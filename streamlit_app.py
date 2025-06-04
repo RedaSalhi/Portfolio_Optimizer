@@ -102,20 +102,26 @@ st.set_page_config(page_title="Portfolio Optimizer", layout="wide")
 st.title("📈 Portfolio Optimizer using Markowitz & CAPM")
 
 with st.sidebar:
-    st.header("User Inputs")
-    tickers_str = st.text_input("Tickers (comma-separated)", "AAPL, MSFT, GOOG")
-    expected_return = st.text_input("Target Return (optional)")
-    expected_std = st.text_input("Target Std Dev (optional)")
+    st.header("⚙️ User Inputs")
+    tickers_str = st.text_input("📃 Tickers (comma-separated)", "AAPL, MSFT, GOOG")
+
+    st.markdown("🎯 **Optimization Target (choose one)**")
+    target_option = st.radio("Select Target:", ("None", "Target Return", "Target Volatility"))
+
+    expected_return_val, expected_std_val = None, None
+    if target_option == "Target Return":
+        expected_return_val = st.slider("Set Target Return", 0.0, 1.0, 0.2, step=0.01)
+    elif target_option == "Target Volatility":
+        expected_std_val = st.slider("Set Target Volatility", 0.0, 1.0, 0.2, step=0.01)
+
     include_risk_free = st.checkbox("Include Risk-Free Asset?", value=True)
     use_sp500 = st.checkbox("Use S&P 500 as Market Proxy?", value=True)
-    submit = st.button("Run Optimization")
+    submit = st.button("🚀 Run Optimization")
 
 if submit:
     tickers = [t.strip().upper() for t in tickers_str.split(',') if t.strip()]
-    expected_return_val = float(expected_return) if expected_return else None
-    expected_std_val = float(expected_std) if expected_std else None
 
-    with st.spinner("Optimizing..."):
+    with st.spinner("Optimizing portfolio... Please wait ⏳"):
         try:
             weights, capm, betas, alphas, w, R_target, sigma_target, fig = optimize_portfolio(
                 tickers, expected_return_val, expected_std_val, include_risk_free, use_sp500
@@ -123,30 +129,38 @@ if submit:
 
             st.subheader("📊 Optimal Portfolio Summary")
 
-            st.markdown("#### ✅ Optimal Weights:")
-            for t, wt in zip(tickers, weights):
-                st.write(f"{t}: {wt:.2%}")
+            # Use columns for better visual layout
+            st.markdown("#### 🎯 Optimal Weights:")
+            weight_cols = st.columns(len(tickers))
+            for col, t, wt in zip(weight_cols, tickers, weights):
+                col.metric(label=t, value=f"{wt:.2%}")
 
-            st.markdown("#### 📉 CAPM Expected Returns:")
-            for t in tickers:
-                st.write(f"{t}: {capm[t]*100:.2f}%")
+            st.markdown("---")
 
-            st.markdown("#### 📈 Betas:")
-            for t in tickers:
-                st.write(f"{t}: {betas[t]:.4f}")
+            st.markdown("#### 💹 CAPM Expected Returns:")
+            capm_cols = st.columns(len(tickers))
+            for col, t in zip(capm_cols, tickers):
+                col.metric(label=t, value=f"{capm[t]*100:.2f} %")
 
-            st.markdown("#### 🧾 Alphas:")
-            for t in tickers:
-                st.write(f"{t}: {alphas[t]:.4f}")
+            st.markdown("#### 📈 Betas & 🧾 Alphas:")
+            stats_cols = st.columns(len(tickers))
+            for col, t in zip(stats_cols, tickers):
+                col.markdown(f"**{t}**")
+                col.write(f"Beta: `{betas[t]:.4f}`")
+                col.write(f"Alpha: `{alphas[t]:.4f}`")
 
             if w is not None:
-                st.markdown("#### 🧮 Capital Allocation:")
-                st.write(f"Risk-Free Weight: {1 - w:.2%}")
-                st.write(f"Risky Portfolio Weight: {w:.2%}")
-                st.write(f"Expected Return: {R_target:.2%}")
-                st.write(f"Volatility: {sigma_target:.2%}")
+                st.markdown("---")
+                st.markdown("#### ⚖️ Capital Allocation (Risk-Free + Risky Asset)")
+                col1, col2, col3 = st.columns(3)
+                col1.metric("Risk-Free Weight", f"{1 - w:.2%}")
+                col2.metric("Risky Portfolio Weight", f"{w:.2%}")
+                col3.metric("Expected Return", f"{R_target:.2%}")
+                st.metric("Expected Volatility", f"{sigma_target:.2%}")
 
+            st.markdown("---")
+            st.markdown("#### 🖼️ Efficient Frontier Plot")
             st.pyplot(fig)
 
         except Exception as e:
-            st.error(f"Error: {e}")
+            st.error(f"❌ Error: {e}")
