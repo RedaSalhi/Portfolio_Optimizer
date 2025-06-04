@@ -152,11 +152,25 @@ if submit:
             if w is not None:
                 st.markdown("---")
                 st.markdown("#### ⚖️ Capital Allocation (Risk-Free + Risky Asset)")
-                col1, col2, col3 = st.columns(3)
-                col1.metric("Risk-Free Weight", f"{1 - w:.2%}")
-                col2.metric("Risky Portfolio Weight", f"{w:.2%}")
-                col3.metric("Expected Return", f"{R_target:.2%}")
-                st.metric("Expected Volatility", f"{sigma_target:.2%}")
+            
+                # Compute real allocation
+                risk_free_weight = 1 - w
+                risky_allocations = [w * wt for wt in weights]
+            
+                labels = ['Risk-Free'] + tickers
+                sizes = [risk_free_weight] + risky_allocations
+            
+                fig_pie, ax_pie = plt.subplots()
+                ax_pie.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90)
+                ax_pie.axis('equal')  # Equal aspect ratio ensures pie is circular.
+                st.pyplot(fig_pie)
+            
+                # Show return and volatility separately below
+                st.markdown("#### 📌 Portfolio Metrics")
+                col1, col2 = st.columns(2)
+                col1.metric("Expected Return", f"{R_target:.2%}")
+                col2.metric("Expected Volatility", f"{sigma_target:.2%}")
+
 
             st.markdown("---")
             st.markdown("#### 🖼️ Efficient Frontier Plot")
