@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from scipy.optimize import minimize
 import statsmodels.api as sm
 import io
+import plotly.graph_objects as go
 
 # Core Portfolio Optimization Function
 def optimize_portfolio(tickers, expected_return=None, expected_std=None, include_risk_free=False, use_sp500=False):
@@ -130,11 +131,23 @@ if submit:
             st.subheader("📊 Optimal Portfolio Summary")
 
             # Use columns for better visual layout
+            
+
             st.markdown("#### 🎯 Optimal Weights (Risky Assets Only)")
-            fig_weights, ax_weights = plt.subplots()
-            ax_weights.pie(weights, labels=tickers, autopct='%1.1f%%', startangle=90)
-            ax_weights.axis('equal')
-            st.pyplot(fig_weights)
+            fig_weights = go.Figure(data=[go.Pie(
+                labels=tickers,
+                values=weights,
+                hole=0.3,
+                textinfo='label+percent',
+                hoverinfo='label+percent+value'
+            )])
+            fig_weights.update_layout(
+                margin=dict(t=20, b=20, l=20, r=20),
+                height=350,
+                showlegend=True
+            )
+            st.plotly_chart(fig_weights, use_container_width=True)
+
 
             st.markdown("---")
 
@@ -152,25 +165,35 @@ if submit:
 
             if w is not None:
                 st.markdown("---")
-                st.markdown("#### ⚖️ Capital Allocation (Including Risk-Free Asset)")
+                st.markdown("#### ⚖️ Capital Allocation Breakdown")
             
-                # Compute weights
+                # Compute real-world weights
                 risk_free_weight = 1 - w
                 risky_allocations = [w * wt for wt in weights]
             
                 labels = ['Risk-Free'] + tickers
-                sizes = [risk_free_weight] + risky_allocations
+                values = [risk_free_weight] + risky_allocations
             
-                fig_alloc, ax_alloc = plt.subplots()
-                ax_alloc.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90)
-                ax_alloc.axis('equal')
-                st.pyplot(fig_alloc)
+                fig_alloc = go.Figure(data=[go.Pie(
+                    labels=labels,
+                    values=values,
+                    hole=0.3,
+                    textinfo='label+percent',
+                    hoverinfo='label+percent+value'
+                )])
+                fig_alloc.update_layout(
+                    margin=dict(t=20, b=20, l=20, r=20),
+                    height=350,
+                    showlegend=True
+                )
             
-                # Portfolio metrics
+                st.plotly_chart(fig_alloc, use_container_width=True)
+            
                 st.markdown("#### 📌 Portfolio Metrics")
                 col1, col2 = st.columns(2)
                 col1.metric("Expected Return", f"{R_target:.2%}")
                 col2.metric("Expected Volatility", f"{sigma_target:.2%}")
+
 
 
 
