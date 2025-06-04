@@ -130,10 +130,11 @@ if submit:
             st.subheader("📊 Optimal Portfolio Summary")
 
             # Use columns for better visual layout
-            st.markdown("#### 🎯 Optimal Weights:")
-            weight_cols = st.columns(len(tickers))
-            for col, t, wt in zip(weight_cols, tickers, weights):
-                col.metric(label=t, value=f"{wt:.2%}")
+            st.markdown("#### 🎯 Optimal Weights (Risky Assets Only)")
+            fig_weights, ax_weights = plt.subplots()
+            ax_weights.pie(weights, labels=tickers, autopct='%1.1f%%', startangle=90)
+            ax_weights.axis('equal')
+            st.pyplot(fig_weights)
 
             st.markdown("---")
 
@@ -151,25 +152,26 @@ if submit:
 
             if w is not None:
                 st.markdown("---")
-                st.markdown("#### ⚖️ Capital Allocation (Risk-Free + Risky Asset)")
+                st.markdown("#### ⚖️ Capital Allocation (Including Risk-Free Asset)")
             
-                # Compute real allocation
+                # Compute weights
                 risk_free_weight = 1 - w
                 risky_allocations = [w * wt for wt in weights]
             
                 labels = ['Risk-Free'] + tickers
                 sizes = [risk_free_weight] + risky_allocations
             
-                fig_pie, ax_pie = plt.subplots()
-                ax_pie.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90)
-                ax_pie.axis('equal')  # Equal aspect ratio ensures pie is circular.
-                st.pyplot(fig_pie)
+                fig_alloc, ax_alloc = plt.subplots()
+                ax_alloc.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90)
+                ax_alloc.axis('equal')
+                st.pyplot(fig_alloc)
             
-                # Show return and volatility separately below
+                # Portfolio metrics
                 st.markdown("#### 📌 Portfolio Metrics")
                 col1, col2 = st.columns(2)
                 col1.metric("Expected Return", f"{R_target:.2%}")
                 col2.metric("Expected Volatility", f"{sigma_target:.2%}")
+
 
 
             st.markdown("---")
