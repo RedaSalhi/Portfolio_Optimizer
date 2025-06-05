@@ -10,12 +10,6 @@ if st.button("🔙 Back to Home"):
     st.switch_page("streamlit_app.py")
 
 
-st.markdown("""
-    <style>
-        [data-testid="stSidebar"] { display: none !important; }
-        header, footer { visibility: hidden; }
-    </style>
-""", unsafe_allow_html=True)
 
 
 st.title("📈 Portfolio Optimizer using Markowitz & CAPM")
