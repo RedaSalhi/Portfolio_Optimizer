@@ -1,11 +1,9 @@
 # streamlit_app.py
 
+
 import streamlit as st
-import time
 
-# Hide sidebar completely
 st.set_page_config(page_title="Reda Salhi's App", layout="centered")
-
 
 st.markdown("""
     <style>
@@ -14,16 +12,23 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-
-st.title("Welcome to My Portfolio Optimizer App")
-st.markdown("Choose a section to continue:")
+st.title("🚀 Welcome to My Streamlit App")
+st.markdown("Choose where you'd like to go:")
 
 col1, col2 = st.columns(2)
 
 with col1:
     if st.button("📈 Portfolio Optimizer"):
-        st.switch_page("pages/1_Portfolio_Optimizer.py")
+        st.session_state.page = "optimizer"
+        st.experimental_rerun()
 
 with col2:
     if st.button("👤 About Me"):
-        st.switch_page("pages/2_About_Me.py")
+        st.session_state.page = "about"
+        st.experimental_rerun()
+
+if "page" in st.session_state:
+    if st.session_state.page == "optimizer":
+        import page_optimizer
+    elif st.session_state.page == "about":
+        import page_about
