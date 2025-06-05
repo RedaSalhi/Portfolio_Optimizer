@@ -6,13 +6,6 @@ import time
 # Hide sidebar completely
 st.set_page_config(page_title="Reda Salhi's App", layout="centered")
 
-st.markdown("""
-    <style>
-        [data-testid="stSidebar"] { display: none !important; }
-        header, footer { visibility: hidden; }
-    </style>
-""", unsafe_allow_html=True)
-
 st.title("Welcome to My Portfolio Optimizer App")
 st.markdown("Choose a section to continue:")
 
