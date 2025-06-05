@@ -6,11 +6,9 @@ import time
 # Hide sidebar completely 
 
 # ✅ Set config FIRST, before any other Streamlit calls
-st.set_page_config(
-    page_title="Reda Salhi's App",       # ✅ Replaces "streamlit app"
-    page_icon="📈",                      # ✅ Optional: emoji or path to .ico
-    layout="centered"
-)
+#st.set_page_config(page_title="Reda Salhi's App", page_icon="📈", layout="centered")
+
+st.set_page_config(page_title="Home Page", layout="wide")
 
 
 st.markdown("""
