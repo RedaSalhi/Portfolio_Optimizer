@@ -13,7 +13,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🚀 Welcome to My Streamlit App")
+st.title("Welcome to My Portfolio Optimizer App")
 st.markdown("Choose a section to continue:")
 
 col1, col2 = st.columns(2)
