@@ -4,6 +4,18 @@ import streamlit as st
 import plotly.graph_objects as go
 from optimizer import optimize_portfolio
 
+st.markdown("""
+    <style>
+        [data-testid="stSidebar"] {
+            display: none;
+        }
+        [data-testid="stSidebarNav"] {
+            display: none;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+
 st.set_page_config(page_title="Portfolio Optimizer", layout="wide")
 
 if st.button("🔙 Back to Home"):
