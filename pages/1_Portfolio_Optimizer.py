@@ -4,7 +4,13 @@ import streamlit as st
 import plotly.graph_objects as go
 from optimizer import optimize_portfolio
 
+st.set_page_config(page_title="Portfolio Optimizer", layout="wide")
+
+if st.button("🔙 Back to Home"):
+    st.switch_page("streamlit_app.py")
+
 st.title("📈 Portfolio Optimizer using Markowitz & CAPM")
+
 
 with st.sidebar:
     st.header("⚙️ User Inputs")
