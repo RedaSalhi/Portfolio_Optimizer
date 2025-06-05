@@ -6,7 +6,8 @@ from optimizer import optimize_portfolio
 
 if st.button("🔙 Back to Home"):
     st.session_state.page = "home"
-    st.experimental_rerun()
+    st.stop()
+
 
 st.title("📈 Portfolio Optimizer using Markowitz & CAPM")
 
