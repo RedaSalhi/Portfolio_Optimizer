@@ -4,7 +4,7 @@ import streamlit as st
 import plotly.graph_objects as go
 from optimizer import optimize_portfolio
 
-st.set_page_config(page_title="Portfolio Optimizer", layout="wide")
+st.set_page_config(page_title="Portfolio Optimizer", layout="center")
 
 st.markdown("""
     <style>
