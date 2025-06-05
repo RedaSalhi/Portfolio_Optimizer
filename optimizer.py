@@ -59,7 +59,6 @@ def optimize_portfolio(tickers, expected_return=None, expected_std=None, include
         betas[ticker] = beta
         capm_expected_returns[ticker] = rf_rate + beta * (expected_market_return - rf_rate)
 
-    # Plot Efficient Frontier
     fig, ax = plt.subplots(figsize=(12, 8))
     sc = ax.scatter(results_df['Volatility'], results_df['Returns'], c=results_df['Sharpe'], cmap='viridis', alpha=0.5)
     plt.colorbar(sc, label='Sharpe Ratio')
