@@ -6,7 +6,8 @@ import os
 
 if st.button("🔙 Back to Home"):
     st.session_state.page = "home"
-    st.experimental_rerun()
+    st.stop()
+
 
 st.title("👤 About Me")
 st.caption("Financial Engineering Student | Quant Researcher")
