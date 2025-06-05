@@ -4,7 +4,9 @@ import streamlit as st
 import plotly.graph_objects as go
 from optimizer import optimize_portfolio
 
-st.button("🔙 Back to Home", on_click=lambda: st.session_state.pop("page", None) or st.experimental_rerun())
+if st.button("🔙 Back to Home"):
+    st.session_state.page = "home"
+    st.experimental_rerun()
 
 st.title("📈 Portfolio Optimizer using Markowitz & CAPM")
 
