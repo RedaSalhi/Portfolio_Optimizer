@@ -8,16 +8,6 @@ from optimizer import optimize_portfolio
 
 st.set_page_config(page_title="Portfolio Optimizer", layout="wide")
 
-st.markdown("""
-    <style>
-        [data-testid="stSidebar"] {
-            display: none;
-        }
-        [data-testid="stSidebarNav"] {
-            display: none;
-        }
-    </style>
-""", unsafe_allow_html=True)
 
 
 if st.button("🔙 Back to Home"):
