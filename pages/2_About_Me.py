@@ -3,6 +3,11 @@
 import streamlit as st
 import os
 
+st.set_page_config(page_title="About Me", layout="centered")
+
+if st.button("🔙 Back to Home"):
+    st.switch_page("streamlit_app.py")
+
 st.title("👤 About Me")
 st.caption("Financial Engineering Student | Quant Researcher")
 
