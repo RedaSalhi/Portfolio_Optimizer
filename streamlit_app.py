@@ -8,7 +8,7 @@ import time
 # ✅ Set config FIRST, before any other Streamlit calls
 #st.set_page_config(page_title="Reda Salhi's App", page_icon="📈", layout="centered")
 
-st.set_page_config(page_title="Home Page", layout="wide")
+st.set_page_config(page_title="Home Page", layout="centered")
 
 
 st.markdown("""
