@@ -69,14 +69,17 @@ def compute_fixed_income_var(tickers,
         df['VaR_Breach'] = df['PnL'] < -var_1d
         df['Ticker'] = ticker
 
+        # After you construct df and compute stats:
         all_data.append({
             'ticker': ticker,
             'ytm': ytm,
             'pv01': pv01,
             'price': price,
             'vol_bps': sigma_r,
-            'VaR': var_1d
+            'VaR': var_1d,
+            'df': df.copy()  # THIS IS REQUIRED
         })
+
 
         if total_pnl.empty:
             total_pnl = df[['PnL']]
