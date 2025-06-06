@@ -27,7 +27,7 @@ def compute_portfolio_var(equity_tickers, equity_weights,
     bond_weights *= (1 / total_weight)
 
     # 1. Get equity data
-    equity_results = compute_parametric_var_multi(equity_tickers,
+    equity_results = compute_parametric_var(equity_tickers,
                                                   confidence_level=confidence_level,
                                                   position_size=position_size)
 
