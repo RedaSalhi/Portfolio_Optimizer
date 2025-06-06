@@ -20,6 +20,15 @@ def compute_parametric_var(ticker="^GSPC", start="2019-01-01", end="2024-12-31",
         else:
             close_data = raw_data.squeeze()  # fallback for Series
 
+    # Convert to single-column DataFrame with 'Price'
+    if isinstance(close_data, pd.Series):
+        df = close_data.to_frame(name='Price')
+    elif isinstance(close_data, pd.DataFrame) and 'Price' not in close_data.columns:
+        df = close_data.rename(columns={close_data.columns[0]: 'Price'})
+    else:
+        df = close_data.copy()
+
+
 
 
     # Compute returns
