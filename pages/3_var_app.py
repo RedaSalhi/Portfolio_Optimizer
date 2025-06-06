@@ -147,7 +147,7 @@ if mode == "Portfolio (Equity + Bonds) (Variance-Covariance)":
         st.subheader("📉 Portfolio VaR Results")
         st.write(f"1-Day Portfolio VaR ({int(confidence * 100)}%): ${results['var_portfolio']:.2f}")
         st.write(f"Sum of Weighted Individual VaRs: ${results['weighted_var_sum']:.2f}")
-        st.write(f"Portfolio Volatility: ${results['volatility']:.2f}")
+        f"Portfolio Daily Volatility: {results['volatility']:.4%} (daily std of log returns)"
         st.write(f"VaR Breaches: {results['exceedances']} ({results['exceedance_pct']:.2f}%)")
         
         return_df = results['return_df']
