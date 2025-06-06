@@ -73,19 +73,39 @@ if mode == "One Asset (Parametric)":
 
 elif mode == "One Asset (Fixed Income)":
     st.header("🪙 Fixed Income VaR via PV01")
-    face = st.number_input("Bond Face Value ($)", value=1_000_000)
-    coupon = st.number_input("Coupon Rate (%)", value=3.0) / 100
+
+    tickers = st.multiselect(
+        "Select Fixed Income Ticker(s) from FRED (e.g. DGS10 for 10Y Treasury)",
+        options=["DGS10", "GS10", "GS5", "DGS5", "DGS2", "DGS30"],
+        default=["DGS10"]
+    )
+    
     maturity = st.number_input("Maturity (Years)", value=10)
+    position_size = st.number_input("Position Size per Asset ($)", value=1_000_000)
     confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95)
 
-    if st.button("Run Analysis"):
-        results = compute_fixed_income_var(face=face, coupon_rate=coupon, maturity=maturity, confidence_level=confidence)
-        st.write(f"1-Day VaR ({int(confidence*100)}%): ${results['VaR']:,.2f}")
-        st.write(f"Volatility of Rate Changes: {results['daily_volatility']:.2f} bps")
-        st.write(f"Exceedances: {results['num_exceedances']} ({results['exceedance_pct']:.2f}%)")
+    if st.button("Run Analysis") and tickers:
+        results = compute_fixed_income_var(
+            tickers=tickers,
+            maturity=maturity,
+            confidence_level=confidence,
+            position_size=position_size
+        )
 
-        st.pyplot(plot_yield_change_distribution(results['df']))
-        st.pyplot(plot_fixed_pnl(results['df'], results['VaR'], confidence))
+        st.subheader("📊 Results")
+        st.write(f"1-Day Portfolio VaR ({int(confidence * 100)}%): ${results['portfolio_var']:,.2f}")
+        st.write(f"Exceedances: {results['num_exceedances']} days ({results['exceedance_pct']:.2f}%)")
+
+        # Optional: Display each asset's PV01 and VaR
+        for asset in results['individual_assets']:
+            st.markdown(f"**{asset['ticker']}** — PV01: {asset['pv01']:.5f}, VaR: ${asset['VaR']:,.2f}")
+
+        # Plotting (you'll need to define these)
+        st.pyplot(plot_yield_change_distribution(results['pnl_df']))
+        st.pyplot(plot_fixed_pnl(results['pnl_df'], results['portfolio_var'], confidence))
+    elif not tickers:
+        st.warning("Please select at least one fixed income ticker.")
+
 
 elif mode == "Multiple Assets (Variance-Covariance)":
     st.header("🪜 Portfolio VaR - Variance-Covariance Method")
