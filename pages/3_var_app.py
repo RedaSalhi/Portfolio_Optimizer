@@ -138,10 +138,11 @@ if mode == "Portfolio (Equity + Bonds) (Variance-Covariance)":
         bond_weights = [float(w) for w in bond_weights]
 
         results = compute_portfolio_var(eq_tickers, eq_weights,
-                                        bond_tickers, bond_weights,
-                                        confidence_level=confidence,
-                                        position_size=position,
-                                        maturity=maturity)
+                                    bond_tickers, bond_weights,
+                                    confidence_level=confidence,
+                                    position_size=position,
+                                    maturity=maturity)
+
 
         st.subheader("📉 Portfolio VaR Results")
         st.write(f"1-Day Portfolio VaR ({int(confidence * 100)}%): ${results['var_portfolio']:.2f}")
@@ -151,6 +152,7 @@ if mode == "Portfolio (Equity + Bonds) (Variance-Covariance)":
         
         return_df = results['return_df']
         asset_names = results['asset_names']
+
         
         st.subheader("🧪 Diagnostics & Visuals")
         
