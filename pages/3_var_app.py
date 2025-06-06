@@ -81,8 +81,13 @@ elif mode == "Multiple Assets (Variance-Covariance)":
 elif mode == "Multiple Assets (Monte Carlo)":
     st.header("🌺 Monte Carlo Portfolio VaR")
     tickers = st.text_input("Tickers (comma-separated)", "GLD,TLT,SPY,EURUSD=X").split(',')
-    weights = st.text_input("Weights (comma-separated)", "0.25,0.25,0.25,0.25")
-    weights = list(map(float, weights))
+    weights_str = st.text_input("Weights (comma-separated)", "0.25,0.25,0.25,0.25")
+    weights = list(map(float, weights_str.split(',')))
+
+    if len(tickers) != len(weights):
+        st.error("The number of tickers must match the number of weights.")
+        st.stop()
+
     sims = st.number_input("Number of Simulations", value=10_000)
     confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95)
 
