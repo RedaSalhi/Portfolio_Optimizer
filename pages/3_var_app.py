@@ -149,7 +149,7 @@ if mode == "Portfolio (Equity + Bonds) (Variance-Covariance)":
         st.write(f"Portfolio Volatility: ${results['volatility']:.2f}")
         st.write(f"VaR Breaches: {results['exceedances']} ({results['exceedance_pct']:.2f}%)")
 
-        combined_df = results['combined_df']
+        combined_df = results['return_df']
         return_df = combined_df[results['asset_names']].pct_change().dropna()
 
         st.subheader("🧪 Diagnostics & Visuals")
