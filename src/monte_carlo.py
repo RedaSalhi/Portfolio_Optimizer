@@ -15,16 +15,22 @@ def fetch_data(ticker, start, end):
     try:
         df = yf.download(ticker, start=start, end=end)['Close']
         if df.dropna().empty:
-            raise ValueError(f"No data from Yahoo for {ticker}")
-        print(f"Fetched {ticker} from Yahoo Finance.")
+            raise ValueError("Empty Yahoo data")
+        print(f"✅ {ticker} fetched from Yahoo Finance")
+        return df
     except Exception as e:
+        print(f"⚠️ Yahoo Finance failed for {ticker}: {e}")
         try:
             df = pdr.DataReader(ticker, 'fred', start, end)
             df = df.squeeze()  # Convert DataFrame to Series if needed
-            print(f"Fetched {ticker} from FRED.")
+            if df.dropna().empty:
+                raise ValueError("Empty FRED data")
+            print(f"✅ {ticker} fetched from FRED")
+            return df
         except Exception as fred_e:
-            raise ValueError(f"Could not fetch {ticker} from Yahoo or FRED.\nYahoo error: {e}\nFRED error: {fred_e}")
-    return df
+            print(f"❌ FRED also failed for {ticker}: {fred_e}")
+            raise ValueError(f"[{ticker}] - Could not fetch from Yahoo or FRED.\nYahoo error: {e}\nFRED error: {fred_e}")
+
 
 # -------------------------------
 # 1. Main Monte Carlo Simulation
