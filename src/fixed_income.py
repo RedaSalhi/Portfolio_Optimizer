@@ -60,7 +60,7 @@ def compute_fixed_income_var(tickers,
             df['PnL'] = pnl_series
             df['VaR_Breach'] = pnl_series < -float(var_1d)
             exceedances = df['VaR_Breach'].sum()
-            exceedance_pct = 100 * num_exceedances / len(df['PnL'])
+            exceedance_pct = 100 * exceedances / len(df['PnL'])
 
             df['Ticker'] = ticker
 
@@ -88,7 +88,7 @@ def compute_fixed_income_var(tickers,
             df['PnL'] = pnl_series
             df['VaR_Breach'] = pnl_series < -float(var_1d)
             exceedances = df['VaR_Breach'].sum()
-            exceedance_pct = 100 * num_exceedances / len(df['PnL'])
+            exceedance_pct = 100 * exceedances / len(df['PnL'])
             
             df['Ticker'] = ticker
 
