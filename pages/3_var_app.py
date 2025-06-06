@@ -196,18 +196,18 @@ elif mode == "Multiple Assets (Monte Carlo)":
                 "Monte Carlo VaR simulates price-based returns, so rates should not be included directly as assets. "
                 "Consider using bond ETFs (like `SHV`, `BIL`, `TLT`) instead."
             )
-
-        results = compute_monte_carlo_var(
-            tickers=tickers,
-            weights=weights,
-            portfolio_value=position,
-            num_simulations=sims,
-            confidence_level=confidence
-        )
-        with st.expander("📉 Portfolio VaR Results"):
-            st.write(f"Monte Carlo VaR: ${results['VaR_dollar']:,.2f} ({results['VaR_pct']:.4%})")
-            st.write(f"Exceedances: {results['num_exceedances']} ({results['exceedance_pct']:.2f}%)")
-    
-            st.pyplot(plot_simulated_returns(results['simulated_returns'], results['VaR_pct'], confidence))
-            st.pyplot(plot_mc_corr(results['returns']))
-            st.pyplot(plot_monte_carlo_pnl_vs_var(results['pnl_df'], results['VaR_dollar'], confidence))
+        else: 
+            results = compute_monte_carlo_var(
+                tickers=tickers,
+                weights=weights,
+                portfolio_value=position,
+                num_simulations=sims,
+                confidence_level=confidence
+            )
+            with st.expander("📉 Portfolio VaR Results"):
+                st.write(f"Monte Carlo VaR: ${results['VaR_dollar']:,.2f} ({results['VaR_pct']:.4%})")
+                st.write(f"Exceedances: {results['num_exceedances']} ({results['exceedance_pct']:.2f}%)")
+        
+                st.pyplot(plot_simulated_returns(results['simulated_returns'], results['VaR_pct'], confidence))
+                st.pyplot(plot_mc_corr(results['returns']))
+                st.pyplot(plot_monte_carlo_pnl_vs_var(results['pnl_df'], results['VaR_dollar'], confidence))
