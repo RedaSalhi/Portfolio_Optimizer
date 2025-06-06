@@ -79,7 +79,7 @@ def compute_fixed_income_var(tickers,
             bumped_price = bond_price(face=1, coupon_rate=coupon_rate, ytm=ytm + 0.0001, years=maturity)
             pv01 = price - bumped_price
 
-            sigma_bps = df['Price_Change_bps'].std()
+            sigma_bps = df['Yield_Change_bps'].std()
             var_1d = -z * pv01 * sigma_bps * position_size
 
             pnl_series = -pv01 * df['Yield_Change_bps'] * position_size
