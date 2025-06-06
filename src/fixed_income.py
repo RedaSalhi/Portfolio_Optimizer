@@ -9,52 +9,97 @@ from datetime import datetime, timedelta
 
 
 # -------------------------------
-# 1. Core Computation Function
+# 1 Bond Pricing Helper
 # -------------------------------
-def compute_fixed_income_var(face=1_000_000, coupon_rate=0.03, maturity=10, confidence_level=0.95, position_size=1_000_000):
+def bond_price(face, coupon_rate, ytm, years, freq=2):
+    periods = int(years * freq)
+    coupon = face * coupon_rate / freq
+    discount_factors = [(1 + ytm / freq) ** -t for t in range(1, periods + 1)]
+    price = sum([coupon * df for df in discount_factors])
+    price += face / (1 + ytm / freq) ** periods
+    return price
+
+# -------------------------------
+# 1.2 Generalized Fixed Income VaR
+# ------------------------------
+def compute_fixed_income_var(tickers,
+                             maturity=10,
+                             confidence_level=0.95,
+                             position_size=1_000_000):
+    """
+    Computes fixed income portfolio VaR using PV01 approximation.
+    
+    Parameters:
+    - tickers: list of FRED yield tickers (e.g., ['DGS10'])
+    - face: bond face value
+    - maturity: bond maturity (years)
+    - confidence_level: confidence level (e.g., 0.95)
+    - position_size: position value per asset
+    
+    Returns:
+    - dict with individual asset stats, total VaR, PnL, and breach stats
+    """
     end = datetime.today().date()
     start = end - timedelta(days=5 * 365)
-    
-    # Download 10Y US Treasury yield data
-    yields = pdr.DataReader('DGS10', 'fred', start, end).dropna()
-    yields.rename(columns={'DGS10': 'Yield'}, inplace=True)
-    
-    # Compute yield changes in basis points
-    yields['Yield_Change_bps'] = yields['Yield'].diff() * 100
-    yields.dropna(inplace=True)
-
-    # Estimate current YTM from last yield
-    latest_ytm = yields['Yield'].iloc[-1] / 100
-
-    # Compute bond price and PV01
-    price = bond_price(face=1, coupon_rate=coupon_rate, ytm=latest_ytm, years=maturity)
-    bumped_price = bond_price(face=1, coupon_rate=coupon_rate, ytm=latest_ytm + 0.0001, years=maturity)
-    pv01 = price - bumped_price
-
-    # Compute rate volatility (bps)
-    sigma_r = yields['Yield_Change_bps'].std()
     z = stats.norm.ppf(1 - confidence_level)
-    var_1d = -z * pv01 * sigma_r * position_size
 
-    # Simulated P&L
-    yields['PnL'] = -pv01 * yields['Yield_Change_bps'] * position_size
-    yields['VaR_Breach'] = yields['PnL'] < -var_1d
-    num_exceedances = yields['VaR_Breach'].sum()
-    total_days = len(yields)
-    exceedance_pct = 100 * num_exceedances / total_days
+    all_data = []
+    total_var = 0
+    total_pnl = pd.DataFrame()
 
-    results = {
-        'df': yields,
-        'ytm': latest_ytm,
-        'bond_price': price,
-        'pv01': pv01,
-        'daily_volatility': sigma_r,
-        'VaR': var_1d,
+    for ticker in tickers:
+        df = pdr.DataReader(ticker, 'fred', start, end).dropna().rename(columns={ticker: 'Yield'})
+        df['Yield_Change_bps'] = df['Yield'].diff() * 100
+        df.dropna(inplace=True)
+
+        # Assume coupon rate = current yield
+        latest_yield = df['Yield'].iloc[-1] / 100
+        coupon_rate = latest_yield
+        ytm = latest_yield
+
+        # Bond pricing & PV01
+        price = bond_price(face=1, coupon_rate=coupon_rate, ytm=ytm, years=maturity)
+        bumped_price = bond_price(face=1, coupon_rate=coupon_rate, ytm=ytm + 0.0001, years=maturity)
+        pv01 = price - bumped_price
+
+        sigma_r = df['Yield_Change_bps'].std()
+        var_1d = -z * pv01 * sigma_r * position_size
+
+        df['PnL'] = -pv01 * df['Yield_Change_bps'] * position_size
+        df['VaR_Breach'] = df['PnL'] < -var_1d
+        df['Ticker'] = ticker
+
+        all_data.append({
+            'ticker': ticker,
+            'ytm': ytm,
+            'pv01': pv01,
+            'price': price,
+            'vol_bps': sigma_r,
+            'VaR': var_1d
+        })
+
+        if total_pnl.empty:
+            total_pnl = df[['PnL']]
+        else:
+            total_pnl = total_pnl.join(df[['PnL']], how='outer', rsuffix=f"_{ticker}")
+
+        total_var += var_1d
+
+    total_pnl.fillna(0, inplace=True)
+    total_pnl['PnL_Total'] = total_pnl.sum(axis=1)
+    total_pnl['VaR_Breach'] = total_pnl['PnL_Total'] < -total_var
+
+    num_exceedances = total_pnl['VaR_Breach'].sum()
+    exceedance_pct = 100 * num_exceedances / len(total_pnl)
+
+    return {
+        'individual_assets': all_data,
+        'portfolio_var': total_var,
+        'pnl_df': total_pnl,
         'z_score': z,
-        'num_exceedances': num_exceedances,
+        'num_exceedances': int(num_exceedances),
         'exceedance_pct': exceedance_pct
     }
-    return results
 
 
 # -------------------------------
@@ -98,15 +143,3 @@ def plot_pnl_vs_var(df, var_1d, confidence_level):
     ax.grid(True)
 
     return fig
-
-
-# -------------------------------
-# Bond Pricing Helper
-# -------------------------------
-def bond_price(face, coupon_rate, ytm, years, freq=2):
-    periods = int(years * freq)
-    coupon = face * coupon_rate / freq
-    discount_factors = [(1 + ytm / freq) ** -t for t in range(1, periods + 1)]
-    price = sum([coupon * df for df in discount_factors])
-    price += face / (1 + ytm / freq) ** periods
-    return price
