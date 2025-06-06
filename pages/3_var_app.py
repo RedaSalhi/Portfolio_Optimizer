@@ -125,10 +125,10 @@ if mode == "Portfolio (Equity + Bonds) (Variance-Covariance)":
     st.subheader("🧮 Configure Portfolio")
     eq_tickers = st.text_input("Equity Tickers (comma-separated)", value="AAPL, MSFT").split(",")
     eq_weights = st.text_input("Equity Weights (comma-separated)", value="0.5, 0.5").split(",")
-    bond_tickers = st.text_input("Bond Tickers (FRED codes, comma-separated)", value="DGS10, DGS2").split(",")
-    bond_weights = st.text_input("Bond Weights (comma-separated)", value="0.5, 0.5").split(",")
+    bond_tickers = st.text_input("Bond Tickers (FRED codes, comma-separated)", value="DGS10").split(",")
+    bond_weights = st.text_input("Bond Weights (comma-separated)", value="1").split(",")
 
-    position = st.number_input("Portfolio Notional Value ($)", value=1_000_000)
+    position = st.number_input("Portfolio Notional Value ($)", value=100)
     maturity = st.slider("Bond Maturity (Years)", 1, 30, 10)
     confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95)
 
