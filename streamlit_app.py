@@ -18,19 +18,19 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🚀 Welcome to My App")
+st.title("Modern Portfolio Theory and Value-at-Risk")
 st.markdown("Choose a section to continue:")
 
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    if st.button("📈 Portfolio Optimizer"):
+    if st.button("Portfolio Optimizer"):
         st.switch_page("pages/1_Portfolio_Optimizer.py")
 
 with col2:
-    if st.button("👤 About Me"):
+    if st.button("About Me"):
         st.switch_page("pages/2_About_Me.py")
 
 with col3:
-    if st.button("📊 Value-at-Risk Calculation"):
+    if st.button("Value-at-Risk Calculation"):
         st.switch_page("pages/3_var_app.py")
