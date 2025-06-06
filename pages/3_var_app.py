@@ -9,7 +9,7 @@ st.set_page_config(page_title="Value at Risk App", layout="wide")
 st.title("Value at Risk Interactive App")
 
 
-if st.button("Back to Home"):
+if st.button("🔙 Back to Home"):
     st.switch_page("streamlit_app.py")
 
 
