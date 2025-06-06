@@ -8,6 +8,15 @@ import seaborn as sns
 from scipy.stats import norm
 from datetime import datetime, timedelta
 
+import numpy as np
+import pandas as pd
+import yfinance as yf
+from pandas_datareader import data as pdr
+import matplotlib.pyplot as plt
+import seaborn as sns
+from scipy.stats import norm
+from datetime import datetime, timedelta
+
 # -------------------------------
 # Helper: Download data from Yahoo or FRED
 # -------------------------------
@@ -15,22 +24,16 @@ def fetch_data(ticker, start, end):
     try:
         df = yf.download(ticker, start=start, end=end)['Close']
         if df.dropna().empty:
-            raise ValueError("Empty Yahoo data")
-        print(f"✅ {ticker} fetched from Yahoo Finance")
-        return df
+            raise ValueError(f"No data from Yahoo for {ticker}")
+        print(f"Fetched {ticker} from Yahoo Finance.")
     except Exception as e:
-        print(f"⚠️ Yahoo Finance failed for {ticker}: {e}")
         try:
             df = pdr.DataReader(ticker, 'fred', start, end)
             df = df.squeeze()  # Convert DataFrame to Series if needed
-            if df.dropna().empty:
-                raise ValueError("Empty FRED data")
-            print(f"✅ {ticker} fetched from FRED")
-            return df
+            print(f"Fetched {ticker} from FRED.")
         except Exception as fred_e:
-            print(f"❌ FRED also failed for {ticker}: {fred_e}")
-            raise ValueError(f"[{ticker}] - Could not fetch from Yahoo or FRED.\nYahoo error: {e}\nFRED error: {fred_e}")
-
+            raise ValueError(f"Could not fetch {ticker} from Yahoo or FRED.\nYahoo error: {e}\nFRED error: {fred_e}")
+    return df
 
 # -------------------------------
 # 1. Main Monte Carlo Simulation
