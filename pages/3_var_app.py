@@ -100,7 +100,7 @@ elif mode == "One Asset (Fixed Income)":
                 st.write(f"- Estimated VaR ({int(confidence * 100)}%): ${float(asset['VaR']):.2f}")
                 st.write(f"**Exceedances**: {asset['exceedances']} days ({asset['exceedance_pct']:.2f}%)")
 
-                st.pyplot(plot_yield_change_distribution(asset['df'], asset['vol_bps'], confidence))
+                st.pyplot(plot_yield_change_distribution(asset['df']))
                 st.pyplot(plot_pnl_vs_var(asset['df'], asset['VaR'], confidence))
 
 
