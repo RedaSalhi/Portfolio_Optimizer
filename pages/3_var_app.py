@@ -1,7 +1,7 @@
 import streamlit as st
 from src.parametric import compute_parametric_var, plot_return_distribution, plot_pnl_vs_var
 from src.fixed_income import compute_fixed_income_var, plot_yield_change_distribution, plot_pnl_vs_var as plot_fixed_pnl
-from src.portfolio import compute_portfolio_var, plot_correlation_matrix as plot_vcv_corr, plot_individual_distributions, plot_portfolio_pnl_vs_var
+from src.portfolio import compute_portfolio_var, plot_correlation_matrix, plot_individual_distributions, plot_portfolio_pnl_vs_var
 from src.monte_carlo import compute_monte_carlo_var, plot_simulated_returns, plot_correlation_matrix as plot_mc_corr, plot_monte_carlo_pnl_vs_var
 import pandas as pd
 
