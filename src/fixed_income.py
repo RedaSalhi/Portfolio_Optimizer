@@ -10,7 +10,10 @@ from scipy import stats
 # -------------------------------
 # 1. Core Computation Function
 # -------------------------------
-def compute_fixed_income_var(face=1_000_000, coupon_rate=0.03, maturity=10, confidence_level=0.95, position_size=1_000_000, start="2019-01-01", end="2024-12-31"):
+def compute_fixed_income_var(face=1_000_000, coupon_rate=0.03, maturity=10, confidence_level=0.95, position_size=1_000_000):
+    end = datetime.today().date()
+    start = end - timedelta(days=5 * 365)
+    
     # Download 10Y US Treasury yield data
     yields = pdr.DataReader('DGS10', 'fred', start, end).dropna()
     yields.rename(columns={'DGS10': 'Yield'}, inplace=True)
