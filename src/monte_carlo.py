@@ -10,7 +10,9 @@ from scipy.stats import norm
 # 1. Main Monte Carlo Simulation
 # -------------------------------
 def compute_monte_carlo_var(tickers, weights, portfolio_value=1_000_000, confidence_level=0.95,
-                             num_simulations=10_000, start="2022-01-01", end="2024-12-31"):
+                             num_simulations=10_000):
+    end = datetime.today().date()
+    start = end - timedelta(days=5 * 365)
     weights = np.array(weights)
     assert len(tickers) == len(weights), "Length of tickers and weights must match."
 
