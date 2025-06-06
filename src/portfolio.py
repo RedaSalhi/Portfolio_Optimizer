@@ -153,7 +153,6 @@ def plot_individual_distributions(df):
         axs[plot_count].set_title(f'{ticker} Daily Returns')
         axs[plot_count].set_xlabel('Log Return')
         axs[plot_count].set_ylabel('Frequency')
-        axs[plot_count].set_xlim(-20, 20) 
         plot_count += 1
 
     # Hide any unused subplots
