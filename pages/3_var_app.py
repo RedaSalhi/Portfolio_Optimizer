@@ -183,11 +183,20 @@ elif mode == "Multiple Assets (Monte Carlo)":
     if len(tickers) != len(weights):
         st.error("The number of tickers must match the number of weights.")
         st.stop()
-
+    
     sims = st.number_input("Number of Simulations", value=10_000)
     confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95)
 
     if st.button("Run Analysis"):
+            # Warn if rates might be incorrectly included
+            rate_like = ['^IRX', 'DGS10', 'DGS2', 'DGS30', 'DTB3', 'DTB6', 'DTB12']
+            if any(ticker.strip().upper() in rate_like for ticker in tickers):
+                st.info(
+                    "ℹ️ Note: Tickers like `^IRX` or `DGS10` represent **interest rates**, not tradable asset prices. "
+                    "Monte Carlo VaR simulates price-based returns, so rates should not be included directly as assets. "
+                    "Consider using bond ETFs (like `SHV`, `BIL`, `TLT`) instead."
+                )
+
         results = compute_monte_carlo_var(
             tickers=tickers,
             weights=weights,
@@ -195,7 +204,7 @@ elif mode == "Multiple Assets (Monte Carlo)":
             num_simulations=sims,
             confidence_level=confidence
         )
-
+        with st.expander("📉 Portfolio VaR Results"):
         st.write(f"Monte Carlo VaR: ${results['VaR_dollar']:,.2f} ({results['VaR_pct']:.4%})")
         st.write(f"Exceedances: {results['num_exceedances']} ({results['exceedance_pct']:.2f}%)")
 
