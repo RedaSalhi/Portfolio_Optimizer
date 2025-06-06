@@ -121,15 +121,16 @@ elif mode == "One Asset (Fixed Income)":
 if mode == "Portfolio (Equity + Bonds) (Variance-Covariance)":
     st.header("📦 Portfolio Parametric VaR")
 
-    with st.expander("🧮 Configure Portfolio"):
-        eq_tickers = st.text_input("Equity Tickers (comma-separated)", value="AAPL, MSFT").split(",")
-        eq_weights = st.text_input("Equity Weights (comma-separated)", value="0.5, 0.5").split(",")
-        bond_tickers = st.text_input("Bond Tickers (FRED codes, comma-separated)", value="DGS10, DGS2").split(",")
-        bond_weights = st.text_input("Bond Weights (comma-separated)", value="0.5, 0.5").split(",")
+    
+    st.subheader("🧮 Configure Portfolio")
+    eq_tickers = st.text_input("Equity Tickers (comma-separated)", value="AAPL, MSFT").split(",")
+    eq_weights = st.text_input("Equity Weights (comma-separated)", value="0.5, 0.5").split(",")
+    bond_tickers = st.text_input("Bond Tickers (FRED codes, comma-separated)", value="DGS10, DGS2").split(",")
+    bond_weights = st.text_input("Bond Weights (comma-separated)", value="0.5, 0.5").split(",")
 
-        position = st.number_input("Portfolio Notional Value ($)", value=1_000_000)
-        maturity = st.slider("Bond Maturity (Years)", 1, 30, 10)
-        confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95)
+    position = st.number_input("Portfolio Notional Value ($)", value=1_000_000)
+    maturity = st.slider("Bond Maturity (Years)", 1, 30, 10)
+    confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95)
 
     if st.button("Run Portfolio VaR"):
         eq_tickers = [t.strip().upper() for t in eq_tickers]
@@ -144,7 +145,7 @@ if mode == "Portfolio (Equity + Bonds) (Variance-Covariance)":
                                     maturity=maturity)
 
 
-        st.subheader("📉 Portfolio VaR Results")
+        with st.expander("📉 Portfolio VaR Results"):
         st.write(f"1-Day Portfolio VaR ({int(confidence * 100)}%): ${results['var_portfolio']:.2f}")
         st.write(f"Sum of Weighted Individual VaRs: ${results['weighted_var_sum']:.2f}")
         f"Portfolio Daily Volatility: {results['volatility']:.4%} (daily std of log returns)"
