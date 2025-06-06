@@ -104,8 +104,9 @@ elif mode == "One Asset (Fixed Income)":
             st.pyplot(fig1)
 
             # Plot PnL vs VaR line
-            fig2 = plot_pnl_vs_var(res['pnl_series'], res['VaR'], confidence)
+            fig2 = plot_pnl_vs_var(res['df'], res['VaR'], confidence)
             st.pyplot(fig2)
+
 
 
 
