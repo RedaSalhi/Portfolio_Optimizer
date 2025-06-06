@@ -17,14 +17,14 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-st.title("👤 About Me")
+st.title("About Me")
 st.caption("Financial Engineering Student | Quant Researcher")
 
 st.markdown("""
 **SALHI Reda**  
-🎓 Engineering student at **Centrale Méditerranée**  
-📈 Passionate about **mathematics**, **financial markets**, and **economic research**  
-🌍 International backpacking experience: France, Germany, Switzerland, Czech Republic, Spain, Malta, Portugal, United Kingdom, etc.   
+Engineering student at **Centrale Méditerranée**  
+Passionate about **mathematics**, **financial markets**, and **economic research**  
+International backpacking experience: France, Germany, Switzerland, Czech Republic, Spain, Malta, Portugal, United Kingdom, etc.   
 """)
 
 cv_en = "assets/Reda_Salhi_CV_EN.pdf"
