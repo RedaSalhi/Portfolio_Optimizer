@@ -37,15 +37,15 @@ st.markdown("### Select a VaR scenario to analyze:")
 col1, col2 = st.columns([1, 1])
 
 with col1:
-    if st.button("🔢 One Asset (Parametric)"):
+    if st.button("One Asset (Stock)"):
         st.session_state.selected_mode = "One Asset (Parametric)"
-    if st.button("🪙 One Asset (Fixed Income)"):
+    if st.button("One Asset (Fixed Income)"):
         st.session_state.selected_mode = "One Asset (Fixed Income)"
 
 with col2:
-    if st.button("🪜 Multiple Assets (Variance-Covariance)"):
+    if st.button("Portfolio of Assets (Variance-Covariance)"):
         st.session_state.selected_mode = "Multiple Assets (Variance-Covariance)"
-    if st.button("🌺 Multiple Assets (Monte Carlo)"):
+    if st.button("Portfolio of Assets (Monte Carlo)"):
         st.session_state.selected_mode = "Multiple Assets (Monte Carlo)"
 
 # Get selected mode (persist between reruns)
@@ -58,11 +58,10 @@ if mode:
 
 
 if mode == "One Asset (Parametric)":
-    st.header("📊 Parametric VaR for Multiple Assets")
-
-    st.subheader("⚙️ Configure Parameters")
+    st.header("Parametric VaR for Stocks")
+    st.subheader("Configure Parameters")
     tickers_input = st.text_input("Enter Tickers (comma-separated, e.g., AAPL, MSFT, SPY)", value="AAPL, MSFT")
-    position = st.number_input("Position Size per Asset ($)", value=1_000_000)
+    position = st.number_input("Position Size per Asset ($)", value=100)
     confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95)
 
     if st.button("Run VaR Analysis"):
@@ -73,8 +72,6 @@ if mode == "One Asset (Parametric)":
                 if 'error' in res:
                     st.error(f"{res['ticker']}: {res['error']}")
                     continue
-    
-                st.subheader(f"📈 Results for {res['ticker']}")
                 st.write(f"🔹 1-Day VaR ({int(confidence * 100)}%): ${res['VaR']:.2f}")
                 st.write(f"🔹 Volatility: {res['daily_volatility']:.4%}")
                 st.write(f"🔹 Exceedances: {res['num_exceedances']} ({res['exceedance_pct']:.2f}%)")
@@ -85,9 +82,9 @@ if mode == "One Asset (Parametric)":
 
 
 elif mode == "One Asset (Fixed Income)":
-    st.header("💰 Fixed Income VaR using PV01 Approximation")
+    st.header("Fixed Income VaR using PV01 Approximation")
 
-    st.subheader("📈 Configure Analysis Parameters")
+    st.subheader("Configure Analysis Parameters")
     tickers = st.text_input("Enter Bond Yield Tickers (comma-separated, e.g., DGS10, DGS2)", value="DGS10")
     maturity = st.number_input("Bond Maturity (Years)", min_value=1, max_value=30, value=10)
     position = st.number_input("Position Size ($)", value=100, step=100)
@@ -119,7 +116,7 @@ elif mode == "One Asset (Fixed Income)":
 
 
 elif mode == "Multiple Assets (Variance-Covariance)":
-    st.header("🪜 Portfolio VaR - Variance-Covariance Method")
+    st.header("Portfolio VaR - Variance-Covariance Method")
 
     normal_assets = st.text_input("Normal Assets (comma-separated)", "GLD,SPY,EURUSD=X").split(',')
     normal_weights_str = st.text_input("Weights for Normal Assets (comma-separated)", "0.3,0.4,0.2")
