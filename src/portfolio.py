@@ -113,17 +113,32 @@ def plot_correlation_matrix(df):
 # -------------------------------
 def plot_individual_distributions(df):
     tickers = df.columns.tolist()
-    fig, axs = plt.subplots(2, 2, figsize=(12, 8))
+    n = len(tickers)
+    ncols = 2
+    nrows = (n + 1) // ncols
+    fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 4 * nrows))
     axs = axs.ravel()
 
+    plot_count = 0
     for i, ticker in enumerate(tickers):
-        axs[i].hist(df[ticker], bins=50, color='lightblue', edgecolor='black')
-        axs[i].set_title(f'{ticker} Daily Returns')
-        axs[i].set_xlabel('Log Return')
-        axs[i].set_ylabel('Frequency')
+        series = df[ticker].replace([np.inf, -np.inf], np.nan).dropna()
+
+        if series.empty:
+            continue  # skip empty or invalid series
+
+        axs[plot_count].hist(series, bins=50, color='lightblue', edgecolor='black')
+        axs[plot_count].set_title(f'{ticker} Daily Returns')
+        axs[plot_count].set_xlabel('Log Return')
+        axs[plot_count].set_ylabel('Frequency')
+        plot_count += 1
+
+    # Hide unused subplots
+    for j in range(plot_count, len(axs)):
+        fig.delaxes(axs[j])
 
     plt.tight_layout()
     return fig
+
 
 
 # -------------------------------
