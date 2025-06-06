@@ -15,14 +15,19 @@ def fetch_data(ticker, start, end):
         df = yf.download(ticker, start=start, end=end)['Close']
         if df.dropna().empty:
             raise ValueError(f"No data from Yahoo for {ticker}")
-        print(f"Fetched {ticker} from Yahoo Finance.")
+        print(f"✅ Fetched {ticker} from Yahoo Finance.")
     except Exception as e:
         try:
             df = pdr.DataReader(ticker, 'fred', start, end)
             df = df.squeeze()  # Convert DataFrame to Series if needed
-            print(f"Fetched {ticker} from FRED.")
+            if df.dropna().empty:
+                raise ValueError(f"No data from FRED for {ticker}")
+            print(f"✅ Fetched {ticker} from FRED.")
         except Exception as fred_e:
-            raise ValueError(f"Could not fetch {ticker} from Yahoo or FRED.\nYahoo error: {e}\nFRED error: {fred_e}")
+            raise ValueError(
+                f"❌ Could not fetch {ticker} from Yahoo or FRED.\n"
+                f"Yahoo error: {e}\nFRED error: {fred_e}"
+            )
     return df
 
 # -------------------------------
@@ -42,14 +47,21 @@ def compute_monte_carlo_var(tickers, weights, portfolio_value=1_000_000, confide
         price_data[ticker] = series
 
     price_data = price_data.dropna()
+    if price_data.empty:
+        raise ValueError("All price data was dropped due to NaNs. Check your tickers or date range.")
+
     log_returns = np.log(price_data / price_data.shift(1)).dropna()
     cov_matrix = log_returns.cov().values
-    cholesky_matrix = np.linalg.cholesky(cov_matrix)
 
-    # Simulate correlated returns
-    normal_randoms = norm.ppf(np.random.rand(num_simulations, len(tickers)))
-    correlated_shocks = normal_randoms @ cholesky_matrix.T
-    simulated_returns = correlated_shocks @ weights
+    # Simulate returns
+    if len(tickers) == 1:
+        std_dev = np.sqrt(cov_matrix[0, 0])
+        simulated_returns = np.random.normal(0, std_dev, num_simulations)
+    else:
+        cholesky_matrix = np.linalg.cholesky(cov_matrix)
+        normal_randoms = norm.ppf(np.random.rand(num_simulations, len(tickers)))
+        correlated_shocks = normal_randoms @ cholesky_matrix.T
+        simulated_returns = correlated_shocks @ weights
 
     # Compute VaR
     var_pct = -np.percentile(simulated_returns, (1 - confidence_level) * 100)
@@ -76,6 +88,7 @@ def compute_monte_carlo_var(tickers, weights, portfolio_value=1_000_000, confide
         'num_exceedances': num_exceedances,
         'exceedance_pct': exceedance_pct
     }
+
 
 # -------------------------------
 # 2. Histogram of Simulated Returns
