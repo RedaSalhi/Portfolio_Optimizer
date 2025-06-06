@@ -5,6 +5,7 @@ from scipy.stats import norm
 import matplotlib.pyplot as plt
 import seaborn as sns
 from datetime import datetime, timedelta
+from scipy import stats
 from src.fixed_income import compute_fixed_income_var
 from src.parametric import compute_parametric_var
 
