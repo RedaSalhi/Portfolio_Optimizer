@@ -94,14 +94,14 @@ elif mode == "One Asset (Fixed Income)":
         
         
         # Individual asset blocks
-        for asset in results['individual_assets']:
+        for asset in results:
             with st.expander(f"📈 {asset['ticker']} - Detailed Results"):
                 st.write(f"- Volatility: {asset['vol_bps']:.2f} bps")
-                st.write(f"- Estimated VaR ({int(confidence * 100)}%): ${float(asset['VaR']):.2f}")
+                st.write(f"- Estimated VaR ({int(confidence * 100)}%): ${asset['VaR']:.2f}")
                 st.write(f"**Exceedances**: {asset['exceedances']} days ({asset['exceedance_pct']:.2f}%)")
 
-                st.pyplot(plot_yield_change_distribution(asset['df']))
-                st.pyplot(plot_pnl_vs_var(asset['df'], asset['VaR'], confidence))
+                st.pyplot(plot_yield_change_distribution(asset['pnl_series']))
+                st.pyplot(plot_pnl_vs_var(asset['pnl_series'], asset['VaR'], confidence))
 
 
     elif not tickers:
