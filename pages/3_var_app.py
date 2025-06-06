@@ -144,18 +144,29 @@ if mode == "Portfolio (Equity + Bonds) (Variance-Covariance)":
                                         maturity=maturity)
 
         st.subheader("📉 Portfolio VaR Results")
-        st.write(f"1-Day Portfolio VaR ({int(confidence*100)}%): ${results['var_portfolio']:.2f}")
+        st.write(f"1-Day Portfolio VaR ({int(confidence * 100)}%): ${results['var_portfolio']:.2f}")
         st.write(f"Sum of Weighted Individual VaRs: ${results['weighted_var_sum']:.2f}")
         st.write(f"Portfolio Volatility: ${results['volatility']:.2f}")
         st.write(f"VaR Breaches: {results['exceedances']} ({results['exceedance_pct']:.2f}%)")
 
-        # Plot histogram
-        fig1 = plot_return_distribution(results['combined_df'][['Portfolio_PnL']].rename(columns={'Portfolio_PnL': 'PnL'}))
-        st.pyplot(fig1)
+        combined_df = results['combined_df']
+        return_df = combined_df[results['asset_names']].pct_change().dropna()
 
-        # Plot PnL vs VaR
-        fig2 = plot_pnl_vs_var(results['combined_df'], results['var_portfolio'], confidence)
-        st.pyplot(fig2)
+        st.subheader("🧪 Diagnostics & Visuals")
+
+        # Correlation matrix
+        fig_corr = plot_correlation_matrix(return_df)
+        st.pyplot(fig_corr)
+
+        # Individual return histograms
+        fig_hists = plot_individual_distributions(return_df)
+        st.pyplot(fig_hists)
+
+        # Portfolio PnL vs VaR
+        pnl_df = combined_df[['Portfolio_PnL', 'VaR_Breach']].rename(columns={'Portfolio_PnL': 'PnL'})
+        fig_pnl = plot_portfolio_pnl_vs_var(pnl_df, results['var_portfolio'], confidence)
+        st.pyplot(fig_pnl)
+
 
 
 elif mode == "Multiple Assets (Monte Carlo)":
