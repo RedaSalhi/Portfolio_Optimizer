@@ -8,7 +8,9 @@ import scipy.stats as stats
 # -------------------------------
 # Core Computation Function
 # -------------------------------
-def compute_parametric_var(ticker="^GSPC", start="2019-01-01", end="2024-12-31", confidence_level=0.95, position_size=1_000_000):
+def compute_parametric_var(ticker="^GSPC", confidence_level=0.95, position_size=1_000_000):
+    end = datetime.today().date()
+    start = end - timedelta(days=5 * 365)
     raw_data = yf.download(ticker, start=start, end=end, auto_adjust=True)
 
     # Handle multi-index (OHLCV) or single-column data
