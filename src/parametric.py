@@ -9,8 +9,16 @@ import scipy.stats as stats
 # Core Computation Function
 # -------------------------------
 def compute_parametric_var(ticker="^GSPC", start="2019-01-01", end="2024-12-31", confidence_level=0.95, position_size=1_000_000):
-    data = yf.download(ticker, start=start, end=end)['Close'].dropna()
-    df = pd.DataFrame(data).rename(columns={'Close': 'Price'})
+    raw_data = yf.download(ticker, start=start, end=end, auto_adjust=True)
+
+    # If single ticker, raw_data is a standard DataFrame
+    if isinstance(raw_data.columns, pd.MultiIndex):
+        close_data = raw_data['Close']
+    else:
+        close_data = raw_data
+
+    df = close_data.to_frame(name='Price').dropna()
+
 
     # Compute returns
     df['Log_Return'] = np.log(df['Price'] / df['Price'].shift(1))
