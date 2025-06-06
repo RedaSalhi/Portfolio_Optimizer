@@ -48,8 +48,9 @@ elif mode == "Multiple Assets (Variance-Covariance)":
     st.header("🪜 Portfolio VaR - Variance-Covariance Method")
 
     normal_assets = st.text_input("Normal Assets (comma-separated)", "GLD,SPY,EURUSD=X").split(',')
-    normal_weights = st.text_input("Weights for Normal Assets (comma-separated)", "0.3,0.4,0.2")
-    normal_weights = list(map(float, normal_weights))
+    normal_weights_str = st.text_input("Weights for Normal Assets (comma-separated)", "0.3,0.4,0.2")
+    normal_weights = list(map(float, normal_weights_str.split(',')))
+
 
     fi_count = st.number_input("Number of Fixed Income Assets", value=1)
     fi_assets = []
