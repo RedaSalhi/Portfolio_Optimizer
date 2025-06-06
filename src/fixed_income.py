@@ -28,16 +28,7 @@ def compute_fixed_income_var(tickers,
                              position_size=1_000_000):
     """
     Computes fixed income portfolio VaR using PV01 approximation.
-    
-    Parameters:
-    - tickers: list of FRED yield tickers (e.g., ['DGS10'])
-    - face: bond face value
-    - maturity: bond maturity (years)
-    - confidence_level: confidence level (e.g., 0.95)
-    - position_size: position value per asset
-    
-    Returns:
-    - dict with individual asset stats, total VaR, PnL, and breach stats
+    Automatically tries FRED first, falls back to yfinance if needed.
     """
     end = datetime.today().date()
     start = end - timedelta(days=5 * 365)
@@ -48,38 +39,60 @@ def compute_fixed_income_var(tickers,
     total_pnl = pd.DataFrame()
 
     for ticker in tickers:
-        df = yf.download(ticker, start=start, end=end)['Close'].dropna()
-        df['Yield_Change_bps'] = df['Yield'].diff() * 100
-        df.dropna(inplace=True)
+        # Try FRED first
+        try:
+            df = pdr.DataReader(ticker, 'fred', start, end).dropna().rename(columns={ticker: 'Yield'})
+            df['Yield_Change_bps'] = df['Yield'].diff() * 100
+            df.dropna(inplace=True)
 
-        # Assume coupon rate = current yield
-        latest_yield = df['Yield'].iloc[-1] / 100
-        coupon_rate = latest_yield
-        ytm = latest_yield
+            latest_yield = df['Yield'].iloc[-1] / 100
+            coupon_rate = latest_yield
+            ytm = latest_yield
 
-        # Bond pricing & PV01
-        price = bond_price(face=1, coupon_rate=coupon_rate, ytm=ytm, years=maturity)
-        bumped_price = bond_price(face=1, coupon_rate=coupon_rate, ytm=ytm + 0.0001, years=maturity)
-        pv01 = price - bumped_price
+            price = bond_price(face=1, coupon_rate=coupon_rate, ytm=ytm, years=maturity)
+            bumped_price = bond_price(face=1, coupon_rate=coupon_rate, ytm=ytm + 0.0001, years=maturity)
+            pv01 = price - bumped_price
 
-        sigma_r = df['Yield_Change_bps'].std()
-        var_1d = -z * pv01 * sigma_r * position_size
+            sigma_bps = df['Yield_Change_bps'].std()
+            var_1d = -z * pv01 * sigma_bps * position_size
 
-        df['PnL'] = -pv01 * df['Yield_Change_bps'] * position_size
-        df['VaR_Breach'] = df['PnL'] < -var_1d
-        df['Ticker'] = ticker
+            df['PnL'] = -pv01 * df['Yield_Change_bps'] * position_size
+            df['VaR_Breach'] = df['PnL'] < -var_1d
+            df['Ticker'] = ticker
 
-        # After you construct df and compute stats:
+        except Exception as e:
+            # Fallback to yfinance
+            df = yf.download(ticker, start=start, end=end)['Close'].dropna().to_frame(name='Price')
+            df['Price_Change_bps'] = df['Price'].pct_change() * 10000
+            df.dropna(inplace=True)
+
+            recent_return = df['Price'].pct_change().iloc[-1]
+            est_yield = abs(recent_return) if recent_return != 0 else 0.03
+            coupon_rate = est_yield
+            ytm = est_yield
+
+            price = bond_price(face=1, coupon_rate=coupon_rate, ytm=ytm, years=maturity)
+            bumped_price = bond_price(face=1, coupon_rate=coupon_rate, ytm=ytm + 0.0001, years=maturity)
+            pv01 = price - bumped_price
+
+            sigma_bps = df['Price_Change_bps'].std()
+            var_1d = -z * pv01 * sigma_bps * position_size
+
+            df['PnL'] = -pv01 * df['Price_Change_bps'] * position_size
+            df['VaR_Breach'] = df['PnL'] < -var_1d
+            df['Ticker'] = ticker
+
+        # Save results
         all_data.append({
             'ticker': ticker,
+            'maturity': maturity,
             'ytm': ytm,
             'pv01': pv01,
             'price': price,
-            'vol_bps': sigma_r,
+            'vol_bps': sigma_bps,
             'VaR': var_1d,
-            'df': df.copy()  # THIS IS REQUIRED
+            'df': df.copy()
         })
-
 
         if total_pnl.empty:
             total_pnl = df[['PnL']]
