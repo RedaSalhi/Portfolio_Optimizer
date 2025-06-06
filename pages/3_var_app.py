@@ -155,19 +155,23 @@ if mode == "Portfolio (Equity + Bonds) (Variance-Covariance)":
             asset_names = results['asset_names']
     
         with st.expander("🧪 Diagnostics & Visuals"):
-            # Correlation matrix (log returns)
-            fig_corr = plot_correlation_matrix(return_df[asset_names])
-            st.pyplot(fig_corr)
-            
+
             # Individual return histograms (log returns)
             fig_hists = plot_individual_distributions(return_df[asset_names])
             st.pyplot(fig_hists)
             
-            # Portfolio PnL vs VaR
-            fig_pnl = plot_portfolio_pnl_vs_var(return_df[['PnL', 'VaR_Breach']], results['var_portfolio'], confidence)
-            st.pyplot(fig_pnl)
-
-
+            col1, col2 = st.columns([1, 1])
+                with col1:
+                    # Correlation matrix (log returns)
+                    fig_corr = plot_correlation_matrix(return_df[asset_names])
+                    st.pyplot(fig_corr)
+                with col2:
+                    # Portfolio PnL vs VaR
+                    fig_pnl = plot_portfolio_pnl_vs_var(return_df[['PnL', 'VaR_Breach']], results['var_portfolio'], confidence)
+                    st.pyplot(fig_pnl)
+            
+            
+            
 
 elif mode == "Multiple Assets (Monte Carlo)":
     st.header("🌺 Monte Carlo Portfolio VaR")
