@@ -4,6 +4,7 @@ import yfinance as yf
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.stats import norm
+from datetime import datetime, timedelta
 
 
 # -------------------------------
