@@ -21,7 +21,7 @@ st.markdown("""
 st.title("🚀 Welcome to My App")
 st.markdown("Choose a section to continue:")
 
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 
 with col1:
     if st.button("📈 Portfolio Optimizer"):
@@ -31,3 +31,6 @@ with col2:
     if st.button("👤 About Me"):
         st.switch_page("pages/2_About_Me.py")
 
+with col3:
+    if st.button("📊 Value-at-Risk Calculation"):
+        st.switch_page("pages/3_var_app.py")
