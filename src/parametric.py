@@ -10,61 +10,70 @@ from datetime import datetime, timedelta
 # -------------------------------
 # Core Computation Function
 # -------------------------------
-def compute_parametric_var(ticker="^GSPC", confidence_level=0.95, position_size=1_000_000):
+def compute_parametric_var_multi(tickers, confidence_level=0.95, position_size=1_000_000):
+    """
+    Computes 1-day parametric VaR for one or more equity tickers based on historical returns.
+    
+    Parameters:
+        tickers (list or str): A single ticker or list of tickers.
+        confidence_level (float): Confidence level for VaR (e.g., 0.95).
+        position_size (float): Notional value of position in USD.
+        
+    Returns:
+        list of dicts: One result dictionary per ticker.
+    """
+    if isinstance(tickers, str):
+        tickers = [tickers]
+
     end = datetime.today().date()
     start = end - timedelta(days=5 * 365)
-    raw_data = yf.download(ticker, start=start, end=end, auto_adjust=True)
-
-    # Handle multi-index (OHLCV) or single-column data
-    if isinstance(raw_data.columns, pd.MultiIndex):
-        close_data = raw_data['Close']
-    else:
-        if 'Close' in raw_data.columns:
-            close_data = raw_data['Close']
-        else:
-            close_data = raw_data.squeeze()  # fallback for Series
-
-    # Convert to single-column DataFrame with 'Price'
-    if isinstance(close_data, pd.Series):
-        df = close_data.to_frame(name='Price')
-    elif isinstance(close_data, pd.DataFrame) and 'Price' not in close_data.columns:
-        df = close_data.rename(columns={close_data.columns[0]: 'Price'})
-    else:
-        df = close_data.copy()
-
-
-
-
-    # Compute returns
-    df['Log_Return'] = np.log(df['Price'] / df['Price'].shift(1))
-    df['Simple_Return'] = df['Price'].pct_change()
-    df.dropna(inplace=True)
-
-    # Daily volatility
-    sigma = df['Log_Return'].std()
-
-    # Z-score and VaR
     z = stats.norm.ppf(1 - confidence_level)
-    var_1d = -z * sigma * position_size
 
-    # P&L
-    df['PnL'] = df['Simple_Return'] * position_size
-    df['VaR_Breach'] = df['PnL'] < -var_1d
+    results = []
 
-    # Summary
-    breaches = df['VaR_Breach'].sum()
-    total_days = len(df)
-    breach_pct = 100 * breaches / total_days
+    for ticker in tickers:
+        try:
+            raw_data = yf.download(ticker, start=start, end=end, auto_adjust=True, progress=False)
 
-    results = {
-        'ticker': ticker,
-        'daily_volatility': sigma,
-        'VaR': var_1d,
-        'z_score': z,
-        'num_exceedances': breaches,
-        'exceedance_pct': breach_pct,
-        'df': df
-    }
+            if isinstance(raw_data.columns, pd.MultiIndex):
+                close_data = raw_data['Close']
+            else:
+                close_data = raw_data.get('Close', raw_data.squeeze())
+
+            if isinstance(close_data, pd.Series):
+                df = close_data.to_frame(name='Price')
+            else:
+                df = close_data.rename(columns={close_data.columns[0]: 'Price'})
+
+            # Compute returns
+            df['Log_Return'] = np.log(df['Price'] / df['Price'].shift(1))
+            df['Simple_Return'] = df['Price'].pct_change()
+            df.dropna(inplace=True)
+
+            sigma = df['Log_Return'].std()
+            var_1d = -z * sigma * position_size
+            df['PnL'] = df['Simple_Return'] * position_size
+            df['VaR_Breach'] = df['PnL'] < -var_1d
+
+            breaches = df['VaR_Breach'].sum()
+            breach_pct = 100 * breaches / len(df)
+
+            results.append({
+                'ticker': ticker,
+                'daily_volatility': sigma,
+                'VaR': var_1d,
+                'z_score': z,
+                'num_exceedances': breaches,
+                'exceedance_pct': breach_pct,
+                'df': df
+            })
+
+        except Exception as e:
+            results.append({
+                'ticker': ticker,
+                'error': str(e)
+            })
+
     return results
 
 
