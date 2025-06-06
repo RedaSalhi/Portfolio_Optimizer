@@ -12,7 +12,7 @@ from src.parametric import compute_parametric_var
 # -------------------------------
 # 1. Main VaR Computation
 # ------------------------------
-def compute_portfolio_var_log(equity_tickers, equity_weights,
+def compute_portfolio_var(equity_tickers, equity_weights,
                                bond_tickers, bond_weights,
                                confidence_level=0.95,
                                position_size=1_000_000,
