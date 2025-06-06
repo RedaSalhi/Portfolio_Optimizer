@@ -36,14 +36,13 @@ def compute_fixed_income_var(tickers,
 
     all_data = []
 
-    for ticker in tickers:
-        try:
-            # Try to get data from FRED
-            df = pdr.DataReader(ticker, 'fred', start, end).dropna().rename(columns={ticker: 'Yield'})
-        except Exception:
-            # Fallback to yfinance (assumes yield proxy from closing price)
-            df = yf.download(ticker, start=start, end=end)
-            df = df[['Close']].dropna().rename(columns={'Close': 'Yield'})
+    for ticker in tickers:for ticker in tickers:
+        if ticker.upper().startswith("DGS") or ticker.upper().startswith("GS"):  # FRED pattern
+            df = pdr.DataReader(ticker, 'fred', start, end).dropna()
+            df = df.rename(columns={ticker: 'Yield'})
+        else:
+            df = yf.download(ticker, start=start, end=end)[['Close']].dropna()
+            df = df.rename(columns={'Close': 'Yield'})
 
         df['Yield_Change_bps'] = df['Yield'].diff() * 100
         df.dropna(inplace=True)
