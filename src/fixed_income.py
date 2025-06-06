@@ -59,6 +59,8 @@ def compute_fixed_income_var(tickers,
             pnl_series = -pv01 * df['Yield_Change_bps'] * position_size
             df['PnL'] = pnl_series
             df['VaR_Breach'] = pnl_series < -float(var_1d)
+            exceedances = df['VaR_Breach'].sum()
+            exceedance_pct = 100 * num_exceedances / len(df['PnL'])
 
             df['Ticker'] = ticker
 
@@ -85,7 +87,9 @@ def compute_fixed_income_var(tickers,
             pnl_series = -pv01 * df['Yield_Change_bps'] * position_size
             df['PnL'] = pnl_series
             df['VaR_Breach'] = pnl_series < -float(var_1d)
-
+            exceedances = df['VaR_Breach'].sum()
+            exceedance_pct = 100 * num_exceedances / len(df['PnL'])
+            
             df['Ticker'] = ticker
 
         # Save results
@@ -95,9 +99,11 @@ def compute_fixed_income_var(tickers,
             'ytm': ytm,
             'pv01': pv01,
             'price': price,
+            'exceedances': int(exceedances),
+            'exceedance_pct': exceedance_pct,
             'vol_bps': sigma_bps,
             'VaR': float(var_1d),
-            'df': df.copy()
+            'df': df['PnL']
         })
 
         if total_pnl.empty:
