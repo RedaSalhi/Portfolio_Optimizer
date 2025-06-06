@@ -99,7 +99,7 @@ elif mode == "One Asset (Fixed Income)":
             with st.expander(f"📈 {asset['ticker']} - Detailed Results"):
                 st.write(f"- Volatility: {asset['vol_bps']:.2f} bps")
                 st.write(f"- Estimated VaR: ${asset['VaR']:,.2f}")
-                st.pyplot(plot_yield_change_distribution(asset['df']))
+                st.pyplot(plot_price_change_distribution(asset['df'], asset['vol_bps']))
                 st.pyplot(plot_pnl_vs_var(asset['df'], asset['VaR'], confidence))
 
         # Portfolio-level plots
@@ -108,7 +108,6 @@ elif mode == "One Asset (Fixed Income)":
 
     elif not tickers:
         st.warning("Please select at least one fixed income ticker.")
-
 
 
 elif mode == "Multiple Assets (Variance-Covariance)":
