@@ -56,8 +56,10 @@ def compute_fixed_income_var(tickers,
             sigma_bps = df['Yield_Change_bps'].std()
             var_1d = -z * pv01 * sigma_bps * position_size
 
-            df['PnL'] = -pv01 * df['Yield_Change_bps'] * position_size
-            df['VaR_Breach'] = df['PnL'] < -var_1d
+            pnl_series = -pv01 * df['Yield_Change_bps'] * position_size
+            df['PnL'] = pnl_series
+            df['VaR_Breach'] = pnl_series < -float(var_1d)
+
             df['Ticker'] = ticker
 
         except Exception as e:
