@@ -178,6 +178,7 @@ elif mode == "Multiple Assets (Monte Carlo)":
     tickers = st.text_input("Tickers (comma-separated)", "GLD,TLT,SPY,EURUSD=X").split(',')
     weights_str = st.text_input("Weights (comma-separated)", "0.25,0.25,0.25,0.25")
     weights = list(map(float, weights_str.split(',')))
+    position = st.number_input("Position Size ($)", value=100, step=100)
 
     if len(tickers) != len(weights):
         st.error("The number of tickers must match the number of weights.")
@@ -190,6 +191,7 @@ elif mode == "Multiple Assets (Monte Carlo)":
         results = compute_monte_carlo_var(
             tickers=tickers,
             weights=weights,
+            portfolio_value=position,
             num_simulations=sims,
             confidence_level=confidence
         )
