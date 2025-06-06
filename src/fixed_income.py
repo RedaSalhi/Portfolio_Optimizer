@@ -74,7 +74,7 @@ def compute_fixed_income_var(tickers,
             df.dropna(inplace=True)
 
             recent_return = df['Price'].pct_change().iloc[-1]
-            est_yield = abs(recent_return) if recent_return != 0 else 0.03
+            est_yield = abs(recent_return)
             coupon_rate = est_yield
             ytm = est_yield
 
