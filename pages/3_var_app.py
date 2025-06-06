@@ -75,9 +75,12 @@ if mode == "One Asset (Parametric)":
                 st.write(f"🔹 1-Day VaR ({int(confidence * 100)}%): ${res['VaR']:.2f}")
                 st.write(f"🔹 Volatility: {res['daily_volatility']:.4%}")
                 st.write(f"🔹 Exceedances: {res['num_exceedances']} ({res['exceedance_pct']:.2f}%)")
-    
-                st.pyplot(plot_return_distribution(res['df']))
-                st.pyplot(plot_pnl_vs_var(res['df'], res['VaR'], confidence))
+
+                col1, col2 = st.columns([1, 1])
+                with col1:
+                    st.pyplot(plot_return_distribution(res['df']))
+                with col2:  
+                    st.pyplot(plot_pnl_vs_var(res['df'], res['VaR'], confidence))
 
 
 
