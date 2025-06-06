@@ -1,11 +1,30 @@
+
 import numpy as np
 import pandas as pd
 import yfinance as yf
+from pandas_datareader import data as pdr
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.stats import norm
 from datetime import datetime, timedelta
 
+# -------------------------------
+# Helper: Download data from Yahoo or FRED
+# -------------------------------
+def fetch_data(ticker, start, end):
+    try:
+        df = yf.download(ticker, start=start, end=end)['Close']
+        if df.dropna().empty:
+            raise ValueError(f"No data from Yahoo for {ticker}")
+        print(f"Fetched {ticker} from Yahoo Finance.")
+    except Exception as e:
+        try:
+            df = pdr.DataReader(ticker, 'fred', start, end)
+            df = df.squeeze()  # Convert DataFrame to Series if needed
+            print(f"Fetched {ticker} from FRED.")
+        except Exception as fred_e:
+            raise ValueError(f"Could not fetch {ticker} from Yahoo or FRED.\nYahoo error: {e}\nFRED error: {fred_e}")
+    return df
 
 # -------------------------------
 # 1. Main Monte Carlo Simulation
@@ -17,21 +36,27 @@ def compute_monte_carlo_var(tickers, weights, portfolio_value=1_000_000, confide
     weights = np.array(weights)
     assert len(tickers) == len(weights), "Length of tickers and weights must match."
 
-    data = yf.download(tickers, start=start, end=end)['Close'].dropna()
-    log_returns = np.log(data / data.shift(1)).dropna()
+    # Fetch all data series
+    price_data = pd.DataFrame()
+    for ticker in tickers:
+        series = fetch_data(ticker, start, end)
+        price_data[ticker] = series
+
+    price_data = price_data.dropna()
+    log_returns = np.log(price_data / price_data.shift(1)).dropna()
     cov_matrix = log_returns.cov().values
     cholesky_matrix = np.linalg.cholesky(cov_matrix)
 
-    # Simulate uncorrelated → correlated normal returns
+    # Simulate correlated returns
     normal_randoms = norm.ppf(np.random.rand(num_simulations, len(tickers)))
     correlated_shocks = normal_randoms @ cholesky_matrix.T
     simulated_returns = correlated_shocks @ weights
 
-    # Compute simulated VaR (in %)
+    # Compute VaR
     var_pct = -np.percentile(simulated_returns, (1 - confidence_level) * 100)
     var_dollar = var_pct * portfolio_value
 
-    # Historical daily portfolio PnL
+    # Historical daily PnL
     historical_portfolio_returns = log_returns @ weights
     simple_returns = np.exp(historical_portfolio_returns) - 1
     pnl_series = simple_returns * portfolio_value
