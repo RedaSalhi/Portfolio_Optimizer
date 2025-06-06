@@ -57,20 +57,30 @@ if mode:
 
 
 
-if mode == "One Asset (Parametric)":
-    st.header("🔢 Parametric VaR for One Asset")
-    ticker = st.text_input("Enter Asset Ticker (e.g., SPY)", value="SPY")
-    position = st.number_input("Position Size ($)", value=1_000_000)
-    confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95)
+if mode == "Multiple Assets (Parametric)":
+    st.header("📊 Parametric VaR for Multiple Assets")
 
-    if st.button("Run Analysis"):
-        results = compute_parametric_var(ticker=ticker, position_size=position, confidence_level=confidence)
-        st.write(f"1-Day VaR ({int(confidence*100)}%): ${results['VaR']:.2f}")
-        st.write(f"Volatility: {results['daily_volatility']:.4%}")
-        st.write(f"Exceedances: {results['num_exceedances']} ({results['exceedance_pct']:.2f}%)")
+    with st.expander("⚙️ Configure Parameters"):
+        tickers_input = st.text_input("Enter Tickers (comma-separated, e.g., AAPL, MSFT, SPY)", value="AAPL, MSFT")
+        position = st.number_input("Position Size per Asset ($)", value=1_000_000)
+        confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95)
 
-        st.pyplot(plot_return_distribution(results['df']))
-        st.pyplot(plot_pnl_vs_var(results['df'], results['VaR'], confidence))
+    if st.button("Run Multi-Asset Analysis"):
+        tickers = [t.strip().upper() for t in tickers_input.split(",")]
+        results = compute_parametric_var_multi(tickers, confidence_level=confidence, position_size=position)
+
+        for res in results:
+            if 'error' in res:
+                st.error(f"{res['ticker']}: {res['error']}")
+                continue
+
+            st.subheader(f"📈 Results for {res['ticker']}")
+            st.write(f"🔹 1-Day VaR ({int(confidence * 100)}%): ${res['VaR']:.2f}")
+            st.write(f"🔹 Volatility: {res['daily_volatility']:.4%}")
+            st.write(f"🔹 Exceedances: {res['num_exceedances']} ({res['exceedance_pct']:.2f}%)")
+
+            st.pyplot(plot_return_distribution(res['df']))
+            st.pyplot(plot_pnl_vs_var(res['df'], res['VaR'], confidence))
 
 
 
