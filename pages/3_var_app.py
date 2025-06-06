@@ -77,7 +77,7 @@ if mode == "One Asset (Parametric)":
 elif mode == "One Asset (Fixed Income)":
     st.header("💰 Fixed Income VaR using PV01 Approximation")
 
-    st.subheader("📈 Configure Analysis Parameters"):
+    st.subheader("📈 Configure Analysis Parameters")
     tickers = st.text_input("Enter Bond Yield Tickers (comma-separated, e.g., DGS10, DGS2)", value="DGS10")
     maturity = st.number_input("Bond Maturity (Years)", min_value=1, max_value=30, value=10)
     position = st.number_input("Position Size ($)", value=100, step=100)
@@ -88,20 +88,20 @@ elif mode == "One Asset (Fixed Income)":
         results = compute_fixed_income_var(ticker_list, maturity=maturity, confidence_level=confidence, position_size=position)
         for res in results:
             with st.expander(f"📊 Results for {res['ticker']}"):
-            st.write(f"🔹 Latest YTM: {res['ytm']:.4%}")
-            st.write(f"🔹 Yield Volatility (bps): {res['vol_bps']:.4f}")
-            st.write(f"🔹 1-Day VaR ({int(confidence * 100)}%): ${res['VaR']:.2f}")
-            st.write(f"🔹 Exceedances: {res['exceedances']} ({res['exceedance_pct']:.2f}%)")
+                st.write(f"🔹 Latest YTM: {res['ytm']:.4%}")
+                st.write(f"🔹 Yield Volatility (bps): {res['vol_bps']:.4f}")
+                st.write(f"🔹 1-Day VaR ({int(confidence * 100)}%): ${res['VaR']:.2f}")
+                st.write(f"🔹 Exceedances: {res['exceedances']} ({res['exceedance_pct']:.2f}%)")
 
-            # Plot yield changes histogram
-            fig1 = plot_yield_change_distribution(pd.DataFrame({
-                'Yield_Change_bps': res['yield_changes']
-            }))
-            st.pyplot(fig1)
-
-            # Plot PnL vs VaR line
-            fig2 = plot_pnl_vs_var(res['df'], res['VaR'], confidence)
-            st.pyplot(fig2)
+                # Plot yield changes histogram
+                fig1 = plot_yield_change_distribution(pd.DataFrame({
+                    'Yield_Change_bps': res['yield_changes']
+                }))
+                st.pyplot(fig1)
+    
+                # Plot PnL vs VaR line
+                fig2 = plot_pnl_vs_var(res['df'], res['VaR'], confidence)
+                st.pyplot(fig2)
 
 
 
