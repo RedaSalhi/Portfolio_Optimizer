@@ -11,7 +11,7 @@ import seaborn as sns
 # -------------------------------
 def compute_portfolio_var(normal_assets, normal_weights,
                           fixed_income_assets, portfolio_value=1_000_000,
-                          confidence_level=0.95, start="2022-01-01", end="2024-12-31"):
+                          confidence_level=0.95):
     """
     normal_assets: list of tickers for normal assets (log-return based)
     normal_weights: list of weights (must sum with fixed to 1)
@@ -24,6 +24,8 @@ def compute_portfolio_var(normal_assets, normal_weights,
     assert np.isclose(sum(normal_weights) + total_fixed_weight, 1.0), "Weights must sum to 1.0"
 
     # --- Normal assets (log returns) ---
+    end = datetime.today().date()
+    start = end - timedelta(days=5 * 365)
     data = yf.download(normal_assets, start=start, end=end)['Close'].dropna()
     returns = np.log(data / data.shift(1)).dropna()
 
