@@ -16,12 +16,12 @@ st.markdown("""
 if st.button("🔙 Back to Home"):
     st.switch_page("streamlit_app.py")
 
-st.title("📈 Portfolio Optimizer using Markowitz & CAPM")
+st.title("Portfolio Optimizer using Markowitz & CAPM")
 
-st.subheader("⚙️ Optimization Parameters")
+st.subheader("Optimization Parameters")
 tickers_str = st.text_input("📃 Tickers (comma-separated)", "AAPL, MSFT, GOOG")
 
-st.markdown("🎯 **Optimization Target (choose one)**")
+st.markdown("**Optimization Target (choose one)**")
 target_option = st.radio("Select Target:", ("None", "Target Return", "Target Volatility"))
 
 expected_return_val, expected_std_val = None, None
@@ -32,7 +32,7 @@ elif target_option == "Target Volatility":
 
 include_risk_free = st.checkbox("Include Risk-Free Asset?", value=True)
 use_sp500 = st.checkbox("Use S&P 500 as Market Proxy?", value=True)
-submit = st.button("🚀 Run Optimization")
+submit = st.button("Run Optimization")
 
 if submit:
     tickers = [t.strip().upper() for t in tickers_str.split(',') if t.strip()]
@@ -43,9 +43,9 @@ if submit:
                 tickers, expected_return_val, expected_std_val, include_risk_free, use_sp500
             )
 
-            st.subheader("📊 Optimal Portfolio Summary")
+            st.subheader("Optimal Portfolio Summary")
 
-            st.markdown("#### 🎯 Optimal Weights (Risky Assets Only)")
+            st.markdown("#### Optimal Weights (Risky Assets Only)")
             fig_weights = go.Figure(data=[go.Pie(
                 labels=tickers,
                 values=weights,
@@ -61,12 +61,12 @@ if submit:
             st.plotly_chart(fig_weights, use_container_width=True)
 
             st.markdown("---")
-            st.markdown("#### 💹 CAPM Expected Returns:")
+            st.markdown("#### CAPM Expected Returns:")
             capm_cols = st.columns(len(tickers))
             for col, t in zip(capm_cols, tickers):
                 col.metric(label=t, value=f"{capm[t]*100:.2f} %")
 
-            st.markdown("#### 📈 Betas & 🧾 Alphas:")
+            st.markdown("#### Betas & Alphas:")
             stats_cols = st.columns(len(tickers))
             for col, t in zip(stats_cols, tickers):
                 col.markdown(f"**{t}**")
@@ -75,7 +75,7 @@ if submit:
 
             if w is not None:
                 st.markdown("---")
-                st.markdown("#### ⚖️ Capital Allocation Breakdown")
+                st.markdown("#### Capital Allocation Breakdown")
 
                 risk_free_weight = 1 - w
                 risky_allocations = [w * wt for wt in weights]
@@ -97,13 +97,13 @@ if submit:
                 )
                 st.plotly_chart(fig_alloc, use_container_width=True)
 
-                st.markdown("#### 📌 Portfolio Metrics")
+                st.markdown("#### Portfolio Metrics")
                 col1, col2 = st.columns(2)
                 col1.metric("Expected Return", f"{R_target:.2%}")
                 col2.metric("Expected Volatility", f"{sigma_target:.2%}")
 
             st.markdown("---")
-            st.markdown("#### 🖼️ Efficient Frontier Plot")
+            st.markdown("#### Efficient Frontier Plot")
             st.pyplot(fig)
 
         except Exception as e:
