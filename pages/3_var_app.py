@@ -65,11 +65,11 @@ if mode == "One Asset (Parametric)":
     position = st.number_input("Position Size per Asset ($)", value=1_000_000)
     confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95)
 
-    if st.button("Run Multi-Asset Analysis"):
+    if st.button("Run VaR Analysis"):
         tickers = [t.strip().upper() for t in tickers_input.split(",")]
         results = compute_parametric_var(tickers, confidence_level=confidence, position_size=position)
-        with st.expander("⚙️ Configure Parameters"):
-            for res in results:
+        for res in results:
+            with st.expander(f"📊 Results for {res['ticker']}"):
                 if 'error' in res:
                     st.error(f"{res['ticker']}: {res['error']}")
                     continue
