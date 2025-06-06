@@ -7,9 +7,16 @@ from src.monte_carlo import compute_monte_carlo_var, plot_simulated_returns, plo
 st.set_page_config(page_title="Value at Risk App", layout="wide")
 st.title("📊 Value at Risk Interactive App")
 
+st.markdown("""
+    <style>
+        [data-testid="stSidebar"] { display: none !important; }
+        header, footer { visibility: hidden; }
+    </style>
+""", unsafe_allow_html=True)
+
+
 st.markdown("### Select a VaR scenario to analyze:")
 mode = st.selectbox("Choose a VaR model type:", [
-    "Do you want to test:",
     "One Asset (Parametric)",
     "One Asset (Fixed Income)",
     "Multiple Assets (Variance-Covariance)",
