@@ -36,7 +36,7 @@ def compute_fixed_income_var(tickers,
 
     all_data = []
 
-    for ticker in tickers:for ticker in tickers:
+    for ticker in tickers:
         if ticker.upper().startswith("DGS") or ticker.upper().startswith("GS"):  # FRED pattern
             df = pdr.DataReader(ticker, 'fred', start, end).dropna()
             df = df.rename(columns={ticker: 'Yield'})
