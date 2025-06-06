@@ -109,7 +109,7 @@ def compute_fixed_income_var(tickers,
 
     total_pnl.fillna(0, inplace=True)
     total_pnl['PnL_Total'] = total_pnl.sum(axis=1)
-    total_pnl['VaR_Breach'] = total_pnl['PnL_Total'] < -total_var
+    total_pnl['VaR_Breach'] = total_pnl['PnL_Total'] < -float(total_var)
 
     num_exceedances = total_pnl['VaR_Breach'].sum()
     exceedance_pct = 100 * num_exceedances / len(total_pnl)
