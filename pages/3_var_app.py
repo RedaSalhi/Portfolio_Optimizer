@@ -90,10 +90,6 @@ elif mode == "One Asset (Fixed Income)":
             position_size=position_size
         )
 
-        st.subheader("📊 Results Summary")
-        st.write(f"**1-Day Portfolio VaR ({int(confidence * 100)}%)**: ${results['portfolio_var']:,.2f}")
-        st.write(f"**Exceedances**: {results['num_exceedances']} days ({results['exceedance_pct']:.2f}%)")
-
         # Individual asset blocks
         for asset in results['individual_assets']:
             with st.expander(f"📈 {asset['ticker']} - Detailed Results"):
