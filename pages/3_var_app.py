@@ -104,13 +104,9 @@ elif mode == "One Asset (Fixed Income)":
             st.pyplot(fig1)
 
             # Plot PnL vs VaR line
-            df = pd.DataFrame({
-                'PnL': res['pnl_series'],
-                'VaR_Breach': res['pnl_series'] < -res['VaR'] / position
-            }, index=res['pnl_series'].index)
-            df['VaR_Breach'] = res['pnl_series'] < -res['VaR'] / position
-            fig2 = plot_pnl_vs_var(df, res['VaR'], confidence)
+            fig2 = plot_pnl_vs_var(res['pnl_series'], res['VaR'], confidence)
             st.pyplot(fig2)
+
 
 
 
