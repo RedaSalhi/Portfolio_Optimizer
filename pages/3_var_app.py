@@ -80,7 +80,6 @@ elif mode == "One Asset (Fixed Income)":
         default=["DGS10"]
     )
 
-    face = st.number_input("Bond Face Value ($)", value=1_000_000)
     maturity = st.number_input("Maturity (Years)", value=10)
     position_size = st.number_input("Position Size per Asset ($)", value=1_000_000)
     confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95)
@@ -88,7 +87,6 @@ elif mode == "One Asset (Fixed Income)":
     if st.button("Run Analysis") and tickers:
         results = compute_fixed_income_var(
             tickers=tickers,
-            face=face,
             maturity=maturity,
             confidence_level=confidence,
             position_size=position_size
