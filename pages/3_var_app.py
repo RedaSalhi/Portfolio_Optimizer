@@ -39,12 +39,12 @@ col1, col2 = st.columns([1, 1])
 with col1:
     if st.button("One Asset (Stock)"):
         st.session_state.selected_mode = "One Asset (Parametric)"
-    if st.button("One Asset (Fixed Income)"):
+    if st.button("One Asset (Fixed Income)"): 
         st.session_state.selected_mode = "One Asset (Fixed Income)"
 
 with col2:
-    if st.button("Portfolio of Assets (Variance-Covariance)"):
-        st.session_state.selected_mode = "Multiple Assets (Variance-Covariance)"
+    if st.button("Portfolio of (Equity + Bonds) Assets (Variance-Covariance)"): 
+        st.session_state.selected_mode = "Portfolio (Equity + Bonds) (Variance-Covariance)"
     if st.button("Portfolio of Assets (Monte Carlo)"):
         st.session_state.selected_mode = "Multiple Assets (Monte Carlo)"
 
@@ -118,39 +118,45 @@ elif mode == "One Asset (Fixed Income)":
 
 
 
-elif mode == "Multiple Assets (Variance-Covariance)":
-    st.header("Portfolio VaR - Variance-Covariance Method")
+if mode == "Portfolio (Equity + Bonds) (Variance-Covariance)":
+    st.header("📦 Portfolio Parametric VaR")
 
-    normal_assets = st.text_input("Normal Assets (comma-separated)", "GLD,SPY,EURUSD=X").split(',')
-    normal_weights_str = st.text_input("Weights for Normal Assets (comma-separated)", "0.3,0.4,0.2")
-    normal_weights = list(map(float, normal_weights_str.split(',')))
+    with st.expander("🧮 Configure Portfolio"):
+        eq_tickers = st.text_input("Equity Tickers (comma-separated)", value="AAPL, MSFT").split(",")
+        eq_weights = st.text_input("Equity Weights (comma-separated)", value="0.5, 0.5").split(",")
+        bond_tickers = st.text_input("Bond Tickers (FRED codes, comma-separated)", value="DGS10, DGS2").split(",")
+        bond_weights = st.text_input("Bond Weights (comma-separated)", value="0.5, 0.5").split(",")
 
-    fi_count = st.number_input("Number of Fixed Income Assets", value=1)
-    fi_assets = []
-    for i in range(int(fi_count)):
-        ticker = st.text_input(f"FI Ticker {i+1}", f"TLT")
-        weight = st.number_input(f"FI Weight {i+1}", value=0.1)
-        pv01 = st.number_input(f"PV01 per $1 for {ticker}", value=0.0008, format="%.6f")
-        fi_assets.append({'ticker': ticker, 'weight': weight, 'pv01': pv01})
+        position = st.number_input("Portfolio Notional Value ($)", value=1_000_000)
+        maturity = st.slider("Bond Maturity (Years)", 1, 30, 10)
+        confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95)
 
-    confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95)
+    if st.button("Run Portfolio VaR"):
+        eq_tickers = [t.strip().upper() for t in eq_tickers]
+        eq_weights = [float(w) for w in eq_weights]
+        bond_tickers = [t.strip().upper() for t in bond_tickers]
+        bond_weights = [float(w) for w in bond_weights]
 
-    if st.button("Run Analysis"):
-        results = compute_portfolio_var(
-            normal_assets=normal_assets,
-            normal_weights=normal_weights,
-            fixed_income_assets=fi_assets,
-            confidence_level=confidence
-        )
+        results = compute_portfolio_var(eq_tickers, eq_weights,
+                                        bond_tickers, bond_weights,
+                                        confidence_level=confidence,
+                                        position_size=position,
+                                        maturity=maturity)
 
-        st.write(f"Total VaR: ${results['VaR']:,.2f}")
-        st.write(f"Normal VaR: ${results['normal_var']:,.2f}")
-        st.write(f"Fixed Income VaR: ${results['fixed_income_var']:,.2f}")
-        st.write(f"Exceedances: {results['num_exceedances']} ({results['exceedance_pct']:.2f}%)")
+        st.subheader("📉 Portfolio VaR Results")
+        st.write(f"1-Day Portfolio VaR ({int(confidence*100)}%): ${results['var_portfolio']:.2f}")
+        st.write(f"Sum of Weighted Individual VaRs: ${results['weighted_var_sum']:.2f}")
+        st.write(f"Portfolio Volatility: ${results['volatility']:.2f}")
+        st.write(f"VaR Breaches: {results['exceedances']} ({results['exceedance_pct']:.2f}%)")
 
-        st.pyplot(plot_vcv_corr(results['df']))
-        st.pyplot(plot_individual_distributions(results['df']))
-        st.pyplot(plot_portfolio_pnl_vs_var(results['pnl_df'], results['VaR'], confidence))
+        # Plot histogram
+        fig1 = plot_return_distribution(results['combined_df'][['Portfolio_PnL']].rename(columns={'Portfolio_PnL': 'PnL'}))
+        st.pyplot(fig1)
+
+        # Plot PnL vs VaR
+        fig2 = plot_pnl_vs_var(results['combined_df'], results['var_portfolio'], confidence)
+        st.pyplot(fig2)
+
 
 elif mode == "Multiple Assets (Monte Carlo)":
     st.header("🌺 Monte Carlo Portfolio VaR")
