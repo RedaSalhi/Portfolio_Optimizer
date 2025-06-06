@@ -64,7 +64,7 @@ if mode == "One Asset (Parametric)":
 
     if st.button("Run Analysis"):
         results = compute_parametric_var(ticker=ticker, position_size=position, confidence_level=confidence)
-        st.write(f"1-Day VaR ({int(confidence*100)}%): ${results['VaR']:,.2f}")
+        st.write(f"1-Day VaR ({int(confidence*100)}%): ${results['VaR']:.2f}")
         st.write(f"Volatility: {results['daily_volatility']:.4%}")
         st.write(f"Exceedances: {results['num_exceedances']} ({results['exceedance_pct']:.2f}%)")
 
