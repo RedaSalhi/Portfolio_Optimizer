@@ -90,17 +90,19 @@ elif mode == "One Asset (Fixed Income)":
             position_size=position_size
         )
 
+        st.subheader("📊 Results Summary")
+        
+        
         # Individual asset blocks
         for asset in results['individual_assets']:
             with st.expander(f"📈 {asset['ticker']} - Detailed Results"):
                 st.write(f"- Volatility: {asset['vol_bps']:.2f} bps")
-                st.write(f"- Estimated VaR: ${float(asset['VaR']):.2f}")
+                st.write(f"- Estimated VaR ({int(confidence * 100)}%): ${float(asset['VaR']):.2f}")
+                st.write(f"**Exceedances**: {asset['exceedances']} days ({asset['exceedance_pct']:.2f}%)")
+
                 st.pyplot(plot_price_change_distribution(asset['df'], asset['vol_bps']))
                 st.pyplot(plot_pnl_vs_var(asset['df'], asset['VaR'], confidence))
 
-        # Portfolio-level plots
-        with st.expander("📊 Portfolio-Level P&L vs VaR"):
-            st.pyplot(plot_pnl_vs_var(results['pnl_df'], results['portfolio_var'], confidence))
 
     elif not tickers:
         st.warning("Please select at least one fixed income ticker.")
