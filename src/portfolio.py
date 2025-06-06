@@ -73,11 +73,14 @@ def compute_portfolio_var(equity_tickers, equity_weights,
     sigma = return_df['Portfolio_Log_Return'].std()
     var = -z * sigma * position_size
 
+    weighted_var_sum = sum(var * weight for each asset)
+
+
     # VaR breaches
     return_df['VaR_Breach'] = return_df['PnL'] < -var
-
     results = {
         'var_portfolio': var,
+        'weighted_var_sum': weighted_var_sum,  # ✅ Added
         'volatility': sigma,
         'exceedances': return_df['VaR_Breach'].sum(),
         'exceedance_pct': 100 * return_df['VaR_Breach'].mean(),
@@ -85,6 +88,7 @@ def compute_portfolio_var(equity_tickers, equity_weights,
         'asset_names': asset_names,
         'weights': all_weights
     }
+
 
     return results
 
