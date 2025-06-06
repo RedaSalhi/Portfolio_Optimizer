@@ -124,20 +124,22 @@ def plot_individual_distributions(df):
         series = df[ticker].replace([np.inf, -np.inf], np.nan).dropna()
 
         if series.empty:
-            continue  # skip empty or invalid series
+            continue
 
         axs[plot_count].hist(series, bins=50, color='lightblue', edgecolor='black')
         axs[plot_count].set_title(f'{ticker} Daily Returns')
         axs[plot_count].set_xlabel('Log Return')
         axs[plot_count].set_ylabel('Frequency')
+        axs[plot_count].set_xlim(-20, 20) 
         plot_count += 1
 
-    # Hide unused subplots
+    # Hide any unused subplots
     for j in range(plot_count, len(axs)):
         fig.delaxes(axs[j])
 
     plt.tight_layout()
     return fig
+
 
 
 
