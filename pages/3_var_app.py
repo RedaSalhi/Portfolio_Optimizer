@@ -57,7 +57,7 @@ if mode:
 
 
 
-if mode == "One Assets (Parametric)":
+if mode == "One Asset (Parametric)":
     st.header("📊 Parametric VaR for Multiple Assets")
 
     with st.expander("⚙️ Configure Parameters"):
