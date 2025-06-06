@@ -7,6 +7,11 @@ from src.monte_carlo import compute_monte_carlo_var, plot_simulated_returns, plo
 st.set_page_config(page_title="Value at Risk App", layout="wide")
 st.title("📊 Value at Risk Interactive App")
 
+
+if st.button("🔙 Back to Home"):
+    st.switch_page("streamlit_app.py")
+
+
 st.markdown("""
     <style>
         [data-testid="stSidebar"] { display: none !important; }
