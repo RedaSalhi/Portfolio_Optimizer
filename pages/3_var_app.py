@@ -11,21 +11,43 @@ st.markdown("""
     <style>
         [data-testid="stSidebar"] { display: none !important; }
         header, footer { visibility: hidden; }
+        .center-box {
+            border: 1px solid #DDD;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+            background-color: #f9f9f9;
+            transition: all 0.2s ease;
+        }
+        .center-box:hover {
+            box-shadow: 3px 3px 10px rgba(0,0,0,0.15);
+        }
     </style>
 """, unsafe_allow_html=True)
 
-
+# Centralized model selector using columns
 st.markdown("### Select a VaR scenario to analyze:")
-mode = st.selectbox("Choose a VaR model type:", [
-    "One Asset (Parametric)",
-    "One Asset (Fixed Income)",
-    "Multiple Assets (Variance-Covariance)",
-    "Multiple Assets (Monte Carlo)"
-])
+col1, col2 = st.columns([1, 1])
 
+with col1:
+    if st.button("🔢 One Asset (Parametric)"):
+        st.session_state.selected_mode = "One Asset (Parametric)"
+    if st.button("🪙 One Asset (Fixed Income)"):
+        st.session_state.selected_mode = "One Asset (Fixed Income)"
 
-# Routing after 'Continue' is clicked
+with col2:
+    if st.button("🪜 Multiple Assets (Variance-Covariance)"):
+        st.session_state.selected_mode = "Multiple Assets (Variance-Covariance)"
+    if st.button("🌺 Multiple Assets (Monte Carlo)"):
+        st.session_state.selected_mode = "Multiple Assets (Monte Carlo)"
+
+# Get selected mode (persist between reruns)
 mode = st.session_state.get("selected_mode", None)
+
+if mode:
+    st.markdown("---")
+    st.subheader(f"📌 Selected: {mode}")
 
 
 
