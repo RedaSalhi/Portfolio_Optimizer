@@ -161,14 +161,14 @@ if mode == "Portfolio (Equity + Bonds) (Variance-Covariance)":
             st.pyplot(fig_hists)
             
             col1, col2 = st.columns([1, 1])
-                with col1:
-                    # Correlation matrix (log returns)
-                    fig_corr = plot_correlation_matrix(return_df[asset_names])
-                    st.pyplot(fig_corr)
-                with col2:
-                    # Portfolio PnL vs VaR
-                    fig_pnl = plot_portfolio_pnl_vs_var(return_df[['PnL', 'VaR_Breach']], results['var_portfolio'], confidence)
-                    st.pyplot(fig_pnl)
+            with col1:
+                # Correlation matrix (log returns)
+                fig_corr = plot_correlation_matrix(return_df[asset_names])
+                st.pyplot(fig_corr)
+            with col2:
+                # Portfolio PnL vs VaR
+                fig_pnl = plot_portfolio_pnl_vs_var(return_df[['PnL', 'VaR_Breach']], results['var_portfolio'], confidence)
+                st.pyplot(fig_pnl)
             
             
             
