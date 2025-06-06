@@ -30,7 +30,11 @@ if target_option == "Target Return":
 elif target_option == "Target Volatility":
     expected_std_val = st.slider("Set Target Volatility", 0.0, 1.0, 0.2, step=0.01)
 
-include_risk_free = st.checkbox("Include Risk-Free Asset? [The Risk-Free Asset used here is '^IRX' (13-Week Treasury Bill Yield Index)]", value=True)
+include_risk_free = st.checkbox(
+    "Include Risk-Free Asset? (Using 13-Week Treasury Bill Yield Index – `^IRX` as proxy)",
+    value=True
+)
+
 use_sp500 = st.checkbox("Use S&P 500 as Market Proxy?", value=True)
 submit = st.button("Run Optimization")
 
