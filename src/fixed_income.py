@@ -48,7 +48,7 @@ def compute_fixed_income_var(tickers,
     total_pnl = pd.DataFrame()
 
     for ticker in tickers:
-        df = pdr.DataReader(ticker, 'fred', start, end).dropna().rename(columns={ticker: 'Yield'})
+        df = yf.download(ticker, start=start, end=end)['Close'].dropna()
         df['Yield_Change_bps'] = df['Yield'].diff() * 100
         df.dropna(inplace=True)
 
