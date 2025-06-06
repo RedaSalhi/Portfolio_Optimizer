@@ -19,92 +19,103 @@ def compute_portfolio_var(equity_tickers, equity_weights,
                                maturity=10):
     """
     Computes portfolio-level parametric VaR using log returns.
-    Combines equities and fixed income.
+    Combines equities and fixed income assets.
+    
+    Returns:
+        dict with portfolio VaR, weighted VaR sum, PnL time series, and diagnostics.
     """
 
-    # Normalize weights
-    equity_weights = np.array(equity_weights) / np.sum(equity_weights)
-    bond_weights = np.array(bond_weights) / np.sum(bond_weights)
+    # -------------------------------
+    # 1. Normalize weights
+    # -------------------------------
+    equity_weights = np.array(equity_weights, dtype=float)
+    bond_weights = np.array(bond_weights, dtype=float)
+
     total_weight = np.sum(equity_weights) + np.sum(bond_weights)
-    equity_weights *= (1 / total_weight)
-    bond_weights *= (1 / total_weight)
+    equity_weights = equity_weights / total_weight
+    bond_weights = bond_weights / total_weight
     all_weights = list(equity_weights) + list(bond_weights)
 
-    
-
-    # 1. Get equity data
+    # -------------------------------
+    # 2. Fetch equity and bond data
+    # -------------------------------
     equity_results = compute_parametric_var(equity_tickers,
-                                                confidence_level=confidence_level,
-                                                 position_size=position_size)
+                                                  confidence_level=confidence_level,
+                                                  position_size=position_size)
 
-    # 2. Get bond data
     bond_results = compute_fixed_income_var(bond_tickers,
                                             maturity=maturity,
                                             confidence_level=confidence_level,
                                             position_size=position_size)
 
-    # 3. Combine log return series
-    all_log_returns = []
+    # -------------------------------
+    # 3. Collect log returns and individual VaRs
+    # -------------------------------
+    log_returns_list = []
+    individual_vars = []
     asset_names = []
 
+    # Equities
     for i, res in enumerate(equity_results):
         if 'error' in res:
             continue
         df = res['df'][['Log_Return']].rename(columns={'Log_Return': res['ticker']})
-        all_log_returns.append(df)
+        log_returns_list.append(df)
+        individual_vars.append(res['VaR'])  # already in $
         asset_names.append(res['ticker'])
 
+    # Bonds
     for i, res in enumerate(bond_results):
         df = res['df'][['Yield_Change_bps']].copy()
-        df['Log_Return'] = -res['pv01'] * df['Yield_Change_bps'] / 100 * (1 / position_size)
+        df['Log_Return'] = -res['pv01'] * df['Yield_Change_bps'] / 100 / position_size  # log-return approx
         df = df[['Log_Return']].rename(columns={'Log_Return': res['ticker']})
-        all_log_returns.append(df)
+        log_returns_list.append(df)
+        individual_vars.append(res['VaR'])  # already in $
         asset_names.append(res['ticker'])
 
+    # -------------------------------
+    # 4. Combine returns
+    # -------------------------------
+    return_df = pd.concat(log_returns_list, axis=1).dropna()
 
-    individual_vars = []
-
-    # Extract individual VaRs from equity results
-    for i, res in enumerate(equity_results):
-        if 'error' in res:
-            continue
-        individual_vars.append(res['VaR'])
-    
-    # Extract individual VaRs from bond results
-    for i, res in enumerate(bond_results):
-        individual_vars.append(res['VaR'])
-    
-    # Now compute weighted sum
-    weighted_var_sum = sum(w * v for w, v in zip(all_weights, individual_vars))
-
-    # Combine all returns
-    return_df = pd.concat(all_log_returns, axis=1).dropna()
-
-    # Compute portfolio log return
+    # Portfolio log return
     return_df['Portfolio_Log_Return'] = return_df.dot(all_weights)
 
-    # Compute PnL
+    # PnL in $
     return_df['PnL'] = return_df['Portfolio_Log_Return'] * position_size
 
-    # VaR computation
+    # -------------------------------
+    # 5. Compute Portfolio VaR
+    # -------------------------------
     z = stats.norm.ppf(1 - confidence_level)
     sigma = return_df['Portfolio_Log_Return'].std()
     var = -z * sigma * position_size
 
+    # -------------------------------
+    # 6. Compute weighted sum of VaRs
+    # -------------------------------
+    weighted_var_sum = sum(w * v for w, v in zip(all_weights, individual_vars))
 
-    # VaR breaches
+    # -------------------------------
+    # 7. Exceedance backtest
+    # -------------------------------
     return_df['VaR_Breach'] = return_df['PnL'] < -var
+    breaches = return_df['VaR_Breach'].sum()
+    breach_pct = 100 * breaches / len(return_df)
+
+    # -------------------------------
+    # 8. Output
+    # -------------------------------
     results = {
         'var_portfolio': var,
-        'weighted_var_sum': weighted_var_sum,  # ✅ Added
+        'weighted_var_sum': weighted_var_sum,
         'volatility': sigma,
-        'exceedances': return_df['VaR_Breach'].sum(),
-        'exceedance_pct': 100 * return_df['VaR_Breach'].mean(),
+        'exceedances': breaches,
+        'exceedance_pct': breach_pct,
         'return_df': return_df,
         'asset_names': asset_names,
         'weights': all_weights
     }
-
 
     return results
 
