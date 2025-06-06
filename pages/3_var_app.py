@@ -77,22 +77,18 @@ if mode == "One Asset (Parametric)":
 elif mode == "One Asset (Fixed Income)":
     st.header("💰 Fixed Income VaR using PV01 Approximation")
 
-    with st.expander("📈 Configure Analysis Parameters"):
-        tickers = st.text_input("Enter Bond Yield Tickers (comma-separated, e.g., DGS10, DGS2)", value="DGS10")
-        maturity = st.number_input("Bond Maturity (Years)", min_value=1, max_value=30, value=10)
-        position = st.number_input("Position Size ($)", min_value=1_000, value=1_000_000, step=10_000)
-        confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95)
+    st.subheader("📈 Configure Analysis Parameters"):
+    tickers = st.text_input("Enter Bond Yield Tickers (comma-separated, e.g., DGS10, DGS2)", value="DGS10")
+    maturity = st.number_input("Bond Maturity (Years)", min_value=1, max_value=30, value=10)
+    position = st.number_input("Position Size ($)", value=100, step=100)
+    confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95)
 
     if st.button("Run Fixed Income VaR"):
         ticker_list = [t.strip() for t in tickers.split(",")]
         results = compute_fixed_income_var(ticker_list, maturity=maturity, confidence_level=confidence, position_size=position)
-
         for res in results:
-            st.subheader(f"📊 Results for {res['ticker']}")
-            st.write(f"🔹 Maturity: {res['maturity']} years")
+            with st.expander(f"📊 Results for {res['ticker']}"):
             st.write(f"🔹 Latest YTM: {res['ytm']:.4%}")
-            st.write(f"🔹 PV01: ${res['pv01']:.4f}")
-            st.write(f"🔹 Price: ${res['price']:.4f}")
             st.write(f"🔹 Yield Volatility (bps): {res['vol_bps']:.4f}")
             st.write(f"🔹 1-Day VaR ({int(confidence * 100)}%): ${res['VaR']:.2f}")
             st.write(f"🔹 Exceedances: {res['exceedances']} ({res['exceedance_pct']:.2f}%)")
