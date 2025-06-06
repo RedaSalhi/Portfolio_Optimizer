@@ -19,37 +19,41 @@ def compute_portfolio_var(equity_tickers=None, equity_weights=None,
                           maturity=10):
     """
     Computes portfolio-level parametric VaR using log returns.
-    Works with:
-    - Only equities
-    - Only bonds
-    - Mixed portfolios
-    Requires: equities from Yahoo, bonds from FRED (via compute_fixed_income_var).
+    Supports:
+      - Equities only
+      - Bonds only
+      - Mixed portfolios
     """
 
+    # Initialize empty lists if None
     equity_tickers = equity_tickers or []
     bond_tickers = bond_tickers or []
     equity_weights = equity_weights or []
     bond_weights = bond_weights or []
 
-    if not equity_tickers and not bond_tickers:
-        raise ValueError("At least one asset (equity or bond) must be provided.")
+    if len(equity_tickers) == 0 and len(bond_tickers) == 0:
+        raise ValueError("Please provide at least one equity or bond ticker.")
 
-    # Normalize weights
-    equity_weights = np.array(equity_weights, dtype=float)
-    bond_weights = np.array(bond_weights, dtype=float)
-    total_weight = np.sum(equity_weights) + np.sum(bond_weights)
+    # Normalize available weights
+    equity_weights = np.array(equity_weights, dtype=float) if equity_weights else np.array([])
+    bond_weights = np.array(bond_weights, dtype=float) if bond_weights else np.array([])
 
+    total_weight = equity_weights.sum() + bond_weights.sum()
     if total_weight == 0:
         raise ValueError("Sum of weights cannot be zero.")
 
-    equity_weights = equity_weights / total_weight if len(equity_weights) > 0 else []
-    bond_weights = bond_weights / total_weight if len(bond_weights) > 0 else []
+    if equity_weights.size > 0:
+        equity_weights = equity_weights / total_weight
+    if bond_weights.size > 0:
+        bond_weights = bond_weights / total_weight
+
     all_weights = list(equity_weights) + list(bond_weights)
 
-    # Fetch data
+    # Get data
     equity_results = compute_parametric_var(equity_tickers, confidence_level, position_size) if equity_tickers else []
     bond_results = compute_fixed_income_var(bond_tickers, maturity, confidence_level, position_size) if bond_tickers else []
 
+    # Build return series
     log_returns_list = []
     individual_vars = []
     asset_names = []
@@ -71,27 +75,33 @@ def compute_portfolio_var(equity_tickers=None, equity_weights=None,
         asset_names.append(res['ticker'])
 
     if len(log_returns_list) == 0:
-        raise ValueError("No valid data returned for the given tickers.")
+        raise ValueError("No valid return series found for given tickers.")
 
+    # Align data and match weights
     return_df = pd.concat(log_returns_list, axis=1).dropna()
+    surviving_assets = return_df.columns.tolist()
 
-    # Adjust weights to match surviving assets
-    if return_df.shape[1] != len(all_weights):
-        valid_cols = return_df.columns.tolist()
-        valid_weights = []
-        for name in valid_cols:
-            if name in asset_names:
-                idx = asset_names.index(name)
-                valid_weights.append(all_weights[idx])
-        all_weights = valid_weights
+    adjusted_weights = []
+    adjusted_vars = []
+    for name in surviving_assets:
+        try:
+            idx = asset_names.index(name)
+            adjusted_weights.append(all_weights[idx])
+            adjusted_vars.append(individual_vars[idx])
+        except ValueError:
+            continue  # Skip if mismatch
 
-    return_df['Portfolio_Log_Return'] = return_df.dot(all_weights)
+    # Normalize again (just in case)
+    weight_sum = sum(adjusted_weights)
+    adjusted_weights = [w / weight_sum for w in adjusted_weights]
+
+    return_df['Portfolio_Log_Return'] = return_df.dot(adjusted_weights)
     return_df['PnL'] = return_df['Portfolio_Log_Return'] * position_size
 
     z = stats.norm.ppf(1 - confidence_level)
     sigma = return_df['Portfolio_Log_Return'].std()
     var = -z * sigma * position_size
-    weighted_var_sum = sum(w * v for w, v in zip(all_weights, individual_vars))
+    weighted_var_sum = sum(w * v for w, v in zip(adjusted_weights, adjusted_vars))
 
     return_df['VaR_Breach'] = return_df['PnL'] < -var
     breaches = return_df['VaR_Breach'].sum()
@@ -104,8 +114,8 @@ def compute_portfolio_var(equity_tickers=None, equity_weights=None,
         'exceedances': breaches,
         'exceedance_pct': breach_pct,
         'return_df': return_df,
-        'asset_names': return_df.columns[:-3].tolist(),  # exclude Portfolio_Log_Return, PnL, VaR_Breach
-        'weights': all_weights
+        'asset_names': surviving_assets,
+        'weights': adjusted_weights
     }
 
 
