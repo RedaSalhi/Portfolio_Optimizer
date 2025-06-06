@@ -98,7 +98,11 @@ elif mode == "One Asset (Fixed Income)":
         results = compute_fixed_income_var(ticker_list, maturity=maturity, confidence_level=confidence, position_size=position)
         for res in results:
             with st.expander(f"📊 Results for {res['ticker']}"):
-                st.write(f"🔹 Latest YTM: {res['ytm']:.4%}")
+                ytm_value = res['ytm']
+                if isinstance(ytm_value, pd.Series):
+                    ytm_value = ytm_value.iloc[0]
+                st.write(f"🔹 Latest YTM: {ytm_value:.4%}")
+                #st.write(f"🔹 Latest YTM: {res['ytm']:.4%}")
                 st.write(f"🔹 Yield Volatility (bps): {res['vol_bps']:.4f}")
                 st.write(f"🔹 1-Day VaR ({int(confidence * 100)}%): ${res['VaR']:.2f}")
                 st.write(f"🔹 Exceedances: {res['exceedances']} ({res['exceedance_pct']:.2f}%)")
