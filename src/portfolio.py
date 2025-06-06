@@ -30,6 +30,8 @@ def compute_portfolio_var(equity_tickers, equity_weights,
     bond_weights *= (1 / total_weight)
     all_weights = list(equity_weights) + list(bond_weights)
 
+    
+
     # 1. Get equity data
     equity_results = compute_parametric_var(equity_tickers,
                                                 confidence_level=confidence_level,
@@ -59,6 +61,22 @@ def compute_portfolio_var(equity_tickers, equity_weights,
         all_log_returns.append(df)
         asset_names.append(res['ticker'])
 
+
+    individual_vars = []
+
+    # Extract individual VaRs from equity results
+    for i, res in enumerate(equity_results):
+        if 'error' in res:
+            continue
+        individual_vars.append(res['VaR'])
+    
+    # Extract individual VaRs from bond results
+    for i, res in enumerate(bond_results):
+        individual_vars.append(res['VaR'])
+    
+    # Now compute weighted sum
+    weighted_var_sum = sum(w * v for w, v in zip(all_weights, individual_vars))
+
     # Combine all returns
     return_df = pd.concat(all_log_returns, axis=1).dropna()
 
@@ -72,8 +90,6 @@ def compute_portfolio_var(equity_tickers, equity_weights,
     z = stats.norm.ppf(1 - confidence_level)
     sigma = return_df['Portfolio_Log_Return'].std()
     var = -z * sigma * position_size
-
-    weighted_var_sum = sum(var * weight for each asset)
 
 
     # VaR breaches
