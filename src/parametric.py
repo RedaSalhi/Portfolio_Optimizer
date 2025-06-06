@@ -11,14 +11,14 @@ import scipy.stats as stats
 def compute_parametric_var(ticker="^GSPC", start="2019-01-01", end="2024-12-31", confidence_level=0.95, position_size=1_000_000):
     raw_data = yf.download(ticker, start=start, end=end, auto_adjust=True)
 
-    # Handle both Series and DataFrame correctly
-    if isinstance(raw_data, pd.Series):
-        df = raw_data.to_frame(name='Price').dropna()
-    elif isinstance(raw_data.columns, pd.MultiIndex):
+    # Handle multi-index (OHLCV) or single-column data
+    if isinstance(raw_data.columns, pd.MultiIndex):
         close_data = raw_data['Close']
-        df = close_data.to_frame(name='Price').dropna()
     else:
-        df = raw_data.rename(columns={'Close': 'Price'}).dropna()
+        if 'Close' in raw_data.columns:
+            close_data = raw_data['Close']
+        else:
+            close_data = raw_data.squeeze()  # fallback for Series
 
 
 
