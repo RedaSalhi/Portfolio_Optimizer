@@ -47,7 +47,9 @@ def compute_fixed_income_var(tickers,
         df['Yield_Change_bps'] = df['Yield'].diff() * 100
         df.dropna(inplace=True)
 
-        latest_yield = float(df['Yield'].iloc[-1]) / 100
+        latest_yield_raw = df['Yield'].iloc[-1]
+        latest_yield = float(latest_yield_raw) / 100
+
         coupon_rate = latest_yield
         ytm = latest_yield
 
