@@ -62,7 +62,14 @@ def compute_fixed_income_var(tickers,
 
         except Exception as e:
             # Fallback to yfinance
-            df = yf.download(ticker, start=start, end=end)['Close'].dropna().to_frame(name='Price')
+            df = yf.download(ticker, start=start, end=end)
+
+            if 'Close' not in df.columns:
+                raise ValueError(f"Ticker '{ticker}' returned no 'Close' data from yfinance.")
+            
+            df = df[['Close']].dropna()
+            df.rename(columns={'Close': 'Price'}, inplace=True)
+
             df['Price_Change_bps'] = df['Price'].pct_change() * 10000
             df.dropna(inplace=True)
 
