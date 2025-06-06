@@ -72,45 +72,43 @@ if mode == "One Asset (Parametric)":
         st.pyplot(plot_pnl_vs_var(results['df'], results['VaR'], confidence))
 
 elif mode == "One Asset (Fixed Income)":
-    st.header("🪙 Fixed Income VaR via PV01")
+    st.header("🪙 Fixed Income VaR via Price Returns")
 
     tickers = st.multiselect(
-        "Select Fixed Income Ticker(s) from FRED (e.g. DGS10 for 10Y Treasury)",
-        options=["DGS10", "GS10", "DGS5", "GS5", "DGS2", "DGS30"],
-        default=["DGS10"]
+        "Select Fixed Income ETF(s) from yfinance (e.g. TLT, IEF, BND)",
+        options=["TLT", "IEF", "SHY", "BND", "TIP"],
+        default=["TLT"]
     )
 
-    maturity = st.number_input("Maturity (Years)", value=10)
     position_size = st.number_input("Position Size per Asset ($)", value=1_000_000)
     confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95)
 
     if st.button("Run Analysis") and tickers:
         results = compute_fixed_income_var(
             tickers=tickers,
-            maturity=maturity,
             confidence_level=confidence,
             position_size=position_size
         )
 
-        st.subheader("📊 Results")
-        st.write(f"1-Day Portfolio VaR ({int(confidence * 100)}%): ${results['portfolio_var']:,.2f}")
-        st.write(f"Exceedances: {results['num_exceedances']} days ({results['exceedance_pct']:.2f}%)")
+        st.subheader("📊 Results Summary")
+        st.write(f"**1-Day Portfolio VaR ({int(confidence * 100)}%)**: ${results['portfolio_var']:,.2f}")
+        st.write(f"**Exceedances**: {results['num_exceedances']} days ({results['exceedance_pct']:.2f}%)")
 
-        # Display individual asset summaries + plots
+        # Individual asset blocks
         for asset in results['individual_assets']:
-            st.markdown(f"### 📈 {asset['ticker']}")
-            st.write(f"- YTM: {asset['ytm']:.2%}")
-            st.write(f"- PV01: {asset['pv01']:.6f}")
-            st.write(f"- Individual VaR: ${asset['VaR']:,.2f}")
-            st.pyplot(plot_yield_change_distribution(asset['df']))
-            st.pyplot(plot_pnl_vs_var(asset['df'], asset['VaR'], confidence))
+            with st.expander(f"📈 {asset['ticker']} - Detailed Results"):
+                st.write(f"- Volatility: {asset['vol_bps']:.2f} bps")
+                st.write(f"- Estimated VaR: ${asset['VaR']:,.2f}")
+                st.pyplot(plot_yield_change_distribution(asset['df']))
+                st.pyplot(plot_pnl_vs_var(asset['df'], asset['VaR'], confidence))
 
-        # Optional: total portfolio PnL plot (aggregated across tickers)
-        st.markdown("### 📊 Portfolio-Level P&L vs VaR")
-        st.pyplot(plot_pnl_vs_var(results['pnl_df'], results['portfolio_var'], confidence))
-    
+        # Portfolio-level plots
+        with st.expander("📊 Portfolio-Level P&L vs VaR"):
+            st.pyplot(plot_pnl_vs_var(results['pnl_df'], results['portfolio_var'], confidence))
+
     elif not tickers:
         st.warning("Please select at least one fixed income ticker.")
+
 
 
 elif mode == "Multiple Assets (Variance-Covariance)":
