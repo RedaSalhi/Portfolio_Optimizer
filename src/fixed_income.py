@@ -96,7 +96,7 @@ def compute_fixed_income_var(tickers,
             'pv01': pv01,
             'price': price,
             'vol_bps': sigma_bps,
-            'VaR': var_1d,
+            'VaR': float(var_1d),
             'df': df.copy()
         })
 
