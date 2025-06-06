@@ -7,3 +7,12 @@ scipy
 statsmodels
 pillow
 plotly
+streamlit
+yfinance
+pandas
+numpy
+matplotlib
+seaborn
+scipy
+pandas_datareader
+streamlit_option_menu
