@@ -74,7 +74,8 @@ def compute_fixed_income_var(tickers,
             'VaR': float(var_1d),
             'exceedances': int(exceedances),
             'exceedance_pct': exceedance_pct,
-            'pnl_series': df['PnL']  # Optional: keep if needed
+            'pnl_series': df['PnL'],
+            'yield_changes': df['Yield_Change_bps']
         })
 
     return all_data
