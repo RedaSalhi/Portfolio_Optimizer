@@ -61,9 +61,9 @@ if mode == "One Asset (Parametric)":
     st.header("📊 Parametric VaR for Multiple Assets")
 
     st.subheader("⚙️ Configure Parameters")
-        tickers_input = st.text_input("Enter Tickers (comma-separated, e.g., AAPL, MSFT, SPY)", value="AAPL, MSFT")
-        position = st.number_input("Position Size per Asset ($)", value=1_000_000)
-        confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95)
+    tickers_input = st.text_input("Enter Tickers (comma-separated, e.g., AAPL, MSFT, SPY)", value="AAPL, MSFT")
+    position = st.number_input("Position Size per Asset ($)", value=1_000_000)
+    confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95)
 
     if st.button("Run Multi-Asset Analysis"):
         tickers = [t.strip().upper() for t in tickers_input.split(",")]
