@@ -65,20 +65,15 @@ def compute_fixed_income_var(tickers,
         except Exception as e:
             # Fallback to yfinance
             df = yf.download(ticker, start=start, end=end)
-
-            if 'Close' not in df.columns:
-                raise ValueError(f"Ticker '{ticker}' returned no 'Close' data from yfinance.")
-            
             df = df[['Close']].dropna()
-            df.rename(columns={'Close': 'Price'}, inplace=True)
+            df.rename(columns={'Close': 'Yield'}, inplace=True)
 
-            df['Price_Change_bps'] = df['Price'].pct_change() * 10000
+            df['Yield_Change_bps'] = df['Yield'].diff() * 100
             df.dropna(inplace=True)
 
-            recent_return = df['Price'].pct_change().iloc[-1]
-            est_yield = abs(recent_return)
-            coupon_rate = est_yield
-            ytm = est_yield
+            latest_yield = df['Yield'].iloc[-1] / 100
+            coupon_rate = latest_yield
+            ytm = latest_yield
 
             price = bond_price(face=1, coupon_rate=coupon_rate, ytm=ytm, years=maturity)
             bumped_price = bond_price(face=1, coupon_rate=coupon_rate, ytm=ytm + 0.0001, years=maturity)
