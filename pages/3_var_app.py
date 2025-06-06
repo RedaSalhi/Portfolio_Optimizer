@@ -6,10 +6,10 @@ from src.monte_carlo import compute_monte_carlo_var, plot_simulated_returns, plo
 import pandas as pd
 
 st.set_page_config(page_title="Value at Risk App", layout="wide")
-st.title("📊 Value at Risk Interactive App")
+st.title("Value at Risk Interactive App")
 
 
-if st.button("🔙 Back to Home"):
+if st.button("Back to Home"):
     st.switch_page("streamlit_app.py")
 
 
@@ -68,13 +68,13 @@ if mode == "One Asset (Parametric)":
         tickers = [t.strip().upper() for t in tickers_input.split(",")]
         results = compute_parametric_var(tickers, confidence_level=confidence, position_size=position)
         for res in results:
-            with st.expander(f"📊 Results for {res['ticker']}"):
+            with st.expander(f"Results for {res['ticker']}"):
                 if 'error' in res:
                     st.error(f"{res['ticker']}: {res['error']}")
                     continue
-                st.write(f"🔹 1-Day VaR ({int(confidence * 100)}%): ${res['VaR']:.2f}")
-                st.write(f"🔹 Volatility: {res['daily_volatility']:.4%}")
-                st.write(f"🔹 Exceedances: {res['num_exceedances']} ({res['exceedance_pct']:.2f}%)")
+                st.write(f"1-Day VaR ({int(confidence * 100)}%): ${res['VaR']:.2f}")
+                st.write(f"Volatility: {res['daily_volatility']:.4%}")
+                st.write(f"Exceedances: {res['num_exceedances']} ({res['exceedance_pct']:.2f}%)")
 
                 col1, col2 = st.columns([1, 1])
                 with col1:
@@ -97,11 +97,11 @@ elif mode == "One Asset (Fixed Income)":
         ticker_list = [t.strip() for t in tickers.split(",")]
         results = compute_fixed_income_var(ticker_list, maturity=maturity, confidence_level=confidence, position_size=position)
         for res in results:
-            with st.expander(f"📊 Results for {res['ticker']}"):
-                st.write(f"🔹 Latest YTM: {res['ytm']:.4%}")
-                st.write(f"🔹 Yield Volatility (bps): {res['vol_bps']:.4f}")
-                st.write(f"🔹 1-Day VaR ({int(confidence * 100)}%): ${res['VaR']:.2f}")
-                st.write(f"🔹 Exceedances: {res['exceedances']} ({res['exceedance_pct']:.2f}%)")
+            with st.expander(f"Results for {res['ticker']}"):
+                st.write(f"Latest YTM: {res['ytm']:.4%}")
+                st.write(f"Yield Volatility (bps): {res['vol_bps']:.4f}")
+                st.write(f"1-Day VaR ({int(confidence * 100)}%): ${res['VaR']:.2f}")
+                st.write(f"Exceedances: {res['exceedances']} ({res['exceedance_pct']:.2f}%)")
                 col1, col2 = st.columns([1, 1])
                 with col1:
                     # Plot yield changes histogram
@@ -119,10 +119,10 @@ elif mode == "One Asset (Fixed Income)":
 
 
 if mode == "Portfolio (Equity + Bonds) (Variance-Covariance)":
-    st.header("📦 Portfolio Parametric VaR")
+    st.header("Portfolio Parametric VaR")
 
     
-    st.subheader("🧮 Configure Portfolio")
+    st.subheader("Configure Portfolio")
     eq_tickers = st.text_input("Equity Tickers (comma-separated)", value="AAPL, MSFT").split(",")
     eq_weights = st.text_input("Equity Weights (comma-separated)", value="0.5, 0.5").split(",")
     bond_tickers = st.text_input("Bond Tickers (FRED codes, comma-separated)", value="DGS10").split(",")
@@ -145,7 +145,7 @@ if mode == "Portfolio (Equity + Bonds) (Variance-Covariance)":
                                     maturity=maturity)
 
 
-        with st.expander("📉 Portfolio VaR Results"):
+        with st.expander("Portfolio VaR Results"):
             st.write(f"1-Day Portfolio VaR ({int(confidence * 100)}%): ${results['var_portfolio']:.2f}")
             st.write(f"Sum of Weighted Individual VaRs: ${results['weighted_var_sum']:.2f}")
             f"Portfolio Daily Volatility: {results['volatility']:.4%} (daily std of log returns)"
@@ -154,7 +154,7 @@ if mode == "Portfolio (Equity + Bonds) (Variance-Covariance)":
             return_df = results['return_df']
             asset_names = results['asset_names']
     
-        with st.expander("🧪 Diagnostics & Visuals"):
+        with st.expander("Diagnostics & Visuals"):
 
             # Individual return histograms (log returns)
             fig_hists = plot_individual_distributions(return_df[asset_names])
@@ -174,7 +174,7 @@ if mode == "Portfolio (Equity + Bonds) (Variance-Covariance)":
             
 
 elif mode == "Multiple Assets (Monte Carlo)":
-    st.header("🌺 Monte Carlo Portfolio VaR")
+    st.header("Monte Carlo Portfolio VaR")
     tickers = st.text_input("Tickers (comma-separated)", "GLD,TLT,SPY,EURUSD=X").split(',')
     weights_str = st.text_input("Weights (comma-separated)", "0.25,0.25,0.25,0.25")
     weights = list(map(float, weights_str.split(',')))
@@ -204,7 +204,7 @@ elif mode == "Multiple Assets (Monte Carlo)":
                 num_simulations=sims,
                 confidence_level=confidence
             )
-            with st.expander("📉 Portfolio VaR Results"):
+            with st.expander("Portfolio VaR Results"):
                 st.write(f"Monte Carlo VaR: ${results['VaR_dollar']:,.2f} ({results['VaR_pct']:.4%})")
                 st.write(f"Exceedances: {results['num_exceedances']} ({results['exceedance_pct']:.2f}%)")
         
