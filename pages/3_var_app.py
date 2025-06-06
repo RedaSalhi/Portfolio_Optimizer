@@ -92,16 +92,17 @@ elif mode == "One Asset (Fixed Income)":
                 st.write(f"🔹 Yield Volatility (bps): {res['vol_bps']:.4f}")
                 st.write(f"🔹 1-Day VaR ({int(confidence * 100)}%): ${res['VaR']:.2f}")
                 st.write(f"🔹 Exceedances: {res['exceedances']} ({res['exceedance_pct']:.2f}%)")
-
-                # Plot yield changes histogram
-                fig1 = plot_yield_change_distribution(pd.DataFrame({
-                    'Yield_Change_bps': res['yield_changes']
-                }))
-                st.pyplot(fig1)
-    
-                # Plot PnL vs VaR line
-                fig2 = plot_pnl_vs_var(res['df'], res['VaR'], confidence)
-                st.pyplot(fig2)
+                col1, col2 = st.columns([1, 1])
+                with col1:
+                    # Plot yield changes histogram
+                    fig1 = plot_yield_change_distribution(pd.DataFrame({
+                        'Yield_Change_bps': res['yield_changes']
+                    }))
+                    st.pyplot(fig1)
+                with col2:
+                    # Plot PnL vs VaR line
+                    fig2 = plot_pnl_vs_var(res['df'], res['VaR'], confidence)
+                    st.pyplot(fig2)
 
 
 
