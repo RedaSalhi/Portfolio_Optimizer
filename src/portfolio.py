@@ -48,7 +48,8 @@ def compute_portfolio_var(normal_assets, normal_weights,
         # Volatility and VaR
         sigma_bps = yield_change.std()
         var = -pv01 * sigma_bps * z * exposure
-        total_fi_var += var
+        total_fi_var += float(var)  # Force scalar
+
 
         # Compute P&L
         pnl_fi[ticker] = -pv01 * yield_change * exposure
@@ -60,16 +61,17 @@ def compute_portfolio_var(normal_assets, normal_weights,
     port_std = np.sqrt(port_var)
     var_normal = -z * port_std * portfolio_value * (1 - total_fixed_weight)
 
-    total_var = var_normal + total_fi_var
-
+    total_var = float(var_normal + total_fi_var)
+                            
     # --- Total PnL ---
     weighted_returns = returns @ weights
     simple_returns = np.exp(weighted_returns) - 1
     pnl_normal = simple_returns * (1 - total_fixed_weight) * portfolio_value
     pnl_total = pnl_normal + pnl_fi.sum(axis=1)
-
+    
     pnl_df = pd.DataFrame({'PnL': pnl_total})
-    pnl_df['VaR_Breach'] = pnl_df['PnL'] < -total_var
+    pnl_df['VaR_Breach'] = pnl_df['PnL'] < -total_var  # this now works safely
+
 
     num_exceedances = pnl_df['VaR_Breach'].sum()
     total_days = len(pnl_df)
