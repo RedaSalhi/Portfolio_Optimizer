@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 # -------------------------------
 # Core Computation Function
 # -------------------------------
-def compute_parametric_var_multi(tickers, confidence_level=0.95, position_size=1_000_000):
+def compute_parametric_var(tickers, confidence_level=0.95, position_size=1_000_000):
     """
     Computes 1-day parametric VaR for one or more equity tickers based on historical returns.
     
