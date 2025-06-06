@@ -7,13 +7,20 @@ from src.monte_carlo import compute_monte_carlo_var, plot_simulated_returns, plo
 st.set_page_config(page_title="Value at Risk App", layout="wide")
 st.title("📊 Value at Risk Interactive App")
 
-st.sidebar.header("Choose VaR Setup")
-mode = st.sidebar.radio("Do you want to test:", [
+st.markdown("### Select a VaR scenario to analyze:")
+mode = st.selectbox("Choose a VaR model type:", [
+    "Do you want to test:",
     "One Asset (Parametric)",
     "One Asset (Fixed Income)",
     "Multiple Assets (Variance-Covariance)",
     "Multiple Assets (Monte Carlo)"
 ])
+
+
+# Routing after 'Continue' is clicked
+mode = st.session_state.get("selected_mode", None)
+
+
 
 if mode == "One Asset (Parametric)":
     st.header("🔢 Parametric VaR for One Asset")
