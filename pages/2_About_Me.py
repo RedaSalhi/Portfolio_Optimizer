@@ -67,9 +67,9 @@ with st.container():
     st.markdown('<div class="section">', unsafe_allow_html=True)
     st.markdown("""
     **SALHI Reda**  
-    Engineering student at **Centrale Méditerranée**  
-    Passionate about **mathematics**, **financial markets**, and **economic research**.  
-    I also enjoy international backpacking: France, Germany, Switzerland, Czech Republic, Spain, Malta, Portugal, United Kingdom, etc.
+    - Engineering student at **Centrale Méditerranée**  
+    - Passionate about **mathematics**, **financial markets**, and **economic research**.  
+    - I also enjoy international backpacking: France, Germany, Switzerland, Czech Republic, Spain, Malta, Portugal, United Kingdom, etc.
     """)
     st.markdown('</div>', unsafe_allow_html=True)
 
