@@ -151,24 +151,33 @@ elif mode == "One Asset (Fixed Income)":
 
     st.markdown('<div class="section-title">Fixed Income VaR using PV01 Approximation</div>', unsafe_allow_html=True)
 
-    st.markdown("### 📄 Define Bond Instruments")
+    st.markdown("### Define Bond Instruments")
 
     num_bonds = st.number_input("Number of Bonds", min_value=1, max_value=5, value=1, step=1)
     bond_tickers = []
 
     for i in range(num_bonds):
         st.markdown('<div class="asset-box">', unsafe_allow_html=True)
-        ticker = st.text_input(f"Bond Yield Ticker {i + 1}", value=f"DGS10" if i == 0 else "", key=f"bond_ticker_{i}")
+        
+        if i == 0:
+            default_value = "DGS10"
+        elif i == 1:
+            default_value = "^IRX"
+        else:
+            default_value = ""
+        
+        ticker = st.text_input(f"Bond Yield Ticker {i + 1}", value=default_value, key=f"bond_ticker_{i}")
         bond_tickers.append(ticker.strip().upper())
+
         st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown("### ⚙️ Analysis Parameters")
+    st.markdown("### Analysis Parameters")
 
-    maturity = st.number_input("📅 Bond Maturity (Years)", min_value=1, max_value=30, value=10)
-    position = st.number_input("💰 Position Size ($)", value=100, step=100)
-    confidence = st.slider("📉 Confidence Level", 0.90, 0.99, 0.95)
+    maturity = st.number_input("Bond Maturity (Years)", min_value=1, max_value=30, value=10)
+    position = st.number_input("Position Size ($)", value=100, step=100)
+    confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95)
 
-    if st.button("🚀 Run Fixed Income VaR"):
+    if st.button("Run Fixed Income VaR"):
         results = compute_fixed_income_var(
             bond_tickers,
             maturity=maturity,
