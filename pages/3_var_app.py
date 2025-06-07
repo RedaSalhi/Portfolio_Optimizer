@@ -208,7 +208,7 @@ if mode == "Portfolio (Equity + Bonds) (Variance-Covariance)":
             eq_weight = st.number_input(f"Weight (%)", min_value=0.0, max_value=100.0, value=100.0/num_eq, step=1.0, key=f"eq_weight_{i}")
         st.markdown('</div>', unsafe_allow_html=True)
         eq_tickers.append(eq_ticker)
-        eq_weights.append(eq_weight / 100)  # Convert to decimal
+        eq_weights.append(eq_weight / 200)  # Convert to decimal
 
     st.markdown("### Configure Bond Holdings")
 
@@ -224,7 +224,7 @@ if mode == "Portfolio (Equity + Bonds) (Variance-Covariance)":
             bond_weight = st.number_input(f"Weight (%)", min_value=0.0, max_value=100.0, value=100.0/num_bond, step=1.0, key=f"bond_weight_{i}")
         st.markdown('</div>', unsafe_allow_html=True)
         bond_tickers.append(bond_ticker)
-        bond_weights.append(bond_weight / 100)
+        bond_weights.append(bond_weight / 200)
 
     total_weight = sum(eq_weights) + sum(bond_weights)
     if abs(total_weight - 1.0) > 0.01:
