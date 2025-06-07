@@ -153,7 +153,7 @@ elif mode == "One Asset (Fixed Income)":
 
     st.markdown("### Define Bond Instruments")
 
-    num_bonds = st.number_input("Number of Bonds", min_value=1, max_value=50, value=1, step=1)
+    num_bonds = st.number_input("Number of Bonds", min_value=1, value=2, step=1)
     bond_tickers = []
 
     for i in range(num_bonds):
@@ -245,8 +245,8 @@ if mode == "Portfolio (Equity + Bonds) (Variance-Covariance)":
 
     st.markdown("### Configure Equity Holdings")
 
-    num_eq = st.number_input("Number of Equity Assets", min_value=1, max_value=10, value=2, step=1)
-    num_bond = st.number_input("Number of Bond Instruments", min_value=1, max_value=10, value=1, step=1)
+    num_eq = st.number_input("Number of Equity Assets", min_value=1, value=2, step=1)
+    num_bond = st.number_input("Number of Bond Instruments", min_value=0, value=1, step=1)
     
     total_assets = num_eq + num_bond
     default_weight = 100.0 / total_assets if total_assets > 0 else 0
