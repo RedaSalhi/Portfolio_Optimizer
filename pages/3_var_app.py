@@ -130,14 +130,20 @@ if mode == "One Asset (Parametric)":
 
     for i in range(num_assets):
         st.markdown('<div class="asset-box">', unsafe_allow_html=True)
-        ticker = st.text_input(f"Stock Ticker {i + 1}", value=f"AAPL" if i == 0 else "", key=f"param_ticker_{i}").upper()
+        if i==0:
+            default_value = "AAPL"
+        elif i==1:
+            default_value = "MSFT"
+        else:
+            default_value = ""
+        ticker = st.text_input(f"Stock Ticker {i + 1}", value= default_value, key=f"param_ticker_{i}").upper()
         tickers.append(ticker.strip())
         st.markdown('</div>', unsafe_allow_html=True)
 
-    position = st.number_input("💰 Position Size per Asset ($)", value=100)
-    confidence = st.slider("📉 Confidence Level", 0.90, 0.99, 0.95)
+    position = st.number_input("Position Size per Asset ($)", value=100)
+    confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95)
 
-    if st.button("🚀 Run VaR Analysis"):
+    if st.button("Run VaR Analysis"):
         results = compute_parametric_var(tickers, confidence_level=confidence, position_size=position)
 
         for res in results:
@@ -146,7 +152,7 @@ if mode == "One Asset (Parametric)":
                     st.error(f"{res['ticker']}: {res['error']}")
                     continue
 
-                st.success(f"✅ 1-Day VaR ({int(confidence * 100)}%): **${res['VaR']:.2f}**")
+                st.success(f"1-Day VaR ({int(confidence * 100)}%): **${res['VaR']:.2f}**")
                 st.write(f"Volatility: `{res['daily_volatility']:.4%}`")
                 st.write(f"Exceedances: `{res['num_exceedances']}` ({res['exceedance_pct']:.2f}%)")
 
