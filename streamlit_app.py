@@ -52,18 +52,22 @@ st.markdown("""
 st.markdown('<div class="main-title">Modern Portfolio Theory & Value-at-Risk</div>', unsafe_allow_html=True)
 st.markdown('<div class="subtitle">Explore tools and concepts below</div>', unsafe_allow_html=True)
 
-# Three-column layout with color-themed buttons
-col1, col2, col3 = st.columns([1, 1, 1])
+# Four-column layout
+col1, col2, col3, col4 = st.columns(4)
 
 with col1:
-    if st.button("📊 Portfolio Optimizer", use_container_width=True):
+    if st.button("Portfolio Optimizer", use_container_width=True):
         st.switch_page("pages/1_Portfolio_Optimizer.py")
 
 with col2:
-    if st.button("👤 About Me", use_container_width=True):
+    if st.button("About Me", use_container_width=True):
         st.switch_page("pages/2_About_Me.py")
 
 with col3:
-    if st.button("📉 Value-at-Risk", use_container_width=True):
+    if st.button("Value-at-Risk", use_container_width=True):
         st.switch_page("pages/3_var_app.py")
+
+with col4:
+    if st.button("Bibliography", use_container_width=True):
+        st.switch_page("pages/4_Bibliography.py")
 
