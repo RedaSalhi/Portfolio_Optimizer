@@ -34,7 +34,7 @@ Here are some of the key references and sources used in this project:
 st.markdown("---")
 st.subheader("📘 In-Depth Project Paper")
 
-st.markdown("""
+st.markdown("
 This project is based on a research paper written by **SALHI Reda** exploring Value at Risk (VaR) estimation across multiple asset classes.
 
 It includes:
@@ -44,15 +44,8 @@ It includes:
 - Full backtesting, diagnostics, and visualizations
 
 You can download the full paper below:
-""")
+")
 
-with open("assets/Value_at_Risk.pdf", "rb") as pdf_file:
-    st.download_button(
-        label="📄 Download Full Research PDF",
-        data=pdf_file,
-        file_name="assets/Value_at_Risk.pdf",
-        mime="application/pdf"
-    )
 
 
 ### Data Sources
