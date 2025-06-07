@@ -197,47 +197,54 @@ if mode == "Portfolio (Equity + Bonds) (Variance-Covariance)":
     st.markdown("### Configure Equity Holdings")
 
     num_eq = st.number_input("Number of Equity Assets", min_value=1, max_value=10, value=2, step=1)
+    num_bond = st.number_input("Number of Bond Instruments", min_value=1, max_value=10, value=1, step=1)
+    
+    total_assets = num_eq + num_bond
+    default_weight = 100.0 / total_assets if total_assets > 0 else 0
+    
     eq_tickers, eq_weights = [], []
-
+    st.markdown("### 🧮 Configure Equity Holdings")
     for i in range(num_eq):
         st.markdown('<div class="asset-box">', unsafe_allow_html=True)
         col1, col2 = st.columns([2, 1])
         with col1:
             eq_ticker = st.text_input(f"Equity Ticker {i+1}", key=f"eq_ticker_{i}").upper()
         with col2:
-            eq_weight = st.number_input(f"Weight (%)", min_value=0.0, max_value=100.0, value=100.0/num_eq, step=1.0, key=f"eq_weight_{i}")
+            eq_weight = st.number_input(f"Weight (%)", min_value=0.0, max_value=100.0,
+                                        value=default_weight, step=1.0, key=f"eq_weight_{i}")
         st.markdown('</div>', unsafe_allow_html=True)
         eq_tickers.append(eq_ticker)
-        eq_weights.append(eq_weight / 100)  # Convert to decimal
-
-    st.markdown("### Configure Bond Holdings")
-
-    num_bond = st.number_input("Number of Bond Instruments", min_value=1, max_value=10, value=1, step=1)
+        eq_weights.append(eq_weight / 100)
+    
     bond_tickers, bond_weights = [], []
-
+    st.markdown("### 🏦 Configure Bond Holdings")
     for i in range(num_bond):
         st.markdown('<div class="asset-box">', unsafe_allow_html=True)
         col1, col2 = st.columns([2, 1])
         with col1:
             bond_ticker = st.text_input(f"Bond Ticker {i+1}", key=f"bond_ticker_{i}").upper()
         with col2:
-            bond_weight = st.number_input(f"Weight (%)", min_value=0.0, max_value=100.0, value=100.0/num_bond, step=1.0, key=f"bond_weight_{i}")
+            bond_weight = st.number_input(f"Weight (%)", min_value=0.0, max_value=100.0,
+                                          value=default_weight, step=1.0, key=f"bond_weight_{i}")
         st.markdown('</div>', unsafe_allow_html=True)
         bond_tickers.append(bond_ticker)
         bond_weights.append(bond_weight / 100)
-
+    
+    # Weight sum validation
     total_eq = sum(eq_weights)
     total_bond = sum(bond_weights)
     total_weight = total_eq + total_bond
     
     st.markdown(f"#### ✅ Total Weight: {total_weight * 100:.2f}%")
     col_eq, col_bond = st.columns(2)
-    col_eq.caption(f"Equity Weight Total: {total_eq * 100:.2f}%")
-    col_bond.caption(f"Bond Weight Total: {total_bond * 100:.2f}%")
+    col_eq.caption(f"Equity Total: {total_eq * 100:.2f}%")
+    col_bond.caption(f"Bond Total: {total_bond * 100:.2f}%")
     
     if abs(total_weight - 1.0) > 0.01:
-        st.error("❌ Total portfolio weights must sum to 100%.")
+        st.error("❌ Total weights must sum to 100%. Adjust your weights accordingly.")
         st.stop()
+
+    
 
 
     st.markdown("### Portfolio Settings")
