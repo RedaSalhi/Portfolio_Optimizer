@@ -42,11 +42,11 @@ if st.button("🔙 Back to Home"):
     st.switch_page("streamlit_app.py")
 
 # Title
-st.markdown('<div class="main-title">📚 Bibliography & Research Paper</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-title">Bibliography & Research Paper</div>', unsafe_allow_html=True)
 
 # Main Bibliography Section
 st.markdown('<div class="section">', unsafe_allow_html=True)
-st.subheader("📘 Key References")
+st.subheader("Key References")
 
 st.markdown("""
 ### Academic Foundations
@@ -61,8 +61,7 @@ st.markdown("""
 
 ### Data Sources
 - **Yahoo Finance API** (via `yfinance`) — Equity & ETF price data
-- **FRED (Federal Reserve Economic Data)** — U.S. Treasury yields
-- **Custom simulation** for Monte Carlo VaR
+- **FRED (Federal Reserve Economic Data)** — Bond yields
 
 ### Tools & Libraries
 - `numpy`, `pandas`, `matplotlib`, `scipy`, `plotly`, `statsmodels`
@@ -85,7 +84,7 @@ with open("assets/Value_at_Risk.pdf", "rb") as pdf_file:
     st.download_button(
         label="📥 Download Value_at_Risk.pdf",
         data=pdf_file,
-        file_name="assets/Value_at_Risk.pdf",
+        file_name="Value_at_Risk.pdf",
         mime="application/pdf"
     )
 
