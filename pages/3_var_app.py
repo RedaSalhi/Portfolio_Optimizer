@@ -1,3 +1,5 @@
+# var_app.py
+
 import streamlit as st
 from src.parametric import compute_parametric_var, plot_return_distribution, plot_pnl_vs_var
 from src.fixed_income import compute_fixed_income_var, plot_yield_change_distribution, plot_pnl_vs_var as plot_fixed_pnl
@@ -5,55 +7,97 @@ from src.portfolio import compute_portfolio_var, plot_correlation_matrix, plot_i
 from src.monte_carlo import compute_monte_carlo_var, plot_simulated_returns, plot_correlation_matrix as plot_mc_corr, plot_monte_carlo_pnl_vs_var
 import pandas as pd
 
+# Page config
 st.set_page_config(page_title="Value at Risk App", layout="wide")
-st.title("Value at Risk Interactive App")
 
-
-if st.button("🔙 Back to Home"):
-    st.switch_page("streamlit_app.py")
-
-
+# Hide sidebar and native headers/footers, add styling
 st.markdown("""
     <style>
         [data-testid="stSidebar"] { display: none !important; }
         header, footer { visibility: hidden; }
-        .center-box {
-            border: 1px solid #DDD;
-            border-radius: 10px;
-            padding: 20px;
+
+        .title {
             text-align: center;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
-            background-color: #f9f9f9;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1f4e79;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-header {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #333;
+            margin-top: 2rem;
+        }
+
+        .button-box {
+            border: 1px solid #DDD;
+            border-radius: 12px;
+            padding: 25px;
+            background-color: #f0f4f8;
+            box-shadow: 2px 2px 6px rgba(0,0,0,0.1);
             transition: all 0.2s ease;
         }
-        .center-box:hover {
+
+        .button-box:hover {
             box-shadow: 3px 3px 10px rgba(0,0,0,0.15);
+        }
+
+        .mode-label {
+            margin-top: 1rem;
+            font-size: 1.1rem;
+            color: #555;
+            text-align: center;
+        }
+
+        .back-button {
+            margin-bottom: 2rem;
         }
     </style>
 """, unsafe_allow_html=True)
 
-# Centralized model selector using columns
-st.markdown("### Select a VaR scenario to analyze:")
-col1, col2 = st.columns([1, 1])
+# Title
+st.markdown('<div class="title">Value at Risk Interactive App</div>', unsafe_allow_html=True)
+
+# Back Button
+with st.container():
+    st.markdown('<div class="back-button">', unsafe_allow_html=True)
+    if st.button("🔙 Back to Home"):
+        st.switch_page("streamlit_app.py")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# Model Selection
+st.markdown('<div class="section-header">Select a VaR scenario to analyze:</div>', unsafe_allow_html=True)
+
+col1, col2 = st.columns(2)
 
 with col1:
-    if st.button("One Asset (Stock)"):
-        st.session_state.selected_mode = "One Asset (Parametric)"
-    if st.button("One Asset (Fixed Income)"): 
-        st.session_state.selected_mode = "One Asset (Fixed Income)"
+    with st.container():
+        with st.container():
+            st.markdown('<div class="button-box">', unsafe_allow_html=True)
+            if st.button("One Asset (Stock)", use_container_width=True):
+                st.session_state.selected_mode = "One Asset (Parametric)"
+            if st.button("One Asset (Fixed Income)", use_container_width=True): 
+                st.session_state.selected_mode = "One Asset (Fixed Income)"
+            st.markdown('</div>', unsafe_allow_html=True)
 
 with col2:
-    if st.button("Portfolio of (Equity + Bonds) Assets (Variance-Covariance)"): 
-        st.session_state.selected_mode = "Portfolio (Equity + Bonds) (Variance-Covariance)"
-    if st.button("Portfolio of Assets (Monte Carlo)"):
-        st.session_state.selected_mode = "Multiple Assets (Monte Carlo)"
+    with st.container():
+        st.markdown('<div class="button-box">', unsafe_allow_html=True)
+        if st.button("Portfolio (Equity + Bonds)", use_container_width=True): 
+            st.session_state.selected_mode = "Portfolio (Equity + Bonds) (Variance-Covariance)"
+        if st.button("Portfolio (Monte Carlo)", use_container_width=True):
+            st.session_state.selected_mode = "Multiple Assets (Monte Carlo)"
+        st.markdown('</div>', unsafe_allow_html=True)
 
-# Get selected mode (persist between reruns)
+# Display selected mode
 mode = st.session_state.get("selected_mode", None)
 
 if mode:
     st.markdown("---")
-    st.subheader(f"📌 Selected: {mode}")
+    st.success(f"📌 Selected Mode: **{mode}**")
+
 
 
 
