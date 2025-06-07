@@ -60,12 +60,12 @@ with col1:
         st.switch_page("pages/1_Portfolio_Optimizer.py")
 
 with col2:
-    if st.button("About Me", use_container_width=True):
-        st.switch_page("pages/2_About_Me.py")
-
-with col3:
     if st.button("Value-at-Risk", use_container_width=True):
         st.switch_page("pages/3_var_app.py")
+
+with col3:
+    if st.button("About Me", use_container_width=True):
+        st.switch_page("pages/2_About_Me.py")
 
 with col4:
     if st.button("Bibliography", use_container_width=True):
