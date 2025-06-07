@@ -102,28 +102,60 @@ if mode:
 
 
 if mode == "One Asset (Parametric)":
-    st.header("Parametric VaR for Stocks")
-    st.subheader("Configure Parameters")
-    tickers_input = st.text_input("Enter Tickers (comma-separated, e.g., AAPL, MSFT, SPY)", value="AAPL, MSFT")
-    position = st.number_input("Position Size per Asset ($)", value=100)
-    confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95)
+    st.markdown("""
+        <style>
+            .section-title {
+                font-size: 1.8rem;
+                font-weight: 700;
+                color: #1f4e79;
+                margin-bottom: 1.2rem;
+                text-align: center;
+            }
 
-    if st.button("Run VaR Analysis"):
-        tickers = [t.strip().upper() for t in tickers_input.split(",")]
+            .asset-box {
+                background-color: #f8f9fa;
+                padding: 1rem 1.5rem;
+                border-radius: 10px;
+                margin-bottom: 1rem;
+                box-shadow: 1px 1px 4px rgba(0,0,0,0.06);
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown('<div class="section-title">Parametric VaR for Stocks</div>', unsafe_allow_html=True)
+    st.markdown("### 📄 Configure Parameters")
+
+    num_assets = st.number_input("Number of Stocks", min_value=1, max_value=10, value=2, step=1)
+    tickers = []
+
+    for i in range(num_assets):
+        st.markdown('<div class="asset-box">', unsafe_allow_html=True)
+        ticker = st.text_input(f"Stock Ticker {i + 1}", value=f"AAPL" if i == 0 else "", key=f"param_ticker_{i}").upper()
+        tickers.append(ticker.strip())
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    position = st.number_input("💰 Position Size per Asset ($)", value=100)
+    confidence = st.slider("📉 Confidence Level", 0.90, 0.99, 0.95)
+
+    if st.button("🚀 Run VaR Analysis"):
         results = compute_parametric_var(tickers, confidence_level=confidence, position_size=position)
+
         for res in results:
-            with st.expander(f"Results for {res['ticker']}"):
+            with st.expander(f"📊 Results for {res['ticker']}"):
                 if 'error' in res:
                     st.error(f"{res['ticker']}: {res['error']}")
                     continue
-                st.write(f"1-Day VaR ({int(confidence * 100)}%): ${res['VaR']:.2f}")
-                st.write(f"Volatility: {res['daily_volatility']:.4%}")
-                st.write(f"Exceedances: {res['num_exceedances']} ({res['exceedance_pct']:.2f}%)")
 
-                col1, col2 = st.columns([1, 1])
+                st.success(f"✅ 1-Day VaR ({int(confidence * 100)}%): **${res['VaR']:.2f}**")
+                st.write(f"Volatility: `{res['daily_volatility']:.4%}`")
+                st.write(f"Exceedances: `{res['num_exceedances']}` ({res['exceedance_pct']:.2f}%)")
+
+                col1, col2 = st.columns(2)
                 with col1:
+                    st.markdown("**Return Distribution**")
                     st.pyplot(plot_return_distribution(res['df']))
-                with col2:  
+                with col2:
+                    st.markdown("**PnL vs. VaR**")
                     st.pyplot(plot_pnl_vs_var(res['df'], res['VaR'], confidence))
 
 
