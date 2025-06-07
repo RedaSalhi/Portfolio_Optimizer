@@ -129,34 +129,74 @@ if mode == "One Asset (Parametric)":
 
 
 elif mode == "One Asset (Fixed Income)":
-    st.header("Fixed Income VaR using PV01 Approximation")
+    st.markdown("""
+        <style>
+            .section-title {
+                font-size: 1.8rem;
+                font-weight: 700;
+                color: #1f4e79;
+                margin-bottom: 1.2rem;
+                text-align: center;
+            }
 
-    st.subheader("Configure Analysis Parameters")
-    tickers = st.text_input("Enter Bond Yield Tickers (comma-separated, e.g., DGS10, DGS2)", value="DGS10")
-    maturity = st.number_input("Bond Maturity (Years)", min_value=1, max_value=30, value=10)
-    position = st.number_input("Position Size ($)", value=100, step=100)
-    confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95)
+            .asset-box {
+                background-color: #f8f9fa;
+                padding: 1rem 1.5rem;
+                border-radius: 10px;
+                margin-bottom: 1rem;
+                box-shadow: 1px 1px 4px rgba(0,0,0,0.06);
+            }
+        </style>
+    """, unsafe_allow_html=True)
 
-    if st.button("Run Fixed Income VaR"):
-        ticker_list = [t.strip() for t in tickers.split(",")]
-        results = compute_fixed_income_var(ticker_list, maturity=maturity, confidence_level=confidence, position_size=position)
+    st.markdown('<div class="section-title">Fixed Income VaR using PV01 Approximation</div>', unsafe_allow_html=True)
+
+    st.markdown("### 📄 Define Bond Instruments")
+
+    num_bonds = st.number_input("Number of Bonds", min_value=1, max_value=5, value=1, step=1)
+    bond_tickers = []
+
+    for i in range(num_bonds):
+        st.markdown('<div class="asset-box">', unsafe_allow_html=True)
+        ticker = st.text_input(f"Bond Yield Ticker {i + 1}", value=f"DGS10" if i == 0 else "", key=f"bond_ticker_{i}")
+        bond_tickers.append(ticker.strip().upper())
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown("### ⚙️ Analysis Parameters")
+
+    maturity = st.number_input("📅 Bond Maturity (Years)", min_value=1, max_value=30, value=10)
+    position = st.number_input("💰 Position Size ($)", value=100, step=100)
+    confidence = st.slider("📉 Confidence Level", 0.90, 0.99, 0.95)
+
+    if st.button("🚀 Run Fixed Income VaR"):
+        results = compute_fixed_income_var(
+            bond_tickers,
+            maturity=maturity,
+            confidence_level=confidence,
+            position_size=position
+        )
+
         for res in results:
-            with st.expander(f"Results for {res['ticker']}"):
-                st.write(f"Latest YTM: {res['ytm']:.4%}")
-                st.write(f"Yield Volatility (bps): {res['vol_bps']:.4f}")
-                st.write(f"1-Day VaR ({int(confidence * 100)}%): ${res['VaR']:.2f}")
-                st.write(f"Exceedances: {res['exceedances']} ({res['exceedance_pct']:.2f}%)")
-                col1, col2 = st.columns([1, 1])
+            with st.expander(f"📊 Results for {res['ticker']}"):
+                st.write(f"Latest YTM: `{res['ytm']:.4%}`")
+                st.write(f"Yield Volatility (bps): `{res['vol_bps']:.4f}`")
+                st.write(f"1-Day VaR ({int(confidence * 100)}%): `${res['VaR']:.2f}`")
+                st.write(f"Exceedances: `{res['exceedances']}` ({res['exceedance_pct']:.2f}%)")
+
+                col1, col2 = st.columns(2)
+
                 with col1:
-                    # Plot yield changes histogram
+                    st.markdown("**Yield Change Distribution**")
                     fig1 = plot_yield_change_distribution(pd.DataFrame({
                         'Yield_Change_bps': res['yield_changes']
                     }))
                     st.pyplot(fig1)
+
                 with col2:
-                    # Plot PnL vs VaR line
+                    st.markdown("**PnL vs. VaR**")
                     fig2 = plot_pnl_vs_var(res['df'], res['VaR'], confidence)
                     st.pyplot(fig2)
+
 
 
 
@@ -333,12 +373,17 @@ elif mode == "Multiple Assets (Monte Carlo)":
         st.stop()
 
     st.markdown("### Simulation Parameters")
-    position = st.number_input("Position Size ($)", value=1000, step=100)
-    sims = st.number_input("Number of Simulations", value=10000, step=1000)
+    position = st.number_input("Position Size ($)", value=100, step=100)
+    sims = st.number_input("Number of Simulations", value=100000, step=1000)
     confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95)
 
     if st.button("Run Analysis"):
-        rate_like = ['^IRX', 'DGS10', 'DGS2', 'DGS30', 'DTB3', 'DTB6', 'DTB12']
+        rate_like = [
+            "^IRX", "DTB3", "DTB6", "DTB12", "DGS1MO", "DGS3MO", "DGS6MO", "DGS1", "DGS2",
+            "DGS3", "DGS5", "DGS7", "DGS10", "DGS20", "DGS30", "FEDFUNDS", "SOFR", "OBFR",
+            "USD3MTD156N", "T5YIE", "T10YIE", "T5YIFR", "DSWP2", "DSWP10"
+        ]
+
         if any(t in rate_like for t in tickers):
             st.info(
                 "ℹ️ Note: Tickers like ‘^IRX‘ or ‘DGS10‘ represent **interest rates**, not tradable asset prices. "
