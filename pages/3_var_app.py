@@ -153,7 +153,7 @@ elif mode == "One Asset (Fixed Income)":
 
     st.markdown("### Define Bond Instruments")
 
-    num_bonds = st.number_input("Number of Bonds", min_value=1, max_value=5, value=1, step=1)
+    num_bonds = st.number_input("Number of Bonds", min_value=1, max_value=50, value=1, step=1)
     bond_tickers = []
 
     for i in range(num_bonds):
