@@ -408,7 +408,7 @@ elif mode == "Multiple Assets (Monte Carlo)":
 
     st.markdown("### Define Portfolio Assets")
 
-    num_assets = st.number_input("Number of Assets", min_value=2, max_value=10, value=4, step=1)
+    num_assets = st.number_input("Number of Assets", min_value=2, value=2, step=1)
 
     tickers, weights = [], []
     for i in range(num_assets):
