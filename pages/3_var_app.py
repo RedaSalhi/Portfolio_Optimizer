@@ -163,57 +163,113 @@ elif mode == "One Asset (Fixed Income)":
 
 
 if mode == "Portfolio (Equity + Bonds) (Variance-Covariance)":
-    st.header("Portfolio Parametric VaR")
+    st.markdown("""
+        <style>
+            .section-title {
+                font-size: 1.8rem;
+                font-weight: 700;
+                color: #1f4e79;
+                margin-bottom: 1.2rem;
+                text-align: center;
+            }
 
-    
-    st.subheader("Configure Portfolio")
-    eq_tickers = st.text_input("Equity Tickers (comma-separated)", value="AAPL, MSFT").split(",")
-    eq_weights = st.text_input("Equity Weights (comma-separated)", value="0.5, 0.5").split(",")
-    bond_tickers = st.text_input("Bond Tickers (FRED/Yahoo Finance codes, comma-separated)", value="DGS10").split(",")
-    bond_weights = st.text_input("Bond Weights (comma-separated)", value="1").split(",")
+            .asset-box {
+                background-color: #f8f9fa;
+                padding: 1rem 1.5rem;
+                border-radius: 10px;
+                margin-bottom: 1rem;
+                box-shadow: 1px 1px 4px rgba(0,0,0,0.06);
+            }
 
-    position = st.number_input("Portfolio Notional Value ($)", value=100)
-    maturity = st.slider("Bond Maturity (Years)", 1, 30, 10)
-    confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95)
+            .error-box {
+                background-color: #ffe0e0;
+                padding: 1rem;
+                border-left: 4px solid #ff4d4d;
+                border-radius: 6px;
+                font-size: 0.95rem;
+                margin-bottom: 1rem;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown('<div class="section-title">Portfolio Parametric VaR</div>', unsafe_allow_html=True)
+
+    st.markdown("### Configure Equity Holdings")
+
+    num_eq = st.number_input("Number of Equity Assets", min_value=1, max_value=10, value=2, step=1)
+    eq_tickers, eq_weights = [], []
+
+    for i in range(num_eq):
+        st.markdown('<div class="asset-box">', unsafe_allow_html=True)
+        col1, col2 = st.columns([2, 1])
+        with col1:
+            eq_ticker = st.text_input(f"Equity Ticker {i+1}", key=f"eq_ticker_{i}").upper()
+        with col2:
+            eq_weight = st.number_input(f"Weight (%)", min_value=0.0, max_value=100.0, value=100.0/num_eq, step=1.0, key=f"eq_weight_{i}")
+        st.markdown('</div>', unsafe_allow_html=True)
+        eq_tickers.append(eq_ticker)
+        eq_weights.append(eq_weight / 100)  # Convert to decimal
+
+    st.markdown("### Configure Bond Holdings")
+
+    num_bond = st.number_input("Number of Bond Instruments", min_value=1, max_value=10, value=1, step=1)
+    bond_tickers, bond_weights = [], []
+
+    for i in range(num_bond):
+        st.markdown('<div class="asset-box">', unsafe_allow_html=True)
+        col1, col2 = st.columns([2, 1])
+        with col1:
+            bond_ticker = st.text_input(f"Bond Ticker {i+1}", key=f"bond_ticker_{i}").upper()
+        with col2:
+            bond_weight = st.number_input(f"Weight (%)", min_value=0.0, max_value=100.0, value=100.0/num_bond, step=1.0, key=f"bond_weight_{i}")
+        st.markdown('</div>', unsafe_allow_html=True)
+        bond_tickers.append(bond_ticker)
+        bond_weights.append(bond_weight / 100)
+
+    total_weight = sum(eq_weights) + sum(bond_weights)
+    if abs(total_weight - 1.0) > 0.01:
+        st.markdown(f'<div class="error-box">❌ Total weights must sum to 100%. Currently: {total_weight*100:.2f}%</div>', unsafe_allow_html=True)
+        st.stop()
+
+    st.markdown("### Portfolio Settings")
+    position = st.number_input("💰 Portfolio Notional Value ($)", value=100)
+    maturity = st.slider("📅 Bond Maturity (Years)", 1, 30, 10)
+    confidence = st.slider("📉 Confidence Level", 0.90, 0.99, 0.95)
 
     if st.button("Run Portfolio VaR"):
-        eq_tickers = [t.strip().upper() for t in eq_tickers]
-        eq_weights = [float(w) for w in eq_weights]
-        bond_tickers = [t.strip().upper() for t in bond_tickers]
-        bond_weights = [float(w) for w in bond_weights]
+        results = compute_portfolio_var(
+            eq_tickers, eq_weights,
+            bond_tickers, bond_weights,
+            confidence_level=confidence,
+            position_size=position,
+            maturity=maturity
+        )
 
-        results = compute_portfolio_var(eq_tickers, eq_weights,
-                                    bond_tickers, bond_weights,
-                                    confidence_level=confidence,
-                                    position_size=position,
-                                    maturity=maturity)
-
-
-        with st.expander("Portfolio VaR Results"):
-            st.write(f"1-Day Portfolio VaR ({int(confidence * 100)}%): ${results['var_portfolio']:.2f}")
-            st.write(f"Sum of Weighted Individual VaRs: ${results['weighted_var_sum']:.2f}")
-            f"Portfolio Daily Volatility: {results['volatility']:.4%} (daily std of log returns)"
+        with st.expander("📊 Portfolio VaR Results", expanded=True):
+            st.success(f"1-Day Portfolio VaR ({int(confidence * 100)}%): **${results['var_portfolio']:.2f}**")
+            st.info(f"Sum of Individual VaRs: **${results['weighted_var_sum']:.2f}**")
+            st.caption(f"Daily Volatility: `{results['volatility']:.4%}`")
             st.write(f"VaR Breaches: {results['exceedances']} ({results['exceedance_pct']:.2f}%)")
-            
-            return_df = results['return_df']
-            asset_names = results['asset_names']
-    
-        with st.expander("Diagnostics & Visuals"):
 
-            # Individual return histograms (log returns)
+        return_df = results['return_df']
+        asset_names = results['asset_names']
+
+        with st.expander("Diagnostics & Visuals", expanded=False):
             fig_hists = plot_individual_distributions(return_df[asset_names])
             st.pyplot(fig_hists)
-            
-            col1, col2 = st.columns([1, 1])
+
+            col1, col2 = st.columns(2)
             with col1:
-                # Correlation matrix (log returns)
                 fig_corr = plot_correlation_matrix(return_df[asset_names])
                 st.pyplot(fig_corr)
             with col2:
-                # Portfolio PnL vs VaR
-                fig_pnl = plot_portfolio_pnl_vs_var(return_df[['PnL', 'VaR_Breach']], results['var_portfolio'], confidence)
+                fig_pnl = plot_portfolio_pnl_vs_var(
+                    return_df[['PnL', 'VaR_Breach']],
+                    results['var_portfolio'],
+                    confidence
+                )
                 st.pyplot(fig_pnl)
-            
+
             
             
 elif mode == "Multiple Assets (Monte Carlo)":
@@ -239,7 +295,7 @@ elif mode == "Multiple Assets (Monte Carlo)":
 
     st.markdown('<div class="section-title">Monte Carlo Portfolio VaR</div>', unsafe_allow_html=True)
 
-    st.markdown("### 🧮 Define Portfolio Assets")
+    st.markdown("### Define Portfolio Assets")
 
     num_assets = st.number_input("Number of Assets", min_value=2, max_value=10, value=4, step=1)
 
@@ -260,12 +316,12 @@ elif mode == "Multiple Assets (Monte Carlo)":
         st.error(f"Total weights must sum to 100%. Currently: {sum(weights)*100:.2f}%")
         st.stop()
 
-    st.markdown("### ⚙️ Simulation Parameters")
-    position = st.number_input("💰 Position Size ($)", value=1000, step=100)
-    sims = st.number_input("🎲 Number of Simulations", value=10000, step=1000)
-    confidence = st.slider("📉 Confidence Level", 0.90, 0.99, 0.95)
+    st.markdown("### Simulation Parameters")
+    position = st.number_input("Position Size ($)", value=1000, step=100)
+    sims = st.number_input("Number of Simulations", value=10000, step=1000)
+    confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95)
 
-    if st.button("🚀 Run Analysis"):
+    if st.button("Run Analysis"):
         rate_like = ['^IRX', 'DGS10', 'DGS2', 'DGS30', 'DTB3', 'DTB6', 'DTB12']
         if any(t in rate_like for t in tickers):
             st.info(
