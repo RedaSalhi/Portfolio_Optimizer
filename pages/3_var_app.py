@@ -216,31 +216,60 @@ if mode == "Portfolio (Equity + Bonds) (Variance-Covariance)":
             
             
             
-
 elif mode == "Multiple Assets (Monte Carlo)":
-    st.header("Monte Carlo Portfolio VaR")
-    tickers = st.text_input("Tickers (comma-separated)", "GLD,TLT,SPY,EURUSD=X").split(',')
-    weights_str = st.text_input("Weights (comma-separated)", "0.25,0.25,0.25,0.25")
-    weights = list(map(float, weights_str.split(',')))
-    position = st.number_input("Position Size ($)", value=100, step=100)
+    st.markdown("""
+        <style>
+            .section-title {
+                font-size: 1.8rem;
+                font-weight: 700;
+                color: #1f4e79;
+                margin-bottom: 1.2rem;
+                text-align: center;
+            }
 
-    if len(tickers) != len(weights):
-        st.error("The number of tickers must match the number of weights.")
+            .asset-box {
+                background-color: #f8f9fa;
+                padding: 1rem 1.5rem;
+                border-radius: 10px;
+                margin-bottom: 1rem;
+                box-shadow: 1px 1px 4px rgba(0,0,0,0.06);
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown('<div class="section-title">Monte Carlo Portfolio VaR</div>', unsafe_allow_html=True)
+
+    st.markdown("### 🧮 Define Portfolio Assets")
+
+    num_assets = st.number_input("Number of Assets", min_value=2, max_value=10, value=4, step=1)
+
+    tickers, weights = [], []
+    for i in range(num_assets):
+        with st.container():
+            st.markdown('<div class="asset-box">', unsafe_allow_html=True)
+            col1, col2 = st.columns([2, 1])
+            with col1:
+                ticker = st.text_input(f"Ticker {i + 1}", key=f"ticker_{i}").upper()
+            with col2:
+                weight = st.number_input(f"Weight (%)", min_value=0.0, max_value=100.0, value=100.0 / num_assets, step=1.0, key=f"weight_{i}")
+            st.markdown('</div>', unsafe_allow_html=True)
+            tickers.append(ticker)
+            weights.append(weight / 100)  # Convert to decimals
+
+    if abs(sum(weights) - 1.0) > 0.01:
+        st.error(f"Total weights must sum to 100%. Currently: {sum(weights)*100:.2f}%")
         st.stop()
-    
-    sims = st.number_input("Number of Simulations", value=10_000)
-    confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95)
 
-    if st.button("Run Analysis"):
-        # Warn if rates might be incorrectly included
+    st.markdown("### ⚙️ Simulation Parameters")
+    position = st.number_input("💰 Position Size ($)", value=1000, step=100)
+    sims = st.number_input("🎲 Number of Simulations", value=10000, step=1000)
+    confidence = st.slider("📉 Confidence Level", 0.90, 0.99, 0.95)
+
+    if st.button("🚀 Run Analysis"):
         rate_like = ['^IRX', 'DGS10', 'DGS2', 'DGS30', 'DTB3', 'DTB6', 'DTB12']
-        if any(ticker.strip().upper() in rate_like for ticker in tickers):
-            st.info(
-                "ℹ️ Note: Tickers like `^IRX` or `DGS10` represent **interest rates**, not tradable asset prices. "
-                "Monte Carlo VaR simulates price-based returns, so rates should not be included directly as assets. "
-                "Consider using bond ETFs (like `SHV`, `BIL`, `TLT`) instead."
-            )
-        else: 
+        if any(t in rate_like for t in tickers):
+            st.warning("Some tickers look like interest rates (e.g., ^IRX). Use bond ETFs instead.")
+        else:
             results = compute_monte_carlo_var(
                 tickers=tickers,
                 weights=weights,
@@ -248,19 +277,19 @@ elif mode == "Multiple Assets (Monte Carlo)":
                 num_simulations=sims,
                 confidence_level=confidence
             )
-            with st.expander("Portfolio VaR Results"):
 
-                st.write(f"Monte Carlo VaR: ${results['VaR_dollar']:,.2f} ({results['VaR_pct']:.4%})")
-                st.write(f"Exceedances: {results['num_exceedances']} ({results['exceedance_pct']:.2f}%)")
+            with st.expander("📊 Portfolio VaR Results", expanded=True):
+                st.success(f"Monte Carlo VaR: ${results['VaR_dollar']:,.2f} ({results['VaR_pct']:.4%})")
+                st.info(f"Exceedances: {results['num_exceedances']} ({results['exceedance_pct']:.2f}%)")
 
-                col1, col2, col3 = st.columns([1, 1, 1])
+                col1, col2, col3 = st.columns(3)
                 with col1:
                     st.pyplot(plot_simulated_returns(results['simulated_returns'], results['VaR_pct'], confidence))
                 with col2:
                     st.pyplot(plot_mc_corr(results['returns']))
                 with col3:
                     st.pyplot(plot_monte_carlo_pnl_vs_var(results['pnl_df'], results['VaR_dollar'], confidence))
-                
+
         
                 
                 
