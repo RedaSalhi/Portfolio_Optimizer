@@ -34,7 +34,6 @@ Here are some of the key references and sources used in this project:
 ### Data Sources
 - Yahoo Finance via `yfinance`
 - FRED Economic Data (Federal Reserve)
-- US Treasury Yield Curves
 
 ### Python Libraries
 - `numpy`, `pandas`, `scipy`, `matplotlib`, `plotly`
