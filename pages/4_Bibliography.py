@@ -46,11 +46,11 @@ It includes:
 You can download the full paper below:
 """)
 
-with open("Value_at_Risk.pdf", "rb") as pdf_file:
+with open("assets/Value_at_Risk.pdf", "rb") as pdf_file:
     st.download_button(
         label="📄 Download Full Research PDF",
         data=pdf_file,
-        file_name="Value_at_Risk.pdf",
+        file_name="assets/Value_at_Risk.pdf",
         mime="application/pdf"
     )
 
