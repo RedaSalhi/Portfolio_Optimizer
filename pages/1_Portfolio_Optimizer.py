@@ -46,18 +46,18 @@ st.markdown('<div class="main-title">Portfolio Optimizer using Markowitz & CAPM<
 
 # --- Parameters Section ---
 st.markdown('<div class="section">', unsafe_allow_html=True)
-st.subheader("📊 Optimization Parameters")
+st.subheader("Optimization Parameters")
 
-tickers_str = st.text_input("📃 Enter Tickers (comma-separated)", "AAPL, MSFT, GOOG")
+tickers_str = st.text_input("Enter Tickers (comma-separated)", "AAPL, MSFT, GOOG")
 
-st.markdown("**🎯 Optimization Target**")
+st.markdown("**Optimization Target**")
 target_option = st.radio("Choose a target:", ("None", "Target Return", "Target Volatility"))
 
 expected_return_val, expected_std_val = None, None
 if target_option == "Target Return":
-    expected_return_val = st.slider("🎯 Set Target Return", 0.0, 1.0, 0.2, step=0.01)
+    expected_return_val = st.slider("Set Target Return", 0.0, 1.0, 0.2, step=0.01)
 elif target_option == "Target Volatility":
-    expected_std_val = st.slider("📉 Set Target Volatility", 0.0, 1.0, 0.2, step=0.01)
+    expected_std_val = st.slider("Set Target Volatility", 0.0, 1.0, 0.2, step=0.01)
 
 include_risk_free = st.checkbox(
     "Include Risk-Free Asset? (`^IRX` as proxy)", value=True
@@ -68,7 +68,7 @@ use_sp500 = st.checkbox(
 st.markdown('</div>', unsafe_allow_html=True)
 
 # --- Run Optimization ---
-submit = st.button("🚀 Run Optimization")
+submit = st.button("Run Optimization")
 
 if submit:
     tickers = [t.strip().upper() for t in tickers_str.split(',') if t.strip()]
