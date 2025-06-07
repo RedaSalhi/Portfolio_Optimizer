@@ -339,7 +339,7 @@ if mode == "Portfolio (Equity + Bonds) (Variance-Covariance)":
     maturity = st.slider("Bond Maturity (Years)", 1, 30, 10)
     confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95)
 
-    if st.button("Run Portfolio VaR"):
+    if st.button("🚀 Run Portfolio VaR"):
         results = compute_portfolio_var(
             eq_tickers, eq_weights,
             bond_tickers, bond_weights,
@@ -347,31 +347,39 @@ if mode == "Portfolio (Equity + Bonds) (Variance-Covariance)":
             position_size=position,
             maturity=maturity
         )
-
+    
+        # === Portfolio Results ===
         with st.expander("📊 Portfolio VaR Results", expanded=True):
             st.success(f"1-Day Portfolio VaR ({int(confidence * 100)}%): **${results['var_portfolio']:.2f}**")
             st.info(f"Sum of Individual VaRs: **${results['weighted_var_sum']:.2f}**")
             st.caption(f"Daily Volatility: `{results['volatility']:.4%}`")
-            st.write(f"VaR Breaches: {results['exceedances']} ({results['exceedance_pct']:.2f}%)")
-
+            st.write(f"VaR Breaches: `{results['exceedances']}` ({results['exceedance_pct']:.2f}%)")
+    
         return_df = results['return_df']
         asset_names = results['asset_names']
-
+    
+        # === Diagnostics Section ===
         with st.expander("Diagnostics & Visuals", expanded=False):
+            st.markdown("### Distribution of Returns")
             fig_hists = plot_individual_distributions(return_df[asset_names])
             st.pyplot(fig_hists)
-
+    
             col1, col2 = st.columns(2)
+    
             with col1:
+                st.markdown("### Correlation Matrix")
                 fig_corr = plot_correlation_matrix(return_df[asset_names])
                 st.pyplot(fig_corr)
+    
             with col2:
+                st.markdown("### PnL vs. VaR Breaches")
                 fig_pnl = plot_portfolio_pnl_vs_var(
                     return_df[['PnL', 'VaR_Breach']],
                     results['var_portfolio'],
                     confidence
                 )
                 st.pyplot(fig_pnl)
+
 
             
             
