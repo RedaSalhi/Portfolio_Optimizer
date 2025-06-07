@@ -2,60 +2,47 @@
 
 import streamlit as st
 
-# ✅ Set config FIRST, before any other Streamlit calls
+# Set config FIRST, before any other Streamlit calls
 st.set_page_config(page_title="Home Page", page_icon="📈", layout="centered")
 
-# 🔒 Hide sidebar and default Streamlit elements
+# Custom CSS to hide sidebar and native header/footer
 st.markdown("""
     <style>
         [data-testid="stSidebar"] { display: none !important; }
         header, footer { visibility: hidden; }
-
-        .stButton>button {
-            background-color: #4CAF50;
+        .main-button {
+            padding: 1.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            background-color: #4B8BBE;
             color: white;
-            padding: 0.75em 1.5em;
-            font-size: 1rem;
-            border: none;
             border-radius: 8px;
+            width: 100%;
+            text-align: center;
+            border: none;
             transition: background-color 0.3s ease;
         }
-        .stButton>button:hover {
-            background-color: #45a049;
-            cursor: pointer;
-        }
-
-        .centered-title {
-            text-align: center;
-            font-size: 2.5rem;
-            margin-bottom: 0.25em;
-        }
-
-        .subtitle {
-            text-align: center;
-            font-size: 1.25rem;
-            color: #555;
-            margin-bottom: 2em;
+        .main-button:hover {
+            background-color: #306998;
         }
     </style>
 """, unsafe_allow_html=True)
 
-# 🧠 Title and subtitle
-st.markdown('<div class="centered-title">Modern Portfolio Theory & Value-at-Risk</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitle">Choose a section to continue</div>', unsafe_allow_html=True)
+# Main Title and Intro
+st.markdown("<h1 style='text-align: center;'>Modern Portfolio Theory & Value-at-Risk</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; font-size: 1.1rem;'>Navigate through the sections below:</p>", unsafe_allow_html=True)
 
-# 🔘 Navigation buttons
+# Button layout
 col1, col2, col3 = st.columns([1, 1, 1])
 
 with col1:
-    if st.button("Portfolio Optimizer"):
+    if st.button("📊 Portfolio Optimizer", use_container_width=True):
         st.switch_page("pages/1_Portfolio_Optimizer.py")
 
 with col2:
-    if st.button("About Me"):
+    if st.button("👤 About Me", use_container_width=True):
         st.switch_page("pages/2_About_Me.py")
 
 with col3:
-    if st.button("Value-at-Risk"):
+    if st.button("📉 Value-at-Risk", use_container_width=True):
         st.switch_page("pages/3_var_app.py")
-
