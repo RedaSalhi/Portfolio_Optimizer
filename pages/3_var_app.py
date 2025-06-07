@@ -208,7 +208,7 @@ if mode == "Portfolio (Equity + Bonds) (Variance-Covariance)":
             eq_weight = st.number_input(f"Weight (%)", min_value=0.0, max_value=100.0, value=100.0/num_eq, step=1.0, key=f"eq_weight_{i}")
         st.markdown('</div>', unsafe_allow_html=True)
         eq_tickers.append(eq_ticker)
-        eq_weights.append(eq_weight / 200)  # Convert to decimal
+        eq_weights.append(eq_weight / 100)  # Convert to decimal
 
     st.markdown("### Configure Bond Holdings")
 
@@ -224,12 +224,21 @@ if mode == "Portfolio (Equity + Bonds) (Variance-Covariance)":
             bond_weight = st.number_input(f"Weight (%)", min_value=0.0, max_value=100.0, value=100.0/num_bond, step=1.0, key=f"bond_weight_{i}")
         st.markdown('</div>', unsafe_allow_html=True)
         bond_tickers.append(bond_ticker)
-        bond_weights.append(bond_weight / 200)
+        bond_weights.append(bond_weight / 100)
 
-    total_weight = sum(eq_weights) + sum(bond_weights)
+    total_eq = sum(eq_weights)
+    total_bond = sum(bond_weights)
+    total_weight = total_eq + total_bond
+    
+    st.markdown(f"#### ✅ Total Weight: {total_weight * 100:.2f}%")
+    col_eq, col_bond = st.columns(2)
+    col_eq.caption(f"Equity Weight Total: {total_eq * 100:.2f}%")
+    col_bond.caption(f"Bond Weight Total: {total_bond * 100:.2f}%")
+    
     if abs(total_weight - 1.0) > 0.01:
-        st.markdown(f'<div class="error-box">❌ Total weights must sum to 100%. Currently: {total_weight*100:.2f}%</div>', unsafe_allow_html=True)
+        st.error("❌ Total portfolio weights must sum to 100%.")
         st.stop()
+
 
     st.markdown("### Portfolio Settings")
     position = st.number_input("💰 Portfolio Notional Value ($)", value=100)
