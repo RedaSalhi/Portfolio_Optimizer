@@ -203,7 +203,7 @@ if mode == "Portfolio (Equity + Bonds) (Variance-Covariance)":
     default_weight = 100.0 / total_assets if total_assets > 0 else 0
     
     eq_tickers, eq_weights = [], []
-    st.markdown("### 🧮 Configure Equity Holdings")
+    st.markdown("### Configure Equity Holdings")
     for i in range(num_eq):
         st.markdown('<div class="asset-box">', unsafe_allow_html=True)
         col1, col2 = st.columns([2, 1])
@@ -217,7 +217,7 @@ if mode == "Portfolio (Equity + Bonds) (Variance-Covariance)":
         eq_weights.append(eq_weight / 100)
     
     bond_tickers, bond_weights = [], []
-    st.markdown("### 🏦 Configure Bond Holdings")
+    st.markdown("### Configure Bond Holdings")
     for i in range(num_bond):
         st.markdown('<div class="asset-box">', unsafe_allow_html=True)
         col1, col2 = st.columns([2, 1])
@@ -235,7 +235,7 @@ if mode == "Portfolio (Equity + Bonds) (Variance-Covariance)":
     total_bond = sum(bond_weights)
     total_weight = total_eq + total_bond
     
-    st.markdown(f"#### ✅ Total Weight: {total_weight * 100:.2f}%")
+    st.markdown(f"#### Total Weight: {total_weight * 100:.2f}%")
     col_eq, col_bond = st.columns(2)
     col_eq.caption(f"Equity Total: {total_eq * 100:.2f}%")
     col_bond.caption(f"Bond Total: {total_bond * 100:.2f}%")
@@ -248,9 +248,9 @@ if mode == "Portfolio (Equity + Bonds) (Variance-Covariance)":
 
 
     st.markdown("### Portfolio Settings")
-    position = st.number_input("💰 Portfolio Notional Value ($)", value=100)
-    maturity = st.slider("📅 Bond Maturity (Years)", 1, 30, 10)
-    confidence = st.slider("📉 Confidence Level", 0.90, 0.99, 0.95)
+    position = st.number_input("Portfolio Notional Value ($)", value=100)
+    maturity = st.slider("Bond Maturity (Years)", 1, 30, 10)
+    confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95)
 
     if st.button("Run Portfolio VaR"):
         results = compute_portfolio_var(
