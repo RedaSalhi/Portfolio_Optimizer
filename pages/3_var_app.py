@@ -123,7 +123,7 @@ if mode == "One Asset (Parametric)":
     """, unsafe_allow_html=True)
 
     st.markdown('<div class="section-title">Parametric VaR for Stocks</div>', unsafe_allow_html=True)
-    st.markdown("### 📄 Configure Parameters")
+    st.markdown("### Configure Parameters")
 
     num_assets = st.number_input("Number of Stocks", min_value=1, max_value=10, value=2, step=1)
     tickers = []
