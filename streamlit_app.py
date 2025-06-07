@@ -2,37 +2,57 @@
 
 import streamlit as st
 
-# Set config FIRST, before any other Streamlit calls
+# Page configuration
 st.set_page_config(page_title="Home Page", page_icon="📈", layout="centered")
 
-# Custom CSS to hide sidebar and native header/footer
+# Hide sidebar and native headers/footers
 st.markdown("""
     <style>
         [data-testid="stSidebar"] { display: none !important; }
         header, footer { visibility: hidden; }
-        .main-button {
-            padding: 1.5rem;
-            font-size: 1.1rem;
-            font-weight: 600;
-            background-color: #4B8BBE;
-            color: white;
-            border-radius: 8px;
+
+        .main-title {
+            text-align: center;
+            font-size: 2.5rem;
+            color: #1f4e79;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #555;
+            margin-bottom: 2rem;
+        }
+
+        .custom-button {
+            display: inline-block;
+            padding: 1rem;
             width: 100%;
             text-align: center;
+            background-color: #4B8BBE;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
             border: none;
-            transition: background-color 0.3s ease;
+            border-radius: 10px;
+            transition: background-color 0.3s ease, transform 0.1s ease;
         }
-        .main-button:hover {
+
+        .custom-button:hover {
             background-color: #306998;
+            transform: scale(1.03);
+            cursor: pointer;
         }
     </style>
 """, unsafe_allow_html=True)
 
-# Main Title and Intro
-st.markdown("<h1 style='text-align: center;'>Modern Portfolio Theory & Value-at-Risk</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; font-size: 1.1rem;'>Navigate through the sections below:</p>", unsafe_allow_html=True)
+# Title and description
+st.markdown('<div class="main-title">Modern Portfolio Theory & Value-at-Risk</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle">Explore tools and concepts below</div>', unsafe_allow_html=True)
 
-# Button layout
+# Three-column layout with color-themed buttons
 col1, col2, col3 = st.columns([1, 1, 1])
 
 with col1:
@@ -46,3 +66,4 @@ with col2:
 with col3:
     if st.button("📉 Value-at-Risk", use_container_width=True):
         st.switch_page("pages/3_var_app.py")
+
