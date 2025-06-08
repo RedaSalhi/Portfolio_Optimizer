@@ -7,12 +7,15 @@ import matplotlib.pyplot as plt
 import statsmodels.api as sm
 
 def optimize_portfolio(tickers, expected_return=None, expected_std=None, include_risk_free=False, use_sp500=False):
-    data = yf.download(tickers, start="2018-01-01")['Close']
+    end = datetime.today().date()
+    start = end - timedelta(days=5 * 365)
+    
+    data = yf.download(tickers, start=start, end=end)['Close']
     returns = data.pct_change(fill_method=None).dropna()
     mean_returns = returns.mean() * 252
     cov_matrix = returns.cov() * 252
 
-    irx = yf.download('^IRX', period="5d", interval="1d")['Close'].dropna()
+    irx = yf.download('^IRX', start=start, end=end, period="5d", interval="1d")['Close'].dropna()
     mean_yield = float(irx.mean())
     rf_rate = mean_yield / 100
     if not include_risk_free:
