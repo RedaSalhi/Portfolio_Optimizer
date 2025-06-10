@@ -441,9 +441,9 @@ elif mode == "Multiple Assets (Monte Carlo)":
 
         if any(t in rate_like for t in tickers):
             st.info(
-                "ℹ️ Note: Tickers like ‘^IRX‘ or ‘DGS10‘ represent **interest rates**, not tradable asset prices. "
+                "ℹ️ Note: Tickers like `^IRX` or `DGS10` represent **interest rates**, not tradable asset prices. "
                 "Monte Carlo VaR simulates price-based returns, so rates should not be included directly as assets. "
-                "Consider using bond ETFs (like ‘SHV‘, ‘BIL‘, ‘TLT‘) instead."
+                "Consider using bond ETFs (like `SHV`, `BIL`, `TLT`) instead."
             )
         else:
             results = compute_monte_carlo_var(
