@@ -1613,12 +1613,12 @@ with st.expander(" Debug & Troubleshooting", expanded=False):
                             st.success(f" Basic Test: {message}")
                             
                             # Show raw data structure
-                            with st.expander(" Raw Data Structure", expanded=False):
-                                st.write("**Data Shape:**", raw_data.shape)
-                                st.write("**Columns:**", list(raw_data.columns))
-                                st.write("**Index Type:**", type(raw_data.index).__name__)
-                                st.write("**First few rows:**")
-                                st.dataframe(raw_data.head())
+                            st.markdown(" Raw Data Structure")
+                            st.write("**Data Shape:**", raw_data.shape)
+                            st.write("**Columns:**", list(raw_data.columns))
+                            st.write("**Index Type:**", type(raw_data.index).__name__)
+                            st.write("**First few rows:**")
+                            st.dataframe(raw_data.head())
                             
                             # Now try full extraction test
                             full_success, full_message = test_optimizer.quick_test_ticker(debug_ticker.upper())
@@ -1635,9 +1635,9 @@ with st.expander(" Debug & Troubleshooting", expanded=False):
                         st.error(f" Critical Error: {str(e)}")
                         
                         # Show detailed traceback for debugging
-                        with st.expander(" Error Details", expanded=False):
-                            import traceback
-                            st.code(traceback.format_exc())
+                        st.markdown(" Error Details", expanded=False)
+                        import traceback
+                        st.code(traceback.format_exc())
                             
             else:
                 st.warning("Please enter a ticker symbol")
