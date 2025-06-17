@@ -1157,7 +1157,6 @@ with col1:
     st.markdown('</div>', unsafe_allow_html=True)
 
 with col2:
-    st.markdown('<div class="danger-button">', unsafe_allow_html=True)
     if st.button("Clear Results", help="Clear current optimization results", use_container_width=True, type="secondary"):
         # Clear all session state
         for key in ['optimizer', 'optimization_results', 'data_fetched']:
