@@ -1034,13 +1034,13 @@ with col1:
                             st.markdown("""
                             **Possible issues and solutions:**
                             
-                            📊 **Target too aggressive:** Try more realistic return/risk targets
+                            **Target too aggressive:** Try more realistic return/risk targets
                             
-                            ⚖️ **Constraint conflicts:** Check min/max weight constraints
+                            **Constraint conflicts:** Check min/max weight constraints
                             
-                            📈 **Market data issues:** Some assets may have insufficient data
+                            **Market data issues:** Some assets may have insufficient data
                             
-                            🔄 **Try different method:** Switch to Maximum Sharpe or Minimum Variance
+                            **Try different method:** Switch to Maximum Sharpe or Minimum Variance
                             """)
                         
             except Exception as e:
@@ -1165,11 +1165,11 @@ if st.session_state.optimization_results and st.session_state.optimizer:
     
     # Enhanced Tabbed Results Display
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "📊 Portfolio Composition",
-        "📈 Efficient Frontier", 
-        "⚠️ Risk Analysis",
-        "📈 Performance Analytics",
-        "📊 CAPM Analysis"
+        "Portfolio Composition",
+        "Efficient Frontier", 
+        "Risk Analysis",
+        "Performance Analytics",
+        "CAPM Analysis"
     ])
 
     # Add custom CSS for tab styling
