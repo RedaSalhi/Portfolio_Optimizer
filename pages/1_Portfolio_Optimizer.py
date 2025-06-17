@@ -1006,7 +1006,8 @@ with col1:
                             target_return=target_return,
                             target_volatility=target_volatility,
                             min_weight=min_weight,
-                            max_weight=max_weight
+                            max_weight=max_weight,
+                            include_risk_free=include_rf 
                         )
                     
                     if result['success']:
