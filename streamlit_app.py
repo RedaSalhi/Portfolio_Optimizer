@@ -302,7 +302,7 @@ with col2:
 with col3:
     st.markdown('<div class="back-button">', unsafe_allow_html=True)
     if st.button("About me"):
-        st.switch_page("2_About_Me.py")
+        st.switch_page("pages/2_About_Me.py")
     st.markdown('</div>', unsafe_allow_html=True)
 with col4:
     st.markdown('<div class="back-button">', unsafe_allow_html=True)
