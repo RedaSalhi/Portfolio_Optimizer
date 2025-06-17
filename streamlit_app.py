@@ -5,7 +5,7 @@ import streamlit as st
 # Page configuration
 st.set_page_config(
     page_title="QuantRisk Analytics", 
-    page_icon="📊", 
+    page_icon="", 
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -318,7 +318,7 @@ col1, col2 = st.columns(2)
 with col1:
     st.markdown("""
         <div class="feature-card">
-            <span class="card-icon">📈</span>
+            <span class="card-icon"></span>
             <div class="card-title">Portfolio Optimizer</div>
             <div class="card-description">
                 Implement Markowitz Modern Portfolio Theory with CAPM analysis for optimal asset allocation.
@@ -334,7 +334,7 @@ with col1:
     
     st.markdown("""
         <div class="feature-card">
-            <span class="card-icon">🎓</span>
+            <span class="card-icon"></span>
             <div class="card-title">Academic Research</div>
             <div class="card-description">
                 Access comprehensive documentation and research papers backing every financial model.
@@ -351,7 +351,7 @@ with col1:
 with col2:
     st.markdown("""
         <div class="feature-card">
-            <span class="card-icon">⚡</span>
+            <span class="card-icon"></span>
             <div class="card-title">Value-at-Risk Engine</div>
             <div class="card-description">
                 Comprehensive risk assessment using multiple VaR methodologies for robust risk management.
@@ -367,7 +367,7 @@ with col2:
     
     st.markdown("""
         <div class="feature-card">
-            <span class="card-icon">👨‍💼</span>
+            <span class="card-icon"></span>
             <div class="card-title">About the Developer</div>
             <div class="card-description">
                 Learn about the financial engineering expertise and academic background behind this platform.
