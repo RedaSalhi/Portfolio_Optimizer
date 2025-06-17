@@ -3,140 +3,82 @@
 import streamlit as st
 import plotly.graph_objects as go
 import numpy as np
+import pandas as pd
 from optimizer import (
-    optimize_portfolio_advanced,
-    create_interactive_efficient_frontier,
-    create_3d_risk_return_time_surface,
-    create_portfolio_composition_sunburst,
-    create_risk_attribution_dashboard,
-    create_performance_attribution_dashboard
+    PortfolioOptimizer,
+    create_efficient_frontier_plot,
+    create_portfolio_composition_chart,
+    create_risk_return_scatter,
+    create_correlation_heatmap,
+    create_performance_chart
 )
 
 # Set page configuration
-st.set_page_config(page_title="Advanced Portfolio Optimizer", layout="wide", page_icon="📈")
+st.set_page_config(
+    page_title="Advanced Portfolio Optimizer", 
+    layout="wide", 
+    page_icon="📈"
+)
 
 # Enhanced CSS styling
 st.markdown("""
     <style>
-        [data-testid="stSidebar"] { display: none !important; }
+        [data-testid="stSidebar"] { displa    if show_capm:
+        with st.expander("📊 CAPM Analysis", expanded=False):
+            capm_metrics = optimizer.calculate_capm_metrics()
+            
+            if capm_metrics:
+                capm_data = []
+                for ticker in optimizer.tickers:
+                    if ticker in capm_metrics:
+                        capm_data.append({
+                            'Asset': ticker,
+                            'Beta': f"{capm_metrics[ticker]['beta']:.2f}",
+                            'Alpha': f"{capm_metrics[ticker]['alpha']:.2%}",
+                            'Expected Return (CAPM)': f"{capm_metrics[ticker]['expected_return']:.1%}"
+                        })tant; }
         header, footer { visibility: hidden; }
         .main { padding-top: 1rem; }
 
         /* Hero Section */
         .optimizer-hero {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 3rem 2rem;
+            padding: 2.5rem 2rem;
             border-radius: 20px;
             text-align: center;
             margin-bottom: 2rem;
             color: white;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .optimizer-hero::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
-            transform: rotate(45deg);
-            animation: shine 4s infinite;
-        }
-
-        @keyframes shine {
-            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
         }
         
         .optimizer-hero h1 {
-            font-size: 3.2rem;
+            font-size: 2.8rem;
             font-weight: 800;
             margin-bottom: 0.8rem;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            letter-spacing: -1px;
-            position: relative;
-            z-index: 1;
         }
         
         .optimizer-hero p {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             opacity: 0.9;
             margin-bottom: 1rem;
-            max-width: 700px;
+            max-width: 600px;
             margin-left: auto;
             margin-right: auto;
             line-height: 1.6;
-            position: relative;
-            z-index: 1;
         }
 
-        .hero-features {
-            display: flex;
-            justify-content: center;
-            gap: 2rem;
-            flex-wrap: wrap;
-            margin-top: 2rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        .hero-feature {
-            background: rgba(255,255,255,0.2);
-            padding: 1rem 1.5rem;
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.3);
-        }
-
-        .feature-icon {
-            font-size: 1.5rem;
-            font-weight: 800;
-            display: block;
-        }
-
-        .feature-label {
-            font-size: 0.9rem;
-            opacity: 0.8;
-        }
-
-        /* Configuration Section */
-        .config-section {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 2.5rem;
-            border-radius: 20px;
-            margin: 2rem 0;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.08);
-            border-left: 5px solid #667eea;
-        }
-
-        .config-title {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #2c3e50;
-            margin-bottom: 2rem;
-            text-align: center;
-        }
-
+        /* Configuration Cards */
         .config-card {
             background: white;
             padding: 2rem;
-            border-radius: 16px;
+            border-radius: 15px;
             margin: 1.5rem 0;
             box-shadow: 0 8px 25px rgba(0,0,0,0.08);
-            border-top: 4px solid #667eea;
-            transition: all 0.3s ease;
+            border-left: 4px solid #667eea;
         }
 
-        .config-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 35px rgba(0,0,0,0.12);
-        }
-
-        .card-title {
+        .config-title {
             font-size: 1.3rem;
             font-weight: 600;
             color: #2c3e50;
@@ -153,44 +95,29 @@ st.markdown("""
             border-radius: 20px;
             margin: 2rem 0;
             border-left: 5px solid #27ae60;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
 
-        .results-title {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #2c3e50;
-            margin-bottom: 2rem;
-            text-align: center;
-        }
-
-        /* Method Selection */
-        .method-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin: 1.5rem 0;
-        }
-
-        .method-card {
+        .metric-card {
             background: white;
             padding: 1.5rem;
             border-radius: 12px;
             text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            margin: 0.5rem 0;
         }
 
-        .method-card:hover {
-            transform: translateY(-3px);
-            border-color: #667eea;
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #667eea;
+            display: block;
         }
 
-        .method-card.selected {
-            border-color: #667eea;
-            background: linear-gradient(135deg, #f8f9ff 0%, #e8f0ff 100%);
+        .metric-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
         }
 
         /* Buttons */
@@ -198,457 +125,600 @@ st.markdown("""
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 1rem 2.5rem;
-            border-radius: 12px;
+            padding: 0.8rem 2rem;
+            border-radius: 10px;
             font-weight: 600;
-            font-size: 1.1rem;
+            font-size: 1rem;
             transition: all 0.3s ease;
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
             width: 100%;
         }
         
         .stButton > button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        }
+
+        /* Back Button */
+        .back-button .stButton > button {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+            width: auto;
+            padding: 0.8rem 1.5rem;
         }
 
         /* Chart containers */
         .chart-container {
             background: white;
-            padding: 2rem;
-            border-radius: 16px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
-            margin: 2rem 0;
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+            margin: 1rem 0;
         }
 
-        .chart-title {
-            font-size: 1.4rem;
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 1.5rem;
-            text-align: center;
+        /* Success/Error messages */
+        .success-msg {
+            background: #d4edda;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+            margin: 1rem 0;
         }
 
-        /* Tabs styling */
-        .stTabs [data-baseweb="tab-list"] {
-            gap: 24px;
+        .error-msg {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #dc3545;
+            margin: 1rem 0;
         }
 
-        .stTabs [data-baseweb="tab"] {
-            height: 50px;
-            background-color: #f8f9fa;
-            border-radius: 12px;
-            padding: 0 24px;
-            font-weight: 600;
+        .warning-msg {
+            background: #fff3cd;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+            margin: 1rem 0;
         }
 
-        .stTabs [aria-selected="true"] {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .reset-button {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
             color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+            width: 100%;
+            margin-top: 1rem;
+        }
+        
+        .reset-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(231, 76, 60, 0.5);
         }
 
         /* Responsive design */
         @media (max-width: 768px) {
-            .optimizer-hero h1 { font-size: 2.5rem; }
-            .optimizer-hero p { font-size: 1.1rem; }
+            .optimizer-hero h1 { font-size: 2.2rem; }
+            .optimizer-hero p { font-size: 1rem; }
             .config-card { padding: 1.5rem; }
-            .hero-features { gap: 1rem; }
-            .method-grid { grid-template-columns: 1fr; }
         }
     </style>
 """, unsafe_allow_html=True)
 
-# Hero Section
-st.markdown("""
-    <div class="optimizer-hero">
-        <h1>📈 Advanced Portfolio Optimizer</h1>
-        <p>Professional-grade portfolio optimization with interactive analytics and real-time visualization</p>
-        <div class="hero-features">
-            <div class="hero-feature">
-                <span class="feature-icon">🎯</span>
-                <span class="feature-label">Multiple Optimization Methods</span>
-            </div>
-            <div class="hero-feature">
-                <span class="feature-icon">🌐</span>
-                <span class="feature-label">3D Visualizations</span>
-            </div>
-            <div class="hero-feature">
-                <span class="feature-icon">⚡</span>
-                <span class="feature-label">Real-Time Analytics</span>
-            </div>
-            <div class="hero-feature">
-                <span class="feature-icon">🎛️</span>
-                <span class="feature-label">Interactive Dashboards</span>
-            </div>
+# Header with Reset Button
+col1, col2 = st.columns([4, 1])
+with col1:
+    st.markdown("""
+        <div class="optimizer-hero">
+            <h1>📈 Advanced Portfolio Optimizer</h1>
+            <p>Professional portfolio optimization using Modern Portfolio Theory with real-time market data</p>
         </div>
-    </div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
-# Back navigation
+with col2:
+    st.markdown("<br>", unsafe_allow_html=True)  # Add some spacing
+    st.markdown('<div class="reset-button">', unsafe_allow_html=True)
+    if st.button("🔄 Reset", help="Clear all data and start fresh", key="reset_main"):
+        # Clear all session state
+        for key in list(st.session_state.keys()):
+            del st.session_state[key]
+        st.success("✅ Reset complete!")
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# Initialize tickers from session state or as empty list
+tickers = st.session_state.get('tickers', [])
+
+# Initialize show_capm from session state or as False by default
+show_capm = st.session_state.get('show_capm', False)
+
+# Status Indicator
+if st.session_state.get('optimization_results') and st.session_state.get('optimizer'):
+    st.success("🎉 Portfolio optimization active! View results below or use tabs to explore.")
+elif len(tickers) >= 2:
+    st.info("✅ Ready to optimize! Click the 'Optimize Portfolio' button to get started.")
+elif len(tickers) == 1:
+    st.warning("⚠️ Need at least 2 assets for portfolio optimization.")
+else:
+    st.info("💡 Enter 2 or more ticker symbols to begin portfolio optimization.")
+
+# Back Button
+st.markdown('<div class="back-button">', unsafe_allow_html=True)
 if st.button("🔙 Back to Home"):
     st.switch_page("streamlit_app.py")
+st.markdown('</div>', unsafe_allow_html=True)
+
+# Initialize session state
+if 'optimizer' not in st.session_state:
+    st.session_state.optimizer = None
+if 'optimization_results' not in st.session_state:
+    st.session_state.optimization_results = None
 
 # Configuration Section
-st.markdown("""
-    <div class="config-section">
-        <div class="config-title">⚙️ Advanced Portfolio Configuration</div>
-    </div>
-""", unsafe_allow_html=True)
+st.markdown('<div class="config-card">', unsafe_allow_html=True)
+st.markdown('<div class="config-title">🏢 Portfolio Configuration</div>', unsafe_allow_html=True)
 
 # Asset Selection
-st.markdown('<div class="config-card">', unsafe_allow_html=True)
-st.markdown('<div class="card-title">🏢 Asset Universe</div>', unsafe_allow_html=True)
-
 col1, col2 = st.columns([3, 1])
 with col1:
-    tickers_str = st.text_input(
-        "Enter Asset Tickers (comma-separated)", 
+    tickers_input = st.text_input(
+        "Enter stock tickers (comma-separated):",
         value="AAPL, MSFT, GOOG, AMZN, TSLA",
-        help="Enter stock tickers separated by commas"
+        help="Enter 2-10 stock symbols separated by commas"
     )
 with col2:
-    advanced_features = st.checkbox("🔬 Advanced Features", value=True, help="Enable 3D visualizations and advanced analytics")
+    lookback_years = st.selectbox(
+        "Historical data period:",
+        options=[1, 2, 3, 5],
+        index=2,
+        help="Years of historical data for analysis"
+    )
 
-st.markdown('</div>', unsafe_allow_html=True)
+# Parse tickers
+tickers = [t.strip().upper() for t in tickers_input.split(',') if t.strip()]
 
 # Optimization Method Selection
-st.markdown('<div class="config-card">', unsafe_allow_html=True)
-st.markdown('<div class="card-title">🎯 Optimization Method</div>', unsafe_allow_html=True)
+st.markdown("#### 🎯 Optimization Method")
+col1, col2, col3, col4 = st.columns(4)
 
-optimization_methods = {
-    'max_sharpe': '📈 Maximum Sharpe Ratio',
-    'min_variance': '🛡️ Minimum Variance', 
-    'max_return': '🚀 Maximum Return',
-    'target_return': '🎯 Target Return',
-    'target_volatility': '📊 Target Volatility'
-}
+with col1:
+    if st.button("📈 Maximum Sharpe Ratio", help="Optimize for best risk-adjusted return"):
+        st.session_state.opt_method = 'max_sharpe'
 
-selected_method = st.selectbox(
-    "Choose optimization objective:",
-    options=list(optimization_methods.keys()),
-    format_func=lambda x: optimization_methods[x],
-    index=0
-)
+with col2:
+    if st.button("🛡️ Minimum Variance", help="Minimize portfolio risk"):
+        st.session_state.opt_method = 'min_variance'
+
+with col3:
+    if st.button("🎯 Target Return", help="Achieve specific return target"):
+        st.session_state.opt_method = 'target_return'
+
+with col4:
+    if st.button("📊 Target Risk", help="Achieve specific risk level"):
+        st.session_state.opt_method = 'target_volatility'
 
 # Method-specific parameters
-method_params = {}
-if selected_method == 'target_return':
-    method_params['target_return'] = st.slider("🎯 Target Annual Return", 0.0, 0.5, 0.15, step=0.01, format="%.1%")
-elif selected_method == 'target_volatility':
-    method_params['target_volatility'] = st.slider("📊 Target Annual Volatility", 0.05, 0.5, 0.20, step=0.01, format="%.1%")
+opt_method = st.session_state.get('opt_method', 'max_sharpe')
 
-st.markdown('</div>', unsafe_allow_html=True)
+target_return = None
+target_volatility = None
+
+if opt_method == 'target_return':
+    target_return = st.slider(
+        "🎯 Target Annual Return:",
+        min_value=0.05,
+        max_value=0.30,
+        value=0.12,
+        step=0.01,
+        format="%.1%"
+    )
+elif opt_method == 'target_volatility':
+    target_volatility = st.slider(
+        "📊 Target Annual Volatility:",
+        min_value=0.05,
+        max_value=0.40,
+        value=0.15,
+        step=0.01,
+        format="%.1%"
+    )
 
 # Advanced Options
-st.markdown('<div class="config-card">', unsafe_allow_html=True)
-st.markdown('<div class="card-title">🔧 Advanced Options</div>', unsafe_allow_html=True)
-
-col1, col2, col3 = st.columns(3)
-with col1:
-    include_risk_free = st.checkbox("🏦 Include Risk-Free Asset", value=True)
-with col2:
-    use_sp500 = st.checkbox("📊 CAPM Analysis (S&P 500)", value=True)
-with col3:
-    num_portfolios = st.number_input("🎲 Simulations", min_value=1000, max_value=50000, value=25000, step=5000)
-
-# Constraints
-st.markdown("#### 📋 Portfolio Constraints")
-col1, col2 = st.columns(2)
-with col1:
-    max_weight = st.slider("📏 Maximum Asset Weight", 0.1, 1.0, 1.0, step=0.05, format="%.0%")
-with col2:
-    min_weight = st.slider("📐 Minimum Asset Weight", 0.0, 0.2, 0.0, step=0.01, format="%.1%")
-
-constraints = {
-    'max_weight': max_weight,
-    'min_weight': min_weight
-}
+with st.expander("⚙️ Advanced Options", expanded=False):
+    col1, col2 = st.columns(2)
+    with col1:
+        include_rf = st.checkbox("Include Risk-Free Rate", value=True)
+        show_capm = st.checkbox("Show CAPM Analysis", value=True)
+    with col2:
+        efficient_frontier_points = st.slider("Efficient Frontier Points", 50, 500, 100)
+        min_weight = st.slider("Minimum Asset Weight", 0.0, 0.2, 0.0, step=0.01, format="%.1%")
 
 st.markdown('</div>', unsafe_allow_html=True)
 
+# Validation
+if len(tickers) < 2:
+    st.markdown('<div class="error-msg">❌ Please enter at least 2 valid ticker symbols</div>', unsafe_allow_html=True)
+elif len(tickers) > 10:
+    st.markdown('<div class="warning-msg">⚠️ Using more than 10 assets may slow down optimization</div>', unsafe_allow_html=True)
+
 # Run Optimization Button
-if st.button("🚀 Run Advanced Portfolio Optimization"):
-    tickers = [t.strip().upper() for t in tickers_str.split(',') if t.strip()]
-    
-    if not tickers:
-        st.error("❌ Please enter at least one ticker symbol")
-    elif len(tickers) < 2:
-        st.error("❌ Please enter at least 2 ticker symbols for portfolio optimization")
-    else:
-        with st.spinner("🔄 Running advanced portfolio optimization... Please wait."):
-            try:
-                # Run optimization
-                results = optimize_portfolio_advanced(
-                    tickers=tickers,
-                    expected_return=method_params.get('target_return'),
-                    expected_std=method_params.get('target_volatility'),
-                    include_risk_free=include_risk_free,
-                    use_sp500=use_sp500,
-                    optimization_method=selected_method,
-                    constraints=constraints,
-                    num_portfolios=num_portfolios
-                )
-
-                # Results Section
+if st.button("🚀 Optimize Portfolio", disabled=(len(tickers) < 2)):
+    with st.spinner("🔄 Fetching data and optimizing portfolio..."):
+        try:
+            # Initialize optimizer
+            optimizer = PortfolioOptimizer(tickers, lookback_years)
+            
+            # Fetch data
+            success, error_info = optimizer.fetch_data()
+            
+            if not success:
+                st.error(f"❌ Failed to fetch data: {error_info}")
+                
+                # Provide helpful suggestions
                 st.markdown("""
-                    <div class="results-section">
-                        <div class="results-title">📊 Advanced Optimization Results</div>
-                    </div>
-                """, unsafe_allow_html=True)
-
-                st.success("✅ Portfolio optimization completed successfully!")
-                
-                # Key Metrics Dashboard
-                st.markdown("### 📈 Portfolio Performance Metrics")
-                
-                col1, col2, col3, col4, col5 = st.columns(5)
-                
-                with col1:
-                    expected_return = results['portfolio_return']
-                    st.metric("📈 Expected Return", f"{expected_return:.1%}", f"Annual return")
-                
-                with col2:
-                    volatility = results['portfolio_volatility'] 
-                    st.metric("📊 Volatility", f"{volatility:.1%}", f"Annual risk")
-                
-                with col3:
-                    sharpe = results['sharpe_ratio']
-                    st.metric("⚡ Sharpe Ratio", f"{sharpe:.2f}", f"Risk-adjusted return")
-                
-                with col4:
-                    diversification = results.get('diversification_ratio', 1.0)
-                    st.metric("🌐 Diversification", f"{diversification:.2f}", f"Benefit ratio")
-                
-                with col5:
-                    max_dd = results.get('max_drawdown', 0)
-                    st.metric("📉 Max Drawdown", f"{max_dd:.1%}", f"Worst loss period")
-
-                # Create tabs for different views
-                tab1, tab2, tab3, tab4, tab5 = st.tabs([
-                    "🎯 Portfolio Composition", 
-                    "📈 Efficient Frontier", 
-                    "🎛️ Risk Analytics", 
-                    "📊 Performance Analysis",
-                    "🌐 3D Visualization"
-                ])
-
-                with tab1:
-                    # Portfolio Composition Analysis
-                    st.markdown("### 🥧 Optimal Portfolio Weights")
-                    
-                    col1, col2 = st.columns([2, 1])
-                    
-                    with col1:
-                        # Interactive sunburst chart
-                        sunburst_fig = create_portfolio_composition_sunburst(tickers, results['optimal_weights'])
-                        st.plotly_chart(sunburst_fig, use_container_width=True)
-                    
-                    with col2:
-                        # Weights table with additional metrics
-                        weights_data = []
-                        for i, ticker in enumerate(tickers):
-                            weight = results['optimal_weights'][i]
-                            expected_ret = results['mean_returns'][i]
-                            volatility = np.sqrt(results['cov_matrix'][i, i])
-                            
-                            weights_data.append({
-                                "Asset": ticker,
-                                "Weight": f"{weight:.1%}",
-                                "Expected Return": f"{expected_ret:.1%}",
-                                "Volatility": f"{volatility:.1%}",
-                                "Risk Contribution": f"{results.get('percent_risk_contrib', [0]*len(tickers))[i]:.1%}"
-                            })
-                        
-                        st.dataframe(weights_data, use_container_width=True)
-
-                with tab2:
-                    # Interactive Efficient Frontier
-                    st.markdown("### 📈 Interactive Efficient Frontier")
-                    
-                    frontier_fig = create_interactive_efficient_frontier(results, highlight_portfolios=True)
-                    st.plotly_chart(frontier_fig, use_container_width=True)
-                    
-                    # Special portfolios comparison
-                    if 'max_sharpe_portfolio' in results:
-                        st.markdown("#### 🏆 Key Portfolio Comparison")
-                        
-                        special_portfolios = []
-                        for name, key in [("Max Sharpe", "max_sharpe_portfolio"), 
-                                         ("Min Variance", "min_variance_portfolio"),
-                                         ("Max Return", "max_return_portfolio")]:
-                            if key in results:
-                                portfolio = results[key]
-                                special_portfolios.append({
-                                    "Portfolio": name,
-                                    "Return": f"{portfolio['return']:.1%}",
-                                    "Volatility": f"{portfolio['volatility']:.1%}",
-                                    "Sharpe Ratio": f"{portfolio['sharpe']:.2f}"
-                                })
-                        
-                        if special_portfolios:
-                            st.dataframe(special_portfolios, use_container_width=True)
-
-                with tab3:
-                    # Risk Attribution Dashboard
-                    st.markdown("### 🎛️ Comprehensive Risk Analysis")
-                    
-                    risk_dashboard = create_risk_attribution_dashboard(results)
-                    if risk_dashboard:
-                        st.plotly_chart(risk_dashboard, use_container_width=True)
-                    
-                    # CAPM Analysis (if available)
-                    if 'asset_capm_metrics' in results and use_sp500:
-                        st.markdown("#### 📊 CAPM Analysis Results")
-                        
-                        capm_data = []
-                        for ticker in tickers:
-                            capm_metrics = results['asset_capm_metrics'].get(ticker, {})
-                            capm_data.append({
-                                "Asset": ticker,
-                                "Alpha": f"{capm_metrics.get('alpha', 0):.2%}",
-                                "Beta": f"{capm_metrics.get('beta', 1.0):.2f}",
-                                "R-Squared": f"{capm_metrics.get('r_squared', 0):.1%}",
-                                "Expected Return (CAPM)": f"{capm_metrics.get('expected_return', 0):.1%}"
-                            })
-                        
-                        st.dataframe(capm_data, use_container_width=True)
-                        
-                        # Portfolio CAPM metrics
-                        col1, col2, col3 = st.columns(3)
-                        with col1:
-                            portfolio_alpha = results.get('portfolio_alpha', 0)
-                            st.metric("Portfolio Alpha", f"{portfolio_alpha:.2%}")
-                        with col2:
-                            portfolio_beta = results.get('portfolio_beta', 1.0)
-                            st.metric("Portfolio Beta", f"{portfolio_beta:.2f}")
-                        with col3:
-                            portfolio_r2 = results.get('portfolio_r_squared', 0)
-                            st.metric("Portfolio R²", f"{portfolio_r2:.1%}")
-
-                with tab4:
-                    # Performance Attribution
-                    st.markdown("### 📊 Performance Attribution Analysis")
-                    
-                    if 'portfolio_returns_series' in results:
-                        performance_dashboard = create_performance_attribution_dashboard(results)
-                        if performance_dashboard:
-                            st.plotly_chart(performance_dashboard, use_container_width=True)
-                        
-                        # Performance statistics
-                        st.markdown("#### 📈 Performance Statistics")
-                        
-                        col1, col2, col3, col4 = st.columns(4)
-                        with col1:
-                            total_return = results.get('total_return', 0)
-                            st.metric("Total Return", f"{total_return:.1%}")
-                        with col2:
-                            annual_return = results.get('annual_return', 0)
-                            st.metric("Annual Return", f"{annual_return:.1%}")
-                        with col3:
-                            annual_vol = results.get('annual_volatility', 0)
-                            st.metric("Annual Volatility", f"{annual_vol:.1%}")
-                        with col4:
-                            max_dd = results.get('max_drawdown', 0)
-                            st.metric("Max Drawdown", f"{max_dd:.1%}")
-                    else:
-                        st.info("📊 Performance attribution requires historical data analysis. Run optimization to generate time series data.")
-
-                with tab5:
-                    # 3D Visualization
-                    if advanced_features:
-                        st.markdown("### 🌐 3D Risk-Return-Time Analysis")
-                        
-                        viz_3d = create_3d_risk_return_time_surface(results)
-                        if viz_3d:
-                            st.plotly_chart(viz_3d, use_container_width=True)
-                            
-                            st.markdown("#### 🎛️ 3D Visualization Controls")
-                            st.info("""
-                                🖱️ **Interactive Controls:**
-                                - **Rotate**: Click and drag to rotate the 3D view
-                                - **Zoom**: Use mouse wheel or pinch to zoom in/out
-                                - **Pan**: Hold Shift and drag to pan the view
-                                - **Hover**: Hover over points to see detailed information
-                            """)
-                        else:
-                            st.info("🌐 3D visualization temporarily unavailable. Showing 2D analysis above.")
-                    else:
-                        st.info("🔬 Enable 'Advanced Features' in the configuration to access 3D visualizations.")
-
-                # Capital Allocation Analysis (if applicable)
-                if include_risk_free and ('risky_weight' in results):
-                    st.markdown("### 💰 Capital Allocation Strategy")
-                    
-                    col1, col2, col3 = st.columns(3)
-                    
-                    with col1:
-                        risky_weight = results['risky_weight']
-                        st.metric("🎯 Risky Asset Weight", f"{risky_weight:.1%}")
-                    
-                    with col2:
-                        risk_free_weight = results['risk_free_weight']
-                        st.metric("🏦 Risk-Free Weight", f"{risk_free_weight:.1%}")
-                    
-                    with col3:
-                        leverage = "Yes" if risky_weight > 1.0 else "No"
-                        st.metric("⚡ Leverage", leverage)
-                    
-                    if risky_weight > 1.0:
-                        st.warning("⚠️ **Leveraged Portfolio**: This allocation requires borrowing at the risk-free rate.")
-                    elif risky_weight < 1.0:
-                        st.info("💡 **Conservative Portfolio**: Part of the allocation is in risk-free assets.")
-
-                # Summary and Insights
-                st.markdown("### 💡 Key Insights & Recommendations")
-                
-                insights = []
-                
-                # Diversification insight
-                if diversification > 1.5:
-                    insights.append("✅ **Well Diversified**: Your portfolio benefits significantly from diversification.")
-                elif diversification < 1.2:
-                    insights.append("⚠️ **Limited Diversification**: Consider adding more uncorrelated assets.")
-                
-                # Risk insight
-                if volatility > 0.25:
-                    insights.append("🔥 **High Risk**: This portfolio has elevated volatility. Consider risk management.")
-                elif volatility < 0.10:
-                    insights.append("🛡️ **Conservative**: Low-risk portfolio suitable for conservative investors.")
-                
-                # Return insight
-                if expected_return > 0.15:
-                    insights.append("🚀 **High Return Potential**: Strong expected returns, but verify assumptions.")
-                elif expected_return < 0.05:
-                    insights.append("📉 **Low Return Expectation**: Consider if returns meet your objectives.")
-                
-                # Sharpe ratio insight
-                if sharpe > 1.5:
-                    insights.append("⭐ **Excellent Risk-Adjusted Returns**: Outstanding Sharpe ratio.")
-                elif sharpe < 0.5:
-                    insights.append("📊 **Poor Risk-Adjusted Returns**: Low Sharpe ratio suggests inefficient risk-taking.")
-                
-                for insight in insights:
-                    st.markdown(insight)
-                
-                if not insights:
-                    st.markdown("📊 **Balanced Portfolio**: Your optimization results appear well-balanced across key metrics.")
-
-            except Exception as e:
-                st.error(f"❌ Error during optimization: {str(e)}")
-                st.info("""
-                    💡 **Troubleshooting Tips:**
-                    - Ensure all ticker symbols are valid and actively traded
-                    - Check your internet connection for data retrieval
-                    - Try with well-known large-cap stocks (AAPL, MSFT, GOOG)
-                    - Reduce the number of simulations if the process times out
-                    - Adjust constraints if optimization fails to converge
+                **💡 Troubleshooting suggestions:**
+                - Check if ticker symbols are correct (e.g., AAPL not Apple)
+                - Try using popular stocks: AAPL, MSFT, GOOGL, AMZN, TSLA
+                - Ensure tickers are from major exchanges (NYSE, NASDAQ)
+                - Check your internet connection
+                - Use the debug tool below to test individual tickers
                 """)
+                
+            else:
+                # Show data fetch results
+                if error_info:  # Some tickers failed
+                    st.warning(f"⚠️ Could not fetch data for: {', '.join(error_info)}")
+                    st.info(f"✅ Successfully loaded data for: {', '.join(optimizer.tickers)}")
+                else:
+                    st.success(f"✅ Successfully loaded data for all {len(optimizer.tickers)} assets")
+                
+                # Get risk-free rate if requested
+                if include_rf:
+                    rf_rate = optimizer.get_risk_free_rate()
+                    st.info(f"📈 Current risk-free rate: {rf_rate:.2%}")
+                
+                # Run optimization
+                result = optimizer.optimize_portfolio(
+                    method=opt_method,
+                    target_return=target_return,
+                    target_volatility=target_volatility
+                )
+                
+                if result['success']:
+                    st.session_state.optimizer = optimizer
+                    st.session_state.optimization_results = result
+                    
+                    st.markdown('<div class="success-msg">🎉 Portfolio optimization completed successfully!</div>', unsafe_allow_html=True)
+                else:
+                    st.error(f"❌ Optimization failed: {result['error']}")
+                    
+        except Exception as e:
+            st.error(f"❌ Unexpected error: {str(e)}")
+            st.info("💡 Try using well-known ticker symbols like AAPL, MSFT, GOOGL, AMZN, TSLA")
+
+# Quick fallback buttons (outside the main optimization)
+if st.session_state.get('optimization_results') is None:
+    st.markdown("#### 🚀 Quick Start Options")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("🔄 Try Sample Portfolio (Tech Giants)", key="tech_sample"):
+            with st.spinner("Loading tech portfolio..."):
+                fallback_tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"]
+                optimizer = PortfolioOptimizer(fallback_tickers, lookback_years)
+                success, error_info = optimizer.fetch_data()
+                if success:
+                    result = optimizer.optimize_portfolio(method=opt_method)
+                    if result['success']:
+                        st.session_state.optimizer = optimizer
+                        st.session_state.optimization_results = result
+                        st.success("✅ Tech portfolio loaded successfully!")
+                        st.rerun()
+                else:
+                    st.error("❌ Failed to load sample portfolio")
+    
+    with col2:
+        if st.button("🏦 Try Sample Portfolio (Diversified)", key="div_sample"):
+            with st.spinner("Loading diversified portfolio..."):
+                fallback_tickers = ["SPY", "BND", "VTI", "SCHG", "VEA"]
+                optimizer = PortfolioOptimizer(fallback_tickers, lookback_years)
+                success, error_info = optimizer.fetch_data()
+                if success:
+                    result = optimizer.optimize_portfolio(method=opt_method)
+                    if result['success']:
+                        st.session_state.optimizer = optimizer
+                        st.session_state.optimization_results = result
+                        st.success("✅ Diversified portfolio loaded successfully!")
+                        st.rerun()
+                else:
+                    st.error("❌ Failed to load sample portfolio")
+
+# Display Results
+if st.session_state.optimization_results and st.session_state.optimizer:
+    optimizer = st.session_state.optimizer
+    result = st.session_state.optimization_results
+    
+    # Results header with clear button
+    col1, col2 = st.columns([4, 1])
+    with col1:
+        st.markdown("""
+            <div class="results-section">
+                <h3 style="text-align: center; color: #2c3e50; margin-bottom: 2rem;">📊 Optimization Results</h3>
+            </div>
+        """, unsafe_allow_html=True)
+    with col2:
+        st.markdown("<br><br>", unsafe_allow_html=True)
+        if st.button("🗑️ Clear Results", help="Clear current results", key="clear_results"):
+            del st.session_state.optimization_results
+            del st.session_state.optimizer
+            st.rerun()
+    
+    # Key Metrics
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        expected_return_pct = result['expected_return'] * 100
+        st.markdown("""
+            <div class="metric-card">
+                <span class="metric-value">{}</span>
+                <div class="metric-label">Expected Annual Return</div>
+            </div>
+        """.format(f"{expected_return_pct:.1f}%"), unsafe_allow_html=True)
+    
+    with col2:
+        volatility_pct = result['volatility'] * 100
+        st.markdown("""
+            <div class="metric-card">
+                <span class="metric-value">{}</span>
+                <div class="metric-label">Annual Volatility</div>
+            </div>
+        """.format(f"{volatility_pct:.1f}%"), unsafe_allow_html=True)
+    
+    with col3:
+        sharpe_val = result['sharpe_ratio']
+        st.markdown("""
+            <div class="metric-card">
+                <span class="metric-value">{}</span>
+                <div class="metric-label">Sharpe Ratio</div>
+            </div>
+        """.format(f"{sharpe_val:.2f}"), unsafe_allow_html=True)
+    
+    with col4:
+        diversification = 1 / np.sum(result['weights'] ** 2)
+        st.markdown("""
+            <div class="metric-card">
+                <span class="metric-value">{}</span>
+                <div class="metric-label">Diversification Ratio</div>
+            </div>
+        """.format(f"{diversification:.1f}"), unsafe_allow_html=True)
+    
+    # Create tabs for different visualizations
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+        "🥧 Portfolio Weights",
+        "📈 Efficient Frontier", 
+        "🎯 Risk-Return Analysis",
+        "🔗 Correlations",
+        "📊 Performance"
+    ])
+    
+    with tab1:
+        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+        
+        # Portfolio composition
+        col1, col2 = st.columns([2, 1])
+        
+        with col1:
+            composition_fig = create_portfolio_composition_chart(optimizer.tickers, result['weights'])
+            st.plotly_chart(composition_fig, use_container_width=True)
+        
+        with col2:
+            st.markdown("#### 📋 Detailed Allocation")
+            weights_df = pd.DataFrame({
+                'Asset': optimizer.tickers,
+                'Weight': [f"{w:.1%}" for w in result['weights']],
+                'Dollar Amount': [f"${w*1000000:,.0f}" for w in result['weights']]
+            })
+            st.dataframe(weights_df, hide_index=True, use_container_width=True)
+            
+            # Risk contribution
+            portfolio_variance = result['volatility'] ** 2
+            marginal_contrib = np.dot(optimizer.cov_matrix.values, result['weights']) / result['volatility']
+            risk_contrib = result['weights'] * marginal_contrib
+            
+            st.markdown("#### ⚠️ Risk Contribution")
+            risk_df = pd.DataFrame({
+                'Asset': optimizer.tickers,
+                'Risk %': [f"{rc:.1%}" for rc in risk_contrib]
+            })
+            st.dataframe(risk_df, hide_index=True, use_container_width=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with tab2:
+        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+        
+        with st.spinner("Generating efficient frontier..."):
+            frontier_fig = create_efficient_frontier_plot(optimizer)
+            if frontier_fig:
+                st.plotly_chart(frontier_fig, use_container_width=True)
+            else:
+                st.warning("Could not generate efficient frontier")
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with tab3:
+        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+        
+        risk_return_fig = create_risk_return_scatter(optimizer, result['weights'])
+        st.plotly_chart(risk_return_fig, use_container_width=True)
+        
+        # Individual asset statistics
+        st.markdown("#### 📊 Individual Asset Statistics")
+        asset_stats = []
+        for i, ticker in enumerate(optimizer.tickers):
+            weight_val = result['weights'][i]
+            return_val = optimizer.mean_returns[ticker]
+            vol_val = np.sqrt(optimizer.cov_matrix.iloc[i,i])
+            sharpe_val = (return_val - optimizer.rf_rate) / vol_val
+            
+            asset_stats.append({
+                'Asset': ticker,
+                'Weight': f"{weight_val:.1%}",
+                'Expected Return': f"{return_val:.1%}",
+                'Volatility': f"{vol_val:.1%}",
+                'Sharpe Ratio': f"{sharpe_val:.2f}"
+            })
+        
+        asset_df = pd.DataFrame(asset_stats)
+        st.dataframe(asset_df, hide_index=True, use_container_width=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with tab4:
+        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+        
+        corr_fig = create_correlation_heatmap(optimizer)
+        if corr_fig:
+            st.plotly_chart(corr_fig, use_container_width=True)
+        
+        # Correlation insights
+        corr_matrix = optimizer.returns.corr()
+        avg_corr = corr_matrix.values[np.triu_indices_from(corr_matrix.values, k=1)].mean()
+        max_corr = corr_matrix.values[np.triu_indices_from(corr_matrix.values, k=1)].max()
+        min_corr = corr_matrix.values[np.triu_indices_from(corr_matrix.values, k=1)].min()
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Average Correlation", f"{avg_corr:.3f}")
+        with col2:
+            st.metric("Maximum Correlation", f"{max_corr:.3f}")
+        with col3:
+            st.metric("Minimum Correlation", f"{min_corr:.3f}")
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with tab5:
+        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+        
+        performance_fig = create_performance_chart(optimizer, result['weights'])
+        if performance_fig:
+            st.plotly_chart(performance_fig, use_container_width=True)
+        
+        # Performance statistics
+        portfolio_returns = (optimizer.returns * result['weights']).sum(axis=1)
+        
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            total_return = (1 + portfolio_returns).prod() - 1
+            st.metric("Total Return", f"{total_return:.1%}")
+        
+        with col2:
+            max_drawdown = ((1 + portfolio_returns).cumprod() / (1 + portfolio_returns).cumprod().expanding().max() - 1).min()
+            st.metric("Max Drawdown", f"{max_drawdown:.1%}")
+        
+        with col3:
+            winning_days = (portfolio_returns > 0).sum() / len(portfolio_returns)
+            st.metric("Winning Days", f"{winning_days:.1%}")
+        
+        with col4:
+            var_95 = np.percentile(portfolio_returns, 5)
+            st.metric("VaR (95%)", f"{var_95:.2%}")
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # CAPM Analysis (if requested)
+    if show_capm:
+        with st.expander("📊 CAPM Analysis", expanded=False):
+            capm_metrics = optimizer.calculate_capm_metrics()
+            
+            if capm_metrics:
+                capm_data = []
+                for ticker in optimizer.tickers:
+                    if ticker in capm_metrics:
+                        capm_data.append({
+                            'Asset': ticker,
+                            'Beta': f"{capm_metrics[ticker]['beta']:.2f}",
+                            'Alpha': f"{capm_metrics[ticker]['alpha']:.2%}",
+                            'Expected Return (CAPM)': f"{capm_metrics[ticker]['expected_return']:.1%}"
+                        })
+                
+                if capm_data:
+                    capm_df = pd.DataFrame(capm_data)
+                    st.dataframe(capm_df, hide_index=True, use_container_width=True)
+            else:
+                st.warning("CAPM analysis not available")
+
+# Tips and Information
+with st.expander("💡 Tips & Information", expanded=False):
+    st.markdown("""
+    ### 🎯 Optimization Methods
+    - **Maximum Sharpe Ratio**: Finds the portfolio with the best risk-adjusted return
+    - **Minimum Variance**: Finds the portfolio with the lowest possible risk
+    - **Target Return**: Finds the minimum risk portfolio for a specific return target
+    - **Target Risk**: Finds the maximum return portfolio for a specific risk level
+    
+    ### 📊 Key Metrics
+    - **Expected Return**: Annualized expected portfolio return based on historical data
+    - **Volatility**: Annualized portfolio standard deviation (risk measure)
+    - **Sharpe Ratio**: Risk-adjusted return measure (higher is better)
+    - **Diversification Ratio**: Measure of portfolio diversification effectiveness
+    
+    ### ⚠️ Important Notes
+    - Results are based on historical data and may not predict future performance
+    - Consider transaction costs and taxes in real implementations
+    - Rebalancing frequency affects actual performance
+    - Market conditions can change rapidly
+    
+    ### 🔧 Troubleshooting Data Issues
+    - **Use valid ticker symbols**: Check symbols on Yahoo Finance or similar sites
+    - **Try well-known stocks**: AAPL, MSFT, GOOGL, AMZN, TSLA usually work
+    - **Check internet connection**: Data fetching requires stable internet
+    - **Avoid delisted/exotic tickers**: Stick to major exchange-listed stocks
+    - **Wait and retry**: Sometimes data providers have temporary issues
+    - **Use the Reset button**: Clear all data if you encounter persistent errors
+    - **Try sample portfolios**: Use the Quick Start options for testing
+    
+    ### 🚨 Common Errors and Solutions
+    - **"No valid data"**: Check ticker symbols and internet connection
+    - **"CAPM analysis not available"**: Market data issue, still usable without CAPM
+    - **"Optimization failed"**: Try different optimization method or check constraints
+    - **JavaScript errors**: Use the Reset button and try again with simpler inputs
+    """)
+
+# Debug Section
+with st.expander("🐛 Debug Data Fetching", expanded=False):
+    st.markdown("### Test Individual Tickers")
+    test_ticker = st.text_input("Enter a single ticker to test:", value="AAPL")
+    
+    if st.button("🧪 Test Ticker"):
+        if test_ticker.strip():
+            with st.spinner(f"Testing {test_ticker.upper()}..."):
+                try:
+                    # Use the quick test function
+                    from optimizer import PortfolioOptimizer
+                    test_optimizer = PortfolioOptimizer([test_ticker.upper()])
+                    success, message = test_optimizer.quick_test_ticker(test_ticker.upper())
+                    
+                    if success:
+                        st.success(f"✅ {message}")
+                    else:
+                        st.error(f"❌ {message}")
+                        
+                except Exception as e:
+                    st.error(f"❌ Error testing {test_ticker.upper()}: {str(e)}")
+        else:
+            st.warning("Please enter a ticker symbol")
 
 # Footer
 st.markdown("---")
 st.markdown("""
-    <div style="text-align: center; color: #666; padding: 2rem;">
-        <p><strong>QuantRisk Analytics</strong> | Advanced Portfolio Optimization Platform</p>
-        <p style="font-size: 0.9rem; opacity: 0.8;">Modern Portfolio Theory • CAPM • Interactive Analytics • Professional-Grade Optimization</p>
+    <div style="text-align: center; color: #666; padding: 1rem;">
+        <p><strong>QuantRisk Analytics</strong> | Professional Portfolio Optimization</p>
+        <p style="font-size: 0.9rem; opacity: 0.8;">Built with Modern Portfolio Theory • Real-time Market Data • Interactive Analytics</p>
     </div>
 """, unsafe_allow_html=True)
