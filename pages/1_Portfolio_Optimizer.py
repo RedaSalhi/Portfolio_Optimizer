@@ -1721,7 +1721,37 @@ with st.expander(" Debug & Troubleshooting", expanded=False):
                 st.warning("Please enter a ticker symbol")
 
 # Tips and Information Section
-with st.expander(" Tips & Best Practices", expanded=False):
+st.markdown("""
+    <style>
+        .custom-expander .stMarkdown h4 {
+            color: #6a11cb;
+            font-weight: 700;
+            margin-top: 1rem;
+        }
+
+        .custom-expander .stMarkdown {
+            font-size: 0.93rem;
+            line-height: 1.6;
+        }
+
+        .custom-expander .stMarkdown strong {
+            color: #2575fc;
+        }
+
+        .custom-expander .stMarkdown ul {
+            margin-bottom: 1rem;
+        }
+
+        .custom-expander .stMarkdown li {
+            margin-left: 0.5rem;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+
+with st.expander("Tips & Best Practices", expanded=False):
+    st.markdown('<div class="custom-expander">', unsafe_allow_html=True)
+
     col1, col2 = st.columns(2)
     
     with col1:
@@ -1729,67 +1759,67 @@ with st.expander(" Tips & Best Practices", expanded=False):
         #### Optimization Methods Guide
         
         **Maximum Sharpe Ratio**
-        - Best for: General portfolio optimization
-        - Goal: Maximize risk-adjusted returns
-        - Ideal for: Most investors seeking balance
-        
+        - Best for: General portfolio optimization  
+        - Goal: Maximize risk-adjusted returns  
+        - Ideal for: Most investors seeking balance  
+
         **Minimum Variance**
-        - Best for: Conservative investors
-        - Goal: Minimize portfolio risk
-        - Ideal for: Risk-averse investors, stable income needs
-        
+        - Best for: Conservative investors  
+        - Goal: Minimize portfolio risk  
+        - Ideal for: Risk-averse investors, stable income needs  
+
         **Target Return**
-        - Best for: Specific return goals
-        - Goal: Achieve target with minimum risk
-        - Ideal for: Pension funds, endowments
-        
+        - Best for: Specific return goals  
+        - Goal: Achieve target with minimum risk  
+        - Ideal for: Pension funds, endowments  
+
         **Target Volatility**
-        - Best for: Risk budgeting
-        - Goal: Maximize return for specific risk
-        - Ideal for: Risk-managed strategies
+        - Best for: Risk budgeting  
+        - Goal: Maximize return for specific risk  
+        - Ideal for: Risk-managed strategies  
         """)
-    
+
     with col2:
         st.markdown("""
         #### Key Metrics Explained
-        
-        **Expected Return**: Annualized expected portfolio return
-        **Volatility**: Annual portfolio standard deviation (risk)
-        **Sharpe Ratio**: Return per unit of risk (higher is better)
-        **Sortino Ratio**: Risk-adjusted return using downside deviation
-        **VaR**: Maximum expected loss at confidence level
-        **CVaR**: Average loss beyond VaR threshold
-        **Max Drawdown**: Largest peak-to-trough decline
-        **Diversification Ratio**: Effective number of independent positions
-        **Beta**: Sensitivity to market movements
-        **Alpha**: Excess return above market expectations
+
+        **Expected Return**: Annualized expected portfolio return  
+        **Volatility**: Annual portfolio standard deviation (risk)  
+        **Sharpe Ratio**: Return per unit of risk (higher is better)  
+        **Sortino Ratio**: Risk-adjusted return using downside deviation  
+        **VaR**: Maximum expected loss at confidence level  
+        **CVaR**: Average loss beyond VaR threshold  
+        **Max Drawdown**: Largest peak-to-trough decline  
+        **Diversification Ratio**: Effective number of independent positions  
+        **Beta**: Sensitivity to market movements  
+        **Alpha**: Excess return above market expectations  
         """)
-    
+
     st.markdown("""
     #### Important Considerations
-    
-     **Data Limitations**
-    - Results based on historical data (past performance ≠ future results)
-    - Market conditions change rapidly
-    - Consider transaction costs and taxes in real implementation
-    
-     **Portfolio Implementation**
-    - Rebalance periodically (quarterly/annually)
-    - Consider market impact of trades
-    - Account for bid-ask spreads and commissions
-    - Monitor portfolio drift from target weights
-    
-     **Risk Management**
-    - Diversification doesn't guarantee profits
-    - Monitor correlation changes over time
-    - Consider regime changes and black swan events
-    - Use multiple risk metrics for comprehensive analysis
-    
-     **Practical Usage**
-    - Start with 3-6 well-known assets
-    - Use 2-3 years of data for stable results
-    - Test with paper trading before real implementation
-    - Consider your investment timeline and liquidity needs
+
+    **Data Limitations**  
+    - Results based on historical data (past performance ≠ future results)  
+    - Market conditions change rapidly  
+    - Consider transaction costs and taxes in real implementation  
+
+    **Portfolio Implementation**  
+    - Rebalance periodically (quarterly/annually)  
+    - Consider market impact of trades  
+    - Account for bid-ask spreads and commissions  
+    - Monitor portfolio drift from target weights  
+
+    **Risk Management**  
+    - Diversification doesn't guarantee profits  
+    - Monitor correlation changes over time  
+    - Consider regime changes and black swan events  
+    - Use multiple risk metrics for comprehensive analysis  
+
+    **Practical Usage**  
+    - Start with 3–6 well-known assets  
+    - Use 2–3 years of data for stable results  
+    - Test with paper trading before real implementation  
+    - Consider your investment timeline and liquidity needs  
     """)
 
 # Footer with enhanced styling
@@ -1801,8 +1831,8 @@ st.markdown("""
                 QuantRisk Analytics
             </span>
         </p>
-        <p style="font-size: 1rem; color: #667eea; margin-bottom: 0.5rem;">Advanced Portfolio Optimization Platform</p>
-        <p style="font-size: 0.9rem; opacity: 0.8;">Built with Modern Portfolio Theory | Real-time Market Data | Professional Risk Analytics</p>
-        <p style="font-size: 0.8rem; opacity: 0.6; margin-top: 1rem;">© 2025 | Powered by Streamlit & Plotly</p>
+        <p style="font-size: 1rem; color: #667eea; margin-bottom: 0.5rem;">Portfolio Optimization Platform</p>
+        <p style="font-size: 0.9rem; opacity: 0.8;">Built with Modern Portfolio Theory</p>
+        <p style="font-size: 0.8rem; opacity: 0.6; margin-top: 1rem;">© 2025 | Powered by Streamlit & Hosted in GitHub</p>
     </div>
 """, unsafe_allow_html=True)
