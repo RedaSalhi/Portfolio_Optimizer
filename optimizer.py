@@ -1645,3 +1645,5 @@ if __name__ == "__main__":
             print(f"Optimization failed: {result['error']}")
     else:
         print(f"Data fetching failed: {error}")
+
+create_efficient_frontier_plot = create_efficient_frontier_plot_fixed
