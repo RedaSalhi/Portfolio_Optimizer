@@ -662,50 +662,52 @@ st.markdown("""
 # Back Button with enhanced styling
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
-    with st.container():
-        st.markdown("""
-            <style>
-                div[data-testid="stButton"] > button {
-                    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
-                    color: white;
-                    border: none;
-                    padding: 1rem 2rem;
-                    border-radius: 12px;
-                    font-weight: 600;
-                    font-size: 1rem;
-                    transition: all 0.3s ease;
-                    box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
-                    width: 100%;
-                    position: relative;
-                    overflow: hidden;
-                    margin-top: 2rem;
-                    margin-bottom: 1rem;
-                }
+    import streamlit as st
 
-                div[data-testid="stButton"] > button:hover {
-                    transform: translateY(-3px);
-                    box-shadow: 0 10px 30px rgba(108, 117, 125, 0.6);
-                }
+    # CSS for styling all buttons inside Streamlit
+    st.markdown("""
+        <style>
+            button[kind="secondary"] {
+                background: linear-gradient(135deg, #6c757d 0%, #495057 100%) !important;
+                color: white !important;
+                border: none !important;
+                padding: 1rem 2rem !important;
+                border-radius: 12px !important;
+                font-weight: 600 !important;
+                font-size: 1rem !important;
+                transition: all 0.3s ease !important;
+                box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4) !important;
+                width: 100% !important;
+                position: relative !important;
+                overflow: hidden !important;
+            }
 
-                div[data-testid="stButton"] > button::before {
-                    content: '';
-                    position: absolute;
-                    top: 0;
-                    left: -100%;
-                    width: 100%;
-                    height: 100%;
-                    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-                    transition: left 0.5s ease;
-                }
+            button[kind="secondary"]:hover {
+                transform: translateY(-3px) !important;
+                box-shadow: 0 10px 30px rgba(108, 117, 125, 0.6) !important;
+            }
 
-                div[data-testid="stButton"] > button:hover::before {
-                    left: 100%;
-                }
-            </style>
-        """, unsafe_allow_html=True)
+            button[kind="secondary"]::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+                transition: left 0.5s ease;
+            }
 
-        if st.button("← Back to Home", help="Return to main dashboard", use_container_width=True):
-            st.switch_page("streamlit_app.py")
+            button[kind="secondary"]:hover::before {
+                left: 100%;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
+    if st.button("← Back to Home", help="Return to main dashboard", use_container_width=True):
+        st.switch_page("streamlit_app.py")
+
+
 # Status Display Function
 def show_status():
     if st.session_state.optimization_results and st.session_state.optimizer:
