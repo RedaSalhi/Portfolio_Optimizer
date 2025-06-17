@@ -662,10 +662,46 @@ st.markdown("""
 # Back Button with enhanced styling
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
-    st.markdown('<div class="secondary-button">', unsafe_allow_html=True)
-    if st.button(" Back to Home", help="Return to main dashboard", use_container_width=True):
+    st.markdown("""
+        <style>
+            div[data-testid="stButton"] > button {
+                background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+                color: white;
+                border: none;
+                padding: 1rem 2rem;
+                border-radius: 12px;
+                font-weight: 600;
+                font-size: 1rem;
+                transition: all 0.3s ease;
+                box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+                width: 100%;
+                position: relative;
+                overflow: hidden;
+            }
+
+            div[data-testid="stButton"] > button:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 10px 30px rgba(108, 117, 125, 0.6);
+            }
+
+            div[data-testid="stButton"] > button::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+                transition: left 0.5s ease;
+            }
+
+            div[data-testid="stButton"] > button:hover::before {
+                left: 100%;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+    if st.button("← Back to Home", help="Return to main dashboard", use_container_width=True):
         st.switch_page("streamlit_app.py")
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # Status Display Function
 def show_status():
@@ -757,6 +793,72 @@ st.markdown('<div class="input-group">', unsafe_allow_html=True)
 st.markdown('<div class="input-title"> Optimization Method</div>', unsafe_allow_html=True)
 
 # Method selection with cards
+st.markdown("""
+    <style>
+        div[data-testid="stButton"] > button.method-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: 2px solid transparent;
+            padding: 1.2rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+            cursor: pointer;
+            width: 100%;
+            margin: 0.5rem 0;
+            text-align: center;
+        }
+
+        div[data-testid="stButton"] > button.method-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+        }
+
+        div[data-testid="stButton"] > button.method-btn.selected {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+        }
+
+        div[data-testid="stButton"] > button.analysis-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 1.2rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        div[data-testid="stButton"] > button.analysis-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(40, 167, 69, 0.6);
+        }
+
+        div[data-testid="stButton"] > button.analysis-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        div[data-testid="stButton"] > button.analysis-btn:hover::before {
+            left: 100%;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+# Method selection with cards
 st.markdown('<div class="method-selection">', unsafe_allow_html=True)
 
 methods_info = {
@@ -792,10 +894,11 @@ cols = [col1, col2, col3, col4]
 for i, (method_key, method_info) in enumerate(methods_info.items()):
     with cols[i]:
         if st.button(
-            f"{method_info['icon']} {method_info['title']}", 
+            f"{method_info['title']}", 
             help=method_info['description'],
             key=f"method_{method_key}",
-            use_container_width=True
+            use_container_width=True,
+            type="primary" if st.session_state.selected_method == method_key else "secondary"
         ):
             st.session_state.selected_method = method_key
 
@@ -873,12 +976,12 @@ st.markdown("### Portfolio Analysis")
 col1, col2 = st.columns([3, 1])
 
 with col1:
-    st.markdown('<div class="success-button">', unsafe_allow_html=True)
     if st.button(
-        " Fetch Data & Optimize Portfolio", 
+        "Fetch Data & Optimize Portfolio", 
         disabled=not valid_input, 
         help="Fetch market data and run portfolio optimization", 
-        use_container_width=True
+        use_container_width=True,
+        type="primary"
     ):
         with st.spinner(" Initializing portfolio optimizer..."):
             try:
@@ -1053,7 +1156,7 @@ with col1:
 
 with col2:
     st.markdown('<div class="danger-button">', unsafe_allow_html=True)
-    if st.button(" Clear Results", help="Clear current optimization results", use_container_width=True):
+    if st.button("Clear Results", help="Clear current optimization results", use_container_width=True, type="secondary"):
         # Clear all session state
         for key in ['optimizer', 'optimization_results', 'data_fetched']:
             if key in st.session_state:
