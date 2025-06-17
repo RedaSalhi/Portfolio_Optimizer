@@ -9,7 +9,7 @@ load_dotenv()
 fred_api_key = os.getenv("6c9061531b2c22864f1516a52090aabd")
 
 # Initialize the FRED client
-fred = Fred(api_key=fred_api_key)
+fred = Fred(api_key='6c9061531b2c22864f1516a52090aabd')
 
 def get_latest_risk_free_rate():
     """
