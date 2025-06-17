@@ -24,7 +24,7 @@ from optimizer import (
 st.set_page_config(
     page_title="Portfolio Optimizer", 
     layout="wide", 
-    page_icon="📈"
+    page_icon=""
 )
 
 # Enhanced CSS styling inspired by bibliography page
@@ -632,7 +632,7 @@ if 'data_fetched' not in st.session_state:
 # Hero Section with enhanced styling
 st.markdown("""
     <div class="optimizer-hero">
-        <h1>📈 Advanced Portfolio Optimizer</h1>
+        <h1> Advanced Portfolio Optimizer</h1>
         <p>Professional portfolio optimization using Modern Portfolio Theory with real-time market data, comprehensive risk analytics, and interactive visualizations</p>
         <div class="hero-stats">
             <div class="hero-stat">
@@ -659,33 +659,33 @@ st.markdown("""
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
     st.markdown('<div class="secondary-button">', unsafe_allow_html=True)
-    if st.button("🔙 Back to Home", help="Return to main dashboard", use_container_width=True):
+    if st.button(" Back to Home", help="Return to main dashboard", use_container_width=True):
         st.switch_page("streamlit_app.py")
     st.markdown('</div>', unsafe_allow_html=True)
 
 # Status Display Function
 def show_status():
     if st.session_state.optimization_results and st.session_state.optimizer:
-        st.markdown('<div class="status-success">🎉 Portfolio optimization active! Explore results in the tabs below.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="status-success"> Portfolio optimization active! Explore results in the tabs below.</div>', unsafe_allow_html=True)
     elif st.session_state.data_fetched:
-        st.markdown('<div class="status-info">📊 Data loaded successfully! Configure settings and click optimize.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="status-info"> Data loaded successfully! Configure settings and click optimize.</div>', unsafe_allow_html=True)
     elif 'tickers_input' in st.session_state and len(st.session_state.get('tickers_input', '').split(',')) >= 2:
-        st.markdown('<div class="status-warning">⚠️ Ready to fetch data! Enter tickers and start optimization.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="status-warning"> Ready to fetch data! Enter tickers and start optimization.</div>', unsafe_allow_html=True)
     else:
-        st.markdown('<div class="status-warning">🎯 Enter 2 or more ticker symbols to begin portfolio optimization.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="status-warning"> Enter 2 or more ticker symbols to begin portfolio optimization.</div>', unsafe_allow_html=True)
 
 show_status()
 
 # Configuration Section
 st.markdown("""
     <div class="config-section">
-        <div class="config-title">⚙️ Portfolio Configuration</div>
+        <div class="config-title"> Portfolio Configuration</div>
     </div>
 """, unsafe_allow_html=True)
 
 # Asset Selection with enhanced UI
 st.markdown('<div class="input-group">', unsafe_allow_html=True)
-st.markdown('<div class="input-title">🎯 Asset Selection</div>', unsafe_allow_html=True)
+st.markdown('<div class="input-title"> Asset Selection</div>', unsafe_allow_html=True)
 
 col1, col2, col3 = st.columns([3, 1, 1])
 with col1:
@@ -699,7 +699,7 @@ with col1:
 
 with col2:
     lookback_years = st.selectbox(
-        "📅 Historical Period:",
+        " Historical Period:",
         options=[1, 2, 3, 5],
         index=2,
         help="Years of historical data for analysis"
@@ -707,7 +707,7 @@ with col2:
 
 with col3:
     include_rf = st.checkbox(
-        "💰 Risk-Free Rate", 
+        " Risk-Free Rate", 
         value=True, 
         help="Use current Treasury rate for Sharpe ratio calculations"
     )
@@ -722,35 +722,35 @@ valid_input = len(tickers) >= 2
 if not st.session_state.optimization_results:
     st.markdown("""
         <div class="quick-start">
-            <div class="quick-start-title">🚀 Quick Start Portfolios</div>
+            <div class="quick-start-title"> Quick Start Portfolios</div>
         </div>
     """, unsafe_allow_html=True)
     
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        if st.button("💻 Tech Giants", help="Load technology stocks portfolio", use_container_width=True):
+        if st.button(" Tech Giants", help="Load technology stocks portfolio", use_container_width=True):
             st.session_state.tickers_input = "AAPL, MSFT, GOOGL, AMZN, TSLA"
             st.rerun()
     
     with col2:
-        if st.button("🏛️ Blue Chips", help="Load blue chip stocks portfolio", use_container_width=True):
+        if st.button(" Blue Chips", help="Load blue chip stocks portfolio", use_container_width=True):
             st.session_state.tickers_input = "JNJ, PG, KO, WMT, JPM"
             st.rerun()
     
     with col3:
-        if st.button("🌍 Diversified ETFs", help="Load diversified ETF portfolio", use_container_width=True):
+        if st.button(" Diversified ETFs", help="Load diversified ETF portfolio", use_container_width=True):
             st.session_state.tickers_input = "SPY, QQQ, VTI, BND, VEA"
             st.rerun()
     
     with col4:
-        if st.button("🎬 FAANG", help="Load FAANG stocks portfolio", use_container_width=True):
+        if st.button(" FAANG", help="Load FAANG stocks portfolio", use_container_width=True):
             st.session_state.tickers_input = "META, AAPL, AMZN, NFLX, GOOGL"
             st.rerun()
 
 # Optimization Method Selection
 st.markdown('<div class="input-group">', unsafe_allow_html=True)
-st.markdown('<div class="input-title">🎯 Optimization Method</div>', unsafe_allow_html=True)
+st.markdown('<div class="input-title"> Optimization Method</div>', unsafe_allow_html=True)
 
 # Method selection with cards
 st.markdown('<div class="method-selection">', unsafe_allow_html=True)
@@ -759,25 +759,25 @@ methods_info = {
     'max_sharpe': {
         'title': 'Maximum Sharpe Ratio',
         'description': 'Optimize for the best risk-adjusted return. Maximizes return per unit of risk.',
-        'icon': '📊',
+        'icon': '',
         'color': '#667eea'
     },
     'min_variance': {
         'title': 'Minimum Variance',
         'description': 'Minimize portfolio risk and volatility. Best for conservative investors.',
-        'icon': '🛡️',
+        'icon': '',
         'color': '#28a745'
     },
     'target_return': {
         'title': 'Target Return',
         'description': 'Achieve specific return with minimum risk. Set your return goal.',
-        'icon': '🎯',
+        'icon': '',
         'color': '#ffc107'
     },
     'target_volatility': {
         'title': 'Target Risk',
         'description': 'Achieve specific risk level with maximum return. Control your risk exposure.',
-        'icon': '⚖️',
+        'icon': '',
         'color': '#e74c3c'
     }
 }
@@ -813,7 +813,7 @@ target_return = None
 target_volatility = None
 
 if selected_method == 'target_return':
-    st.markdown("### 🎯 Target Return Configuration")
+    st.markdown("### Target Return Configuration")
     target_return = st.slider(
         "Target Annual Return:",
         min_value=0.05,
@@ -826,7 +826,7 @@ if selected_method == 'target_return':
     st.info(f"Target: {target_return*100:.1f}% annual return")
 
 elif selected_method == 'target_volatility':
-    st.markdown("### ⚖️ Target Volatility Configuration")
+    st.markdown("### Target Volatility Configuration")
     target_volatility = st.slider(
         "Target Annual Volatility:",
         min_value=0.05,
@@ -841,71 +841,71 @@ elif selected_method == 'target_volatility':
 st.markdown('</div>', unsafe_allow_html=True)
 
 # Advanced Options
-with st.expander("🔧 Advanced Options", expanded=False):
+with st.expander(" Advanced Options", expanded=False):
     st.markdown('<div class="advanced-section">', unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown("#### 📊 Analysis Options")
-        show_capm = st.checkbox("🏛️ CAPM Analysis", value=True, help="Show Capital Asset Pricing Model analysis")
-        frontier_points = st.slider("📈 Efficient Frontier Points", 25, 100, 50, help="Number of points for efficient frontier")
+        st.markdown("#### Analysis Options")
+        show_capm = st.checkbox(" CAPM Analysis", value=True, help="Show Capital Asset Pricing Model analysis")
+        frontier_points = st.slider(" Efficient Frontier Points", 25, 100, 50, help="Number of points for efficient frontier")
         
     with col2:
-        st.markdown("#### ⚖️ Weight Constraints")
-        min_weight = st.slider("📉 Minimum Asset Weight", 0.0, 0.2, 0.0, step=0.01, format="%.1f%%")
-        max_weight = st.slider("📈 Maximum Asset Weight", 0.2, 1.0, 1.0, step=0.01, format="%.1f%%")
+        st.markdown("#### Weight Constraints")
+        min_weight = st.slider(" Minimum Asset Weight", 0.0, 0.2, 0.0, step=0.01, format="%.1f%%")
+        max_weight = st.slider(" Maximum Asset Weight", 0.2, 1.0, 1.0, step=0.01, format="%.1f%%")
     
     st.markdown('</div>', unsafe_allow_html=True)
 
 # Validation messages with enhanced styling
 if not valid_input:
-    st.markdown('<div class="status-error">❌ Please enter at least 2 valid ticker symbols separated by commas</div>', unsafe_allow_html=True)
+    st.markdown('<div class="status-error"> Please enter at least 2 valid ticker symbols separated by commas</div>', unsafe_allow_html=True)
 elif len(tickers) > 10:
-    st.markdown('<div class="status-warning">⚠️ Using more than 10 assets may slow down optimization</div>', unsafe_allow_html=True)
+    st.markdown('<div class="status-warning"> Using more than 10 assets may slow down optimization</div>', unsafe_allow_html=True)
 
 # Main Action Buttons
-st.markdown("### 🚀 Portfolio Analysis")
+st.markdown("### Portfolio Analysis")
 
 col1, col2 = st.columns([3, 1])
 
 with col1:
     st.markdown('<div class="success-button">', unsafe_allow_html=True)
     if st.button(
-        "🔍 Fetch Data & Optimize Portfolio", 
+        " Fetch Data & Optimize Portfolio", 
         disabled=not valid_input, 
         help="Fetch market data and run portfolio optimization", 
         use_container_width=True
     ):
-        with st.spinner("🔄 Initializing portfolio optimizer..."):
+        with st.spinner(" Initializing portfolio optimizer..."):
             try:
                 # Initialize optimizer
-                st.info("🎯 Initializing optimizer...")
+                st.info(" Initializing optimizer...")
                 optimizer = PortfolioOptimizer(tickers, lookback_years)
                 
                 # Validate tickers first
                 valid_tickers, invalid_tickers = optimizer.validate_tickers()
                 
                 if invalid_tickers:
-                    st.warning(f"⚠️ Invalid ticker format detected: {', '.join(invalid_tickers)}")
+                    st.warning(f" Invalid ticker format detected: {', '.join(invalid_tickers)}")
                 
                 if len(valid_tickers) < 2:
-                    st.error("❌ Need at least 2 valid tickers for portfolio optimization")
+                    st.error(" Need at least 2 valid tickers for portfolio optimization")
                     st.stop()
                 
                 # Fetch data
-                st.info("📊 Fetching market data...")
+                st.info(" Fetching market data...")
                 success, error_info = optimizer.fetch_data()
                 
                 if not success:
-                    st.markdown(f'<div class="status-error">❌ Failed to fetch data: {error_info}</div>', unsafe_allow_html=True)
+                    st.markdown(f'<div class="status-error"> Failed to fetch data: {error_info}</div>', unsafe_allow_html=True)
                     
                     # Show detailed failure analysis
                     if hasattr(optimizer, 'failed_tickers') and optimizer.failed_tickers:
-                        st.warning(f"📊 Failed to fetch data for: {', '.join(optimizer.failed_tickers)}")
+                        st.warning(f" Failed to fetch data for: {', '.join(optimizer.failed_tickers)}")
                         
                         # Check for common issues
                         if len(optimizer.failed_tickers) == len(tickers):
-                            st.error("🚨 **All tickers failed!** This usually indicates:")
+                            st.error(" **All tickers failed!** This usually indicates:")
                             st.markdown("""
                             - Internet connectivity issues
                             - Yahoo Finance API problems  
@@ -913,7 +913,7 @@ with col1:
                             - Regional access restrictions
                             """)
                         elif len(optimizer.failed_tickers) > len(tickers) * 0.5:
-                            st.warning("⚠️ **Most tickers failed.** Common causes:")
+                            st.warning(" **Most tickers failed.** Common causes:")
                             st.markdown("""
                             - Network issues or rate limiting
                             - Ticker symbol format problems
@@ -921,43 +921,43 @@ with col1:
                             """)
                     
                     # Provide troubleshooting suggestions
-                    with st.expander("🔧 Troubleshooting Guide", expanded=True):
+                    with st.expander(" Troubleshooting Guide", expanded=True):
                         st.markdown("""
                         **Most Common Issues:**
                         
-                        🔍 **Invalid Ticker Symbols:**
+                         **Invalid Ticker Symbols:**
                         - Make sure you're using the correct stock symbols (AAPL, not Apple Inc.)
                         - Remove any spaces or special characters
                         - Use US stock symbols (NYSE, NASDAQ)
                         
-                        📡 **Connection Issues:**
+                         **Connection Issues:**
                         - Check your internet connection
                         - Yahoo Finance servers might be busy - try again in 1-2 minutes
                         - Try fewer tickers at once (2-3 maximum)
                         
-                        🕒 **Market Data Availability:**
+                         **Market Data Availability:**
                         - Some stocks may not have sufficient historical data
                         - Try major blue-chip stocks: AAPL, MSFT, JNJ, PG, KO
                         - Avoid recently listed companies or penny stocks
                         
-                        💡 **Quick Solutions:**
+                         **Quick Solutions:**
                         """)
                         
                         # Add quick solution buttons
                         sol_col1, sol_col2, sol_col3 = st.columns(3)
                         
                         with sol_col1:
-                            if st.button("🏢 Try Blue Chips", help="Use reliable blue chip stocks"):
+                            if st.button(" Try Blue Chips", help="Use reliable blue chip stocks"):
                                 st.session_state.tickers_input = "AAPL, MSFT, JNJ, PG, KO"
                                 st.rerun()
                         
                         with sol_col2:
-                            if st.button("📈 Try Top ETFs", help="Use popular ETFs"):
+                            if st.button(" Try Top ETFs", help="Use popular ETFs"):
                                 st.session_state.tickers_input = "SPY, QQQ, VTI"
                                 st.rerun()
                         
                         with sol_col3:
-                            if st.button("💰 Try Finance Sector", help="Use financial stocks"):
+                            if st.button(" Try Finance Sector", help="Use financial stocks"):
                                 st.session_state.tickers_input = "JPM, BAC, WFC"
                                 st.rerun()
                 else:
@@ -965,14 +965,14 @@ with col1:
                     
                     # Show data fetch results
                     if error_info:  # Some tickers failed
-                        st.markdown(f'<div class="status-warning">⚠️ Could not fetch data for: {error_info}</div>', unsafe_allow_html=True)
-                        st.markdown(f'<div class="status-success">✅ Successfully loaded: {", ".join(optimizer.tickers)}</div>', unsafe_allow_html=True)
+                        st.markdown(f'<div class="status-warning"> Could not fetch data for: {error_info}</div>', unsafe_allow_html=True)
+                        st.markdown(f'<div class="status-success"> Successfully loaded: {", ".join(optimizer.tickers)}</div>', unsafe_allow_html=True)
                     else:
-                        st.markdown(f'<div class="status-success">🎉 Successfully loaded all {len(optimizer.tickers)} assets!</div>', unsafe_allow_html=True)
+                        st.markdown(f'<div class="status-success"> Successfully loaded all {len(optimizer.tickers)} assets!</div>', unsafe_allow_html=True)
                     
                     # Display data quality information
                     if optimizer.data_quality_info:
-                        st.markdown("#### 📊 Data Quality Report")
+                        st.markdown("#### Data Quality Report")
                         quality_cols = st.columns(len(optimizer.tickers))
                         
                         for i, ticker in enumerate(optimizer.tickers):
@@ -993,14 +993,14 @@ with col1:
                     
                     # Get risk-free rate
                     if include_rf:
-                        with st.spinner("💰 Fetching risk-free rate..."):
+                        with st.spinner(" Fetching risk-free rate..."):
                             rf_rate = optimizer.get_risk_free_rate()
-                            st.info(f"💰 Current risk-free rate: {rf_rate:.2%}")
+                            st.info(f" Current risk-free rate: {rf_rate:.2%}")
                     
                     # Run optimization
-                    st.info(f"🎯 Running {methods_info[selected_method]['title']} optimization...")
+                    st.info(f" Running {methods_info[selected_method]['title']} optimization...")
                     
-                    with st.spinner("🧮 Optimizing portfolio..."):
+                    with st.spinner(" Optimizing portfolio..."):
                         result = optimizer.optimize_portfolio(
                             method=selected_method,
                             target_return=target_return,
@@ -1026,7 +1026,7 @@ with col1:
                         st.markdown(f'<div class="status-error">❌ Optimization failed: {result["error"]}</div>', unsafe_allow_html=True)
                         
                         # Provide optimization troubleshooting
-                        with st.expander("🔧 Optimization Troubleshooting", expanded=True):
+                        with st.expander(" Optimization Troubleshooting", expanded=True):
                             st.markdown("""
                             **Possible issues and solutions:**
                             
@@ -1049,7 +1049,7 @@ with col1:
 
 with col2:
     st.markdown('<div class="danger-button">', unsafe_allow_html=True)
-    if st.button("🗑️ Clear Results", help="Clear current optimization results", use_container_width=True):
+    if st.button(" Clear Results", help="Clear current optimization results", use_container_width=True):
         # Clear all session state
         for key in ['optimizer', 'optimization_results', 'data_fetched']:
             if key in st.session_state:
@@ -1065,7 +1065,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
     # Results Section with enhanced styling
     st.markdown("""
         <div class="results-section">
-            <div class="results-title">🏆 Optimization Results</div>
+            <div class="results-title"> Optimization Results</div>
         </div>
     """, unsafe_allow_html=True)
     
@@ -1080,7 +1080,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
             <div class="metric-card">
                 <span class="metric-value">{result['expected_return']*100:.1f}%</span>
                 <div class="metric-label">Expected Return</div>
-                <div class="metric-change">📈 Annualized</div>
+                <div class="metric-change"> Annualized</div>
             </div>
         """, unsafe_allow_html=True)
     
@@ -1089,7 +1089,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
             <div class="metric-card">
                 <span class="metric-value">{result['volatility']*100:.1f}%</span>
                 <div class="metric-label">Volatility</div>
-                <div class="metric-change">📊 Annual Risk</div>
+                <div class="metric-change"> Annual Risk</div>
             </div>
         """, unsafe_allow_html=True)
     
@@ -1099,7 +1099,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
             <div class="metric-card">
                 <span class="metric-value">{result['sharpe_ratio']:.2f}</span>
                 <div class="metric-label">Sharpe Ratio</div>
-                <div class="metric-change {sharpe_color}">⚡ Risk-Adjusted</div>
+                <div class="metric-change {sharpe_color}"> Risk-Adjusted</div>
             </div>
         """, unsafe_allow_html=True)
     
@@ -1109,7 +1109,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
             <div class="metric-card">
                 <span class="metric-value">{diversification:.1f}</span>
                 <div class="metric-label">Diversification</div>
-                <div class="metric-change">🔄 Effective Assets</div>
+                <div class="metric-change"> Effective Assets</div>
             </div>
         """, unsafe_allow_html=True)
     
@@ -1120,7 +1120,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
             <div class="metric-card">
                 <span class="metric-value">{max_dd:.1f}%</span>
                 <div class="metric-label">Max Drawdown</div>
-                <div class="metric-change {dd_color}">📉 Historical</div>
+                <div class="metric-change {dd_color}"> Historical</div>
             </div>
         """, unsafe_allow_html=True)
     
@@ -1135,7 +1135,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
                 <div class="metric-card">
                     <span class="metric-value">{result['sortino_ratio']:.2f}</span>
                     <div class="metric-label">Sortino Ratio</div>
-                    <div class="metric-change">📊 Downside Risk</div>
+                    <div class="metric-change"> Downside Risk</div>
                 </div>
             """, unsafe_allow_html=True)
         
@@ -1145,7 +1145,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
                 <div class="metric-card">
                     <span class="metric-value">{cvar:.1f}%</span>
                     <div class="metric-label">CVaR (95%)</div>
-                    <div class="metric-change">⚠️ Tail Risk</div>
+                    <div class="metric-change"> Tail Risk</div>
                 </div>
             """, unsafe_allow_html=True)
         
@@ -1155,17 +1155,17 @@ if st.session_state.optimization_results and st.session_state.optimizer:
                 <div class="metric-card">
                     <span class="metric-value">{concentration:.3f}</span>
                     <div class="metric-label">Concentration</div>
-                    <div class="metric-change">📊 HHI Index</div>
+                    <div class="metric-change"> HHI Index</div>
                 </div>
             """, unsafe_allow_html=True)
     
     # Enhanced Tabbed Results Display
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "📊 Portfolio Composition",
-        "📈 Efficient Frontier", 
-        "⚡ Risk Analysis",
-        "📉 Performance Analytics",
-        "🏛️ CAPM Analysis"
+        " Portfolio Composition",
+        " Efficient Frontier", 
+        " Risk Analysis",
+        " Performance Analytics",
+        " CAPM Analysis"
     ])
     
     with tab1:
@@ -1179,7 +1179,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
         col1, col2 = st.columns([1, 1])
         
         with col1:
-            st.markdown("#### 💼 Asset Allocation")
+            st.markdown("#### Asset Allocation")
             allocation_data = []
             for i, ticker in enumerate(optimizer.tickers):
                 weight = result['weights'][i]
@@ -1194,7 +1194,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
             st.dataframe(allocation_df, hide_index=True, use_container_width=True)
         
         with col2:
-            st.markdown("#### ⚡ Risk Attribution")
+            st.markdown("#### Risk Attribution")
             risk_data = []
             for i, ticker in enumerate(optimizer.tickers):
                 risk_contrib = result['risk_contribution'][i] if len(result['risk_contribution']) > i else 0
@@ -1219,10 +1219,10 @@ if st.session_state.optimization_results and st.session_state.optimizer:
         if frontier_fig:
             st.plotly_chart(frontier_fig, use_container_width=True)
         else:
-            st.warning("⚠️ Could not generate efficient frontier. Try reducing the number of assets or using different optimization method.")
+            st.warning(" Could not generate efficient frontier. Try reducing the number of assets or using different optimization method.")
         
         # Enhanced frontier statistics
-        st.markdown("#### 📊 Frontier Analysis")
+        st.markdown("#### Frontier Analysis")
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
@@ -1257,7 +1257,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
                 st.metric(
                     "Convergence", 
                     f"{iterations} iterations",
-                    "✅ Successful" if result['optimization_details'].get('converged', False) else "⚠️ Warning",
+                    " Successful" if result['optimization_details'].get('converged', False) else " Warning",
                     help="Optimization convergence details"
                 )
         
@@ -1270,7 +1270,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
         st.plotly_chart(risk_analysis_fig, use_container_width=True)
         
         # Enhanced risk metrics summary
-        st.markdown("#### ⚡ Risk Metrics Summary")
+        st.markdown("#### Risk Metrics Summary")
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
@@ -1300,7 +1300,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
         # Enhanced performance statistics
         portfolio_returns = (optimizer.returns * result['weights']).sum(axis=1)
         
-        st.markdown("#### 📊 Performance Statistics")
+        st.markdown("#### Performance Statistics")
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
@@ -1381,7 +1381,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
         if show_capm:
             st.markdown('<div class="chart-container">', unsafe_allow_html=True)
             
-            with st.spinner("📊 Calculating CAPM metrics..."):
+            with st.spinner(" Calculating CAPM metrics..."):
                 capm_metrics = optimizer.calculate_capm_metrics()
             
             if capm_metrics:
@@ -1390,7 +1390,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
                     st.plotly_chart(capm_fig, use_container_width=True)
                 
                 # Enhanced CAPM summary
-                st.markdown("#### 🏛️ CAPM Analysis Summary")
+                st.markdown("#### CAPM Analysis Summary")
                 
                 # Create enhanced CAPM table
                 capm_data = []
@@ -1414,7 +1414,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
                     st.dataframe(capm_df, hide_index=True, use_container_width=True)
                     
                     # CAPM interpretation
-                    st.markdown("#### 📚 CAPM Interpretation")
+                    st.markdown("#### CAPM Interpretation")
                     col1, col2 = st.columns(2)
                     
                     with col1:
@@ -1433,7 +1433,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
                         - **Alpha ≈ 0:** Performing as expected
                         """)
             else:
-                st.markdown('<div class="status-warning">⚠️ CAPM analysis not available - market data could not be fetched</div>', unsafe_allow_html=True)
+                st.markdown('<div class="status-warning"> CAPM analysis not available - market data could not be fetched</div>', unsafe_allow_html=True)
                 
                 st.markdown("""
                 **Why CAPM might not be available:**
@@ -1444,17 +1444,17 @@ if st.session_state.optimization_results and st.session_state.optimizer:
             
             st.markdown('</div>', unsafe_allow_html=True)
         else:
-            st.markdown('<div class="status-info">📊 CAPM analysis disabled. Enable in Advanced Options to view detailed beta and alpha analysis.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="status-info"> CAPM analysis disabled. Enable in Advanced Options to view detailed beta and alpha analysis.</div>', unsafe_allow_html=True)
 
 # Debug and Troubleshooting Section
-with st.expander("🔧 Debug & Troubleshooting", expanded=False):
+with st.expander(" Debug & Troubleshooting", expanded=False):
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown("#### 🧪 Test Individual Tickers")
+        st.markdown("#### Test Individual Tickers")
         debug_ticker = st.text_input("Enter a single ticker to test:", value="AAPL", help="Test if a ticker is valid and has data")
         
-        if st.button("🔍 Test Ticker", key="debug_test"):
+        if st.button(" Test Ticker", key="debug_test"):
             if debug_ticker.strip():
                 with st.spinner(f"Testing {debug_ticker.upper()}..."):
                     try:
@@ -1464,10 +1464,10 @@ with st.expander("🔧 Debug & Troubleshooting", expanded=False):
                         success, message, raw_data = test_optimizer.simple_ticker_test(debug_ticker.upper())
                         
                         if success:
-                            st.success(f"✅ Basic Test: {message}")
+                            st.success(f" Basic Test: {message}")
                             
                             # Show raw data structure
-                            with st.expander("📊 Raw Data Structure", expanded=False):
+                            with st.expander(" Raw Data Structure", expanded=False):
                                 st.write("**Data Shape:**", raw_data.shape)
                                 st.write("**Columns:**", list(raw_data.columns))
                                 st.write("**Index Type:**", type(raw_data.index).__name__)
@@ -1478,18 +1478,18 @@ with st.expander("🔧 Debug & Troubleshooting", expanded=False):
                             full_success, full_message = test_optimizer.quick_test_ticker(debug_ticker.upper())
                             
                             if full_success:
-                                st.success(f"✅ Full Test: {full_message}")
+                                st.success(f" Full Test: {full_message}")
                             else:
-                                st.error(f"❌ Full Test Failed: {full_message}")
+                                st.error(f" Full Test Failed: {full_message}")
                                 
                         else:
-                            st.error(f"❌ Basic Test Failed: {message}")
+                            st.error(f" Basic Test Failed: {message}")
                             
                     except Exception as e:
-                        st.error(f"❌ Critical Error: {str(e)}")
+                        st.error(f" Critical Error: {str(e)}")
                         
                         # Show detailed traceback for debugging
-                        with st.expander("🐛 Error Details", expanded=False):
+                        with st.expander(" Error Details", expanded=False):
                             import traceback
                             st.code(traceback.format_exc())
                             
@@ -1497,7 +1497,7 @@ with st.expander("🔧 Debug & Troubleshooting", expanded=False):
                 st.warning("Please enter a ticker symbol")
     
     with col2:
-        st.markdown("#### 🛠️ System Information")
+        st.markdown("#### System Information")
         
         if st.session_state.optimizer:
             optimizer = st.session_state.optimizer
@@ -1523,49 +1523,49 @@ with st.expander("🔧 Debug & Troubleshooting", expanded=False):
             st.info("No optimizer initialized yet")
     
     st.markdown("""
-    #### 🚨 Common Issues & Solutions
+    #### Common Issues & Solutions
     
     **"No valid ticker symbols found" / "Failed to fetch data"**
-    - ✅ Check internet connection
-    - ✅ Verify ticker symbols are correct (e.g., AAPL not Apple)
-    - ✅ Try well-known tickers: AAPL, MSFT, GOOGL, AMZN, TSLA
-    - ✅ Ensure tickers are from major exchanges (NYSE, NASDAQ)
-    - ✅ Wait a moment and try again (rate limiting)
+    - Check internet connection
+    - Verify ticker symbols are correct (e.g., AAPL not Apple)
+    - Try well-known tickers: AAPL, MSFT, GOOGL, AMZN, TSLA
+    - Ensure tickers are from major exchanges (NYSE, NASDAQ)
+    - Wait a moment and try again (rate limiting)
     
     **"yfinance download errors"**
-    - ✅ This is often due to Yahoo Finance API changes
-    - ✅ Try fewer tickers at once (2-3 maximum)
-    - ✅ Use the individual ticker test feature below
-    - ✅ Try during US market hours for better reliability
+    - This is often due to Yahoo Finance API changes
+    - Try fewer tickers at once (2-3 maximum)
+    - Use the individual ticker test feature below
+    - Try during US market hours for better reliability
     
     **"Optimization failed to converge"**
-    - ✅ Try different optimization method (Maximum Sharpe works best)
-    - ✅ Adjust target return/volatility to realistic levels
-    - ✅ Check min/max weight constraints
-    - ✅ Reduce number of assets (5-8 works well)
+    - Try different optimization method (Maximum Sharpe works best)
+    - Adjust target return/volatility to realistic levels
+    - Check min/max weight constraints
+    - Reduce number of assets (5-8 works well)
     
     **"Data fetching errors"**
-    - ✅ Yahoo Finance may be temporarily unavailable
-    - ✅ Try again in a few minutes
-    - ✅ Use fewer tickers (2-5 assets)
-    - ✅ Check ticker formats (no special characters)
+    - Yahoo Finance may be temporarily unavailable
+    - Try again in a few minutes
+    - Use fewer tickers (2-5 assets)
+    - Check ticker formats (no special characters)
     
     **"Insufficient data"**
-    - ✅ Choose tickers with longer trading history
-    - ✅ Avoid newly listed stocks or ETFs
-    - ✅ Reduce lookback period to 1-2 years
-    - ✅ Try major blue-chip stocks first
+    - Choose tickers with longer trading history
+    - Avoid newly listed stocks or ETFs
+    - Reduce lookback period to 1-2 years
+    - Try major blue-chip stocks first
     """)
     
     # Add a data fetch test section
-    st.markdown("#### 🧪 Data Fetch Test")
+    st.markdown("#### Data Fetch Test")
     col1, col2 = st.columns(2)
     
     with col1:
         test_ticker = st.text_input("Test a ticker:", value="AAPL", help="Test individual ticker data availability")
         
     with col2:
-        if st.button("🔍 Test Data Fetch", key="test_fetch"):
+        if st.button(" Test Data Fetch", key="test_fetch"):
             if test_ticker.strip():
                 with st.spinner(f"Testing data fetch for {test_ticker.upper()}..."):
                     try:
@@ -1576,7 +1576,7 @@ with st.expander("🔧 Debug & Troubleshooting", expanded=False):
                         data = yf.download(test_ticker.upper(), period='30d', progress=False)
                         
                         if data.empty:
-                            st.error(f"❌ No data available for {test_ticker.upper()}")
+                            st.error(f" No data available for {test_ticker.upper()}")
                         else:
                             # Test our data extraction method
                             try:
@@ -1584,7 +1584,7 @@ with st.expander("🔧 Debug & Troubleshooting", expanded=False):
                                 price_series = temp_optimizer._extract_price_series(data, test_ticker.upper())
                                 
                                 if price_series is not None and len(price_series) > 0:
-                                    st.success(f"✅ Successfully fetched and extracted {len(price_series)} price points for {test_ticker.upper()}")
+                                    st.success(f" Successfully fetched and extracted {len(price_series)} price points for {test_ticker.upper()}")
                                     
                                     # Show basic info - handle both single and multi-index columns
                                     try:
@@ -1600,47 +1600,47 @@ with st.expander("🔧 Debug & Troubleshooting", expanded=False):
                                         - Date range: {data.index.min().strftime('%Y-%m-%d')} to {data.index.max().strftime('%Y-%m-%d')}
                                         - Columns: {', '.join(columns_list)}
                                         - Latest price: ${latest_price:.2f}
-                                        - Data extraction: ✅ Success
+                                        - Data extraction: Success
                                         """)
                                     except Exception as info_error:
                                         st.info(f"Data extracted successfully but couldn't parse details: {str(info_error)}")
                                         
                                 else:
-                                    st.warning(f"⚠️ Data fetched but price extraction failed for {test_ticker.upper()}")
+                                    st.warning(f" Data fetched but price extraction failed for {test_ticker.upper()}")
                                     
                             except Exception as extract_error:
-                                st.warning(f"⚠️ Data fetched but extraction test failed: {str(extract_error)}")
-                                st.success(f"✅ Basic fetch successful for {test_ticker.upper()} ({len(data)} rows)")
+                                st.warning(f" Data fetched but extraction test failed: {str(extract_error)}")
+                                st.success(f" Basic fetch successful for {test_ticker.upper()} ({len(data)} rows)")
                             
                     except Exception as e:
-                        st.error(f"❌ Error testing {test_ticker.upper()}: {str(e)}")
+                        st.error(f" Error testing {test_ticker.upper()}: {str(e)}")
             else:
                 st.warning("Please enter a ticker symbol")
 
 # Tips and Information Section
-with st.expander("💡 Tips & Best Practices", expanded=False):
+with st.expander(" Tips & Best Practices", expanded=False):
     col1, col2 = st.columns(2)
     
     with col1:
         st.markdown("""
-        #### 🎯 Optimization Methods Guide
+        #### Optimization Methods Guide
         
-        **🏆 Maximum Sharpe Ratio**
+        ** Maximum Sharpe Ratio**
         - Best for: General portfolio optimization
         - Goal: Maximize risk-adjusted returns
         - Ideal for: Most investors seeking balance
         
-        **🛡️ Minimum Variance**
+        ** Minimum Variance**
         - Best for: Conservative investors
         - Goal: Minimize portfolio risk
         - Ideal for: Risk-averse investors, stable income needs
         
-        **🎯 Target Return**
+        ** Target Return**
         - Best for: Specific return goals
         - Goal: Achieve target with minimum risk
         - Ideal for: Pension funds, endowments
         
-        **⚖️ Target Volatility**
+        ** Target Volatility**
         - Best for: Risk budgeting
         - Goal: Maximize return for specific risk
         - Ideal for: Risk-managed strategies
@@ -1648,7 +1648,7 @@ with st.expander("💡 Tips & Best Practices", expanded=False):
     
     with col2:
         st.markdown("""
-        #### 📊 Key Metrics Explained
+        #### Key Metrics Explained
         
         **Expected Return**: Annualized expected portfolio return
         **Volatility**: Annual portfolio standard deviation (risk)
@@ -1663,26 +1663,26 @@ with st.expander("💡 Tips & Best Practices", expanded=False):
         """)
     
     st.markdown("""
-    #### ⚠️ Important Considerations
+    #### Important Considerations
     
-    🔍 **Data Limitations**
+     **Data Limitations**
     - Results based on historical data (past performance ≠ future results)
     - Market conditions change rapidly
     - Consider transaction costs and taxes in real implementation
     
-    📈 **Portfolio Implementation**
+     **Portfolio Implementation**
     - Rebalance periodically (quarterly/annually)
     - Consider market impact of trades
     - Account for bid-ask spreads and commissions
     - Monitor portfolio drift from target weights
     
-    🎯 **Risk Management**
+     **Risk Management**
     - Diversification doesn't guarantee profits
     - Monitor correlation changes over time
     - Consider regime changes and black swan events
     - Use multiple risk metrics for comprehensive analysis
     
-    💼 **Practical Usage**
+     **Practical Usage**
     - Start with 3-6 well-known assets
     - Use 2-3 years of data for stable results
     - Test with paper trading before real implementation
