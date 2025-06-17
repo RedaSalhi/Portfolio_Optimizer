@@ -983,7 +983,7 @@ with col1:
         disabled=not valid_input, 
         help="Fetch market data and run portfolio optimization", 
         use_container_width=True,
-        type="primary"
+        type="secondary"
     ):
         with st.spinner(" Initializing portfolio optimizer..."):
             try:
