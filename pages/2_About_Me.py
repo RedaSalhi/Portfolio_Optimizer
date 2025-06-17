@@ -389,19 +389,19 @@ st.markdown("""
 #            )
 #   else:
 #        st.info("English CV - Coming Soon")
-"""
+
 #with col2:
-    if os.path.exists(cv_fr):
-        with open(cv_fr, "rb") as f:
-            st.download_button(
-                label="Download CV - French Version", 
-                data=f,
-                file_name="Reda_Salhi_CV_FR.pdf",
-                mime="application/pdf",
-                use_container_width=True
-            )
-    else:
-        st.info("French CV - Coming Soon")"""
+#    if os.path.exists(cv_fr):
+#        with open(cv_fr, "rb") as f:
+#            st.download_button(
+#                label="Download CV - French Version", 
+#                data=f,
+#                file_name="Reda_Salhi_CV_FR.pdf",
+#                mime="application/pdf",
+#                use_container_width=True
+#            )
+#    else:
+#        st.info("French CV - Coming Soon")
 
 # Links Section
 st.markdown("""
