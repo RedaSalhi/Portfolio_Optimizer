@@ -3,7 +3,7 @@
 import streamlit as st
 
 # Page config
-st.set_page_config(page_title="Bibliography & Research", layout="wide", page_icon="🎓")
+st.set_page_config(page_title="Bibliography & Research", layout="wide", page_icon="")
 
 # Enhanced CSS styling with interactive elements
 st.markdown("""
@@ -377,7 +377,7 @@ st.markdown("""
 # Hero Section
 st.markdown("""
     <div class="bib-hero">
-        <h1>🎓 Bibliography & Research</h1>
+        <h1>Bibliography & Research</h1>
         <p>Comprehensive academic foundations and cutting-edge research in quantitative finance</p>
         <div class="hero-stats">
             <div class="hero-stat">
@@ -398,14 +398,14 @@ st.markdown("""
 
 # Back Button
 st.markdown('<div class="back-button">', unsafe_allow_html=True)
-if st.button("🔙 Back to Home"):
+if st.button("Back to Home"):
     st.switch_page("streamlit_app.py")
 st.markdown('</div>', unsafe_allow_html=True)
 
 # Interactive Filter Section
 st.markdown("""
     <div class="filter-section">
-        <div class="filter-title">📚 Browse Research by Category</div>
+        <div class="filter-title">Browse Research by Category</div>
     </div>
 """, unsafe_allow_html=True)
 
@@ -413,19 +413,19 @@ st.markdown("""
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
-    if st.button("📈 Portfolio Theory", use_container_width=True):
+    if st.button("Portfolio Theory", use_container_width=True):
         st.session_state.selected_category = "portfolio"
 
 with col2:
-    if st.button("⚡ Risk Management", use_container_width=True):
+    if st.button("Risk Management", use_container_width=True):
         st.session_state.selected_category = "risk"
 
 with col3:
-    if st.button("💰 Asset Pricing", use_container_width=True):
+    if st.button("Asset Pricing", use_container_width=True):
         st.session_state.selected_category = "pricing"
 
 with col4:
-    if st.button("📊 All References", use_container_width=True):
+    if st.button("All References", use_container_width=True):
         st.session_state.selected_category = "all"
 
 # Get selected category
@@ -434,12 +434,12 @@ selected_category = st.session_state.get("selected_category", "all")
 # Search functionality
 st.markdown("""
     <div class="search-container">
-        <input type="text" class="search-box" placeholder="🔍 Search references by author, title, or keyword..." id="searchBox">
+        <input type="text" class="search-box" placeholder="Search references by author, title, or keyword..." id="searchBox">
     </div>
 """, unsafe_allow_html=True)
 
 # Timeline of Key Developments
-with st.expander("📅 Timeline of Key Financial Theory Developments", expanded=False):
+with st.expander("Timeline of Key Financial Theory Developments", expanded=False):
     st.markdown("""
         <div class="timeline-container">
             <div class="timeline-item">
@@ -542,16 +542,16 @@ references = {
 if selected_category == "all":
     categories_to_show = ["portfolio", "risk", "pricing"]
     category_names = {
-        "portfolio": "📈 Modern Portfolio Theory & Asset Pricing", 
-        "risk": "⚡ Risk Management & Measurement",
-        "pricing": "💰 Derivatives Pricing & Models"
+        "portfolio": "Modern Portfolio Theory & Asset Pricing", 
+        "risk": "Risk Management & Measurement",
+        "pricing": "Derivatives Pricing & Models"
     }
 else:
     categories_to_show = [selected_category]
     category_names = {
-        "portfolio": "📈 Modern Portfolio Theory & Asset Pricing",
-        "risk": "⚡ Risk Management & Measurement", 
-        "pricing": "💰 Derivatives Pricing & Models"
+        "portfolio": "Modern Portfolio Theory & Asset Pricing",
+        "risk": "Risk Management & Measurement", 
+        "pricing": "Derivatives Pricing & Models"
     }
 
 for category in categories_to_show:
@@ -580,11 +580,11 @@ for category in categories_to_show:
         st.markdown("</div></div>", unsafe_allow_html=True)
 
 # Additional Research Tools
-with st.expander("🔬 Research Tools & Data Sources", expanded=False):
+with st.expander("Research Tools & Data Sources", expanded=False):
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown("### 📊 Data Sources")
+        st.markdown("### Data Sources")
         st.markdown("""
         - **Yahoo Finance API** (via `yfinance`) — Equity & ETF price data
         - **FRED (Federal Reserve Economic Data)** — Bond yields & macro indicators  
@@ -594,7 +594,7 @@ with st.expander("🔬 Research Tools & Data Sources", expanded=False):
         """)
     
     with col2:
-        st.markdown("### 🛠️ Technical Implementation")
+        st.markdown("### Technical Implementation")
         st.markdown("""
         - **Python Libraries**: `numpy`, `pandas`, `scipy`, `matplotlib`, `plotly`
         - **Financial Tools**: `yfinance`, `pandas_datareader`, `quantlib`
@@ -606,7 +606,7 @@ with st.expander("🔬 Research Tools & Data Sources", expanded=False):
 # PDF Download Section
 st.markdown("""
     <div class="pdf-section">
-        <span class="pdf-icon">📑</span>
+        <span class="pdf-icon"></span>
         <div class="pdf-title">Complete Research Document</div>
         <div class="pdf-description">
             Download the comprehensive research paper that provides detailed analysis, implementation notes, 
@@ -619,17 +619,17 @@ st.markdown("""
 try:
     with open("assets/Value_at_Risk.pdf", "rb") as pdf_file:
         st.download_button(
-            label="📥 Download Complete Research Paper (PDF)",
+            label="Download Complete Research Paper (PDF)",
             data=pdf_file,
             file_name="QuantRisk_Analytics_Research_Paper.pdf",
             mime="application/pdf",
             use_container_width=True
         )
 except FileNotFoundError:
-    st.info("📝 Research paper will be available soon. Currently finalizing the comprehensive analysis.")
+    st.info("Research paper will be available soon. Currently finalizing the comprehensive analysis.")
 
 # Concepts Covered Section
-with st.expander("🎯 Key Concepts Implemented in This Platform", expanded=False):
+with st.expander("Key Concepts Implemented in This Platform", expanded=False):
     col1, col2, col3 = st.columns(3)
     
     with col1:

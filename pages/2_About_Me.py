@@ -8,7 +8,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 
 # Page configuration
-st.set_page_config(page_title="About Me", layout="centered", page_icon="👨‍💼")
+st.set_page_config(page_title="About Me", layout="centered", page_icon="")
 
 # Enhanced CSS styling
 st.markdown("""
@@ -328,7 +328,7 @@ st.markdown("""
 # Hero Section
 st.markdown("""
     <div class="about-hero">
-        <h1>👨‍💼 About Me</h1>
+        <h1>About Me</h1>
         <p>Financial Engineering Student & Quantitative Research Enthusiast</p>
         <div class="hero-badges">
             <span class="hero-badge">Centrale Méditerranée</span>
@@ -341,14 +341,14 @@ st.markdown("""
 
 # Back Button
 st.markdown('<div class="back-button">', unsafe_allow_html=True)
-if st.button("🔙 Back to Home"):
+if st.button("Back to Home"):
     st.switch_page("streamlit_app.py")
 st.markdown('</div>', unsafe_allow_html=True)
 
 # Profile Section
 st.markdown("""
     <div class="section-card">
-        <div class="section-title">🎓 Profile</div>
+        <div class="section-title">Profile</div>
         <div class="profile-content">
             <strong>SALHI Reda</strong><br><br>
             Engineering student at <strong>Centrale Méditerranée</strong><br>
@@ -363,7 +363,7 @@ st.markdown("""
 # CV Downloads Section
 st.markdown("""
     <div class="section-card">
-        <div class="section-title">📄 Resume Downloads</div>
+        <div class="section-title">Resume Downloads</div>
         <div class="cv-section">
             <p class="cv-description">Download my latest resume in your preferred language:</p>
         </div>
@@ -380,46 +380,46 @@ with col1:
     if os.path.exists(cv_en):
         with open(cv_en, "rb") as f:
             st.download_button(
-                label="📥 Download CV - English Version",
+                label="Download CV - English Version",
                 data=f,
                 file_name="Reda_Salhi_CV_EN.pdf",
                 mime="application/pdf",
                 use_container_width=True
             )
     else:
-        st.info("📝 English CV - Coming Soon")
+        st.info("English CV - Coming Soon")
 
 with col2:
     if os.path.exists(cv_fr):
         with open(cv_fr, "rb") as f:
             st.download_button(
-                label="📥 Download CV - French Version", 
+                label="Download CV - French Version", 
                 data=f,
                 file_name="Reda_Salhi_CV_FR.pdf",
                 mime="application/pdf",
                 use_container_width=True
             )
     else:
-        st.info("📝 French CV - Coming Soon")
+        st.info("French CV - Coming Soon")
 
 # Links Section
 st.markdown("""
     <div class="section-card">
-        <div class="section-title">🔗 Connect With Me</div>
+        <div class="section-title">Connect With Me</div>
         <div class="links-container">
             <div class="link-item">
                 <a href="https://www.linkedin.com/in/reda-salhi-195297290/" target="_blank">
-                    💼 LinkedIn Profile
+                    LinkedIn Profile
                 </a>
             </div>
             <div class="link-item">
                 <a href="https://github.com/RedaSalhi" target="_blank">
-                    💻 GitHub Portfolio
+                    GitHub Portfolio
                 </a>
             </div>
             <div class="link-item">
                 <a href="mailto:salhi.reda47@gmail.com">
-                    📧 salhi.reda47@gmail.com
+                    salhi.reda47@gmail.com
                 </a>
             </div>
         </div>
@@ -429,7 +429,7 @@ st.markdown("""
 # Contact Form Section
 st.markdown("""
     <div class="section-card">
-        <div class="section-title">📬 Contact Me</div>
+        <div class="section-title">Contact Me</div>
         <div class="contact-form-container">
             <p style="text-align: center; color: #6c757d; margin-bottom: 2rem;">If you'd like to get in touch, just fill out the form below:</p>
         </div>
@@ -457,7 +457,7 @@ st.markdown(form_code, unsafe_allow_html=True)
 # Skills & Interests Section
 st.markdown("""
     <div class="section-card">
-        <div class="section-title">🚀 Skills & Expertise</div>
+        <div class="section-title">Skills & Expertise</div>
     </div>
 """, unsafe_allow_html=True)
 
@@ -468,7 +468,7 @@ col1, col2, col3 = st.columns(3)
 with col1:
     st.markdown("""
         <div class="skill-card">
-            <h3>💻 Technical Skills</h3>
+            <h3>Technical Skills</h3>
             <ul>
                 <li><strong>Programming:</strong> Python, SQL, MATLAB, Excel</li>
                 <li><strong>Finance:</strong> Derivatives Pricing, Risk Management, Portfolio Optimization</li>
@@ -481,7 +481,7 @@ with col1:
 with col2:
     st.markdown("""
         <div class="skill-card">
-            <h3>🎯 Areas of Interest</h3>
+            <h3>Areas of Interest</h3>
             <ul>
                 <li>Quantitative Finance</li>
                 <li>Financial Engineering</li>
@@ -494,7 +494,7 @@ with col2:
 with col3:
     st.markdown("""
         <div class="skill-card">
-            <h3>🔬 Current Focus</h3>
+            <h3>Current Focus</h3>
             <ul>
                 <li>Derivatives Pricing</li>
                 <li>Monte Carlo Simulations</li>
