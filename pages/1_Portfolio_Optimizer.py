@@ -564,7 +564,24 @@ st.markdown("""
             padding: 2rem;
             border-radius: 16px;
             margin: 1rem 0;
-            border: 2px dashed #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .advanced-section h4 {
+            color: #2c3e50;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .advanced-section .stMarkdown {
+            margin-bottom: 1.5rem;
+        }
+
+        .advanced-section .stButton > button {
+            margin: 0.5rem 0;
         }
 
         /* Responsive Design */
@@ -948,220 +965,231 @@ elif selected_method == 'target_volatility':
 st.markdown('</div>', unsafe_allow_html=True)
 
 # Advanced Options
-with st.expander(" Advanced Options", expanded=False):
+with st.expander("Advanced Options & Debugging", expanded=False):
+    st.markdown("""
+        <style>
+            .advanced-section {
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                padding: 2rem;
+                border-radius: 16px;
+                margin: 1rem 0;
+                border: 2px solid #667eea;
+            }
+
+            .advanced-section h4 {
+                color: #2c3e50;
+                font-size: 1.2rem;
+                font-weight: 600;
+                margin-bottom: 1rem;
+                padding-bottom: 0.5rem;
+                border-bottom: 2px solid #667eea;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
     st.markdown('<div class="advanced-section">', unsafe_allow_html=True)
     
+    # Analysis Options
+    st.markdown("#### Analysis Options")
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown("#### Analysis Options")
-        show_capm = st.checkbox(" CAPM Analysis", value=True, help="Show Capital Asset Pricing Model analysis")
-        frontier_points = st.slider(" Efficient Frontier Points", 25, 100, 50, help="Number of points for efficient frontier")
-        
+        show_capm = st.checkbox("CAPM Analysis", value=True, help="Show Capital Asset Pricing Model analysis")
+        frontier_points = st.slider("Efficient Frontier Points", 25, 100, 50, help="Number of points for efficient frontier")
+    
     with col2:
         st.markdown("#### Weight Constraints")
-        min_weight = st.slider(" Minimum Asset Weight", 0.0, 0.2, 0.0, step=0.01, format="%.1f%%")
-        max_weight = st.slider(" Maximum Asset Weight", 0.2, 1.0, 1.0, step=0.01, format="%.1f%%")
+        min_weight = st.slider("Minimum Asset Weight", 0.0, 0.2, 0.0, step=0.01, format="%.1f%%")
+        max_weight = st.slider("Maximum Asset Weight", 0.2, 1.0, 1.0, step=0.01, format="%.1f%%")
+
+    # Debug & Troubleshooting
+    st.markdown("#### Debug & Troubleshooting")
+    col1, col2 = st.columns(2)
     
-    st.markdown('</div>', unsafe_allow_html=True)
-
-# Validation messages with enhanced styling
-if not valid_input:
-    st.markdown('<div class="status-error"> Please enter at least 2 valid ticker symbols separated by commas</div>', unsafe_allow_html=True)
-elif len(tickers) > 10:
-    st.markdown('<div class="status-warning"> Using more than 10 assets may slow down optimization</div>', unsafe_allow_html=True)
-
-# Main Action Buttons
-st.markdown("### Portfolio Analysis")
-
-col1, col2 = st.columns([3, 1])
-
-with col1:
-    if st.button(
-        "Fetch Data & Optimize Portfolio", 
-        disabled=not valid_input, 
-        help="Fetch market data and run portfolio optimization", 
-        use_container_width=True,
-        type="primary"
-    ):
-        with st.spinner(" Initializing portfolio optimizer..."):
-            try:
-                # Initialize optimizer
-                st.info(" Initializing optimizer...")
-                optimizer = PortfolioOptimizer(tickers, lookback_years)
-                
-                # Validate tickers first
-                valid_tickers, invalid_tickers = optimizer.validate_tickers()
-                
-                if invalid_tickers:
-                    st.warning(f" Invalid ticker format detected: {', '.join(invalid_tickers)}")
-                
-                if len(valid_tickers) < 2:
-                    st.error(" Need at least 2 valid tickers for portfolio optimization")
-                    st.stop()
-                
-                # Fetch data
-                st.info(" Fetching market data...")
-                success, error_info = optimizer.fetch_data()
-                
-                if not success:
-                    st.markdown(f'<div class="status-error"> Failed to fetch data: {error_info}</div>', unsafe_allow_html=True)
-                    
-                    # Show detailed failure analysis
-                    if hasattr(optimizer, 'failed_tickers') and optimizer.failed_tickers:
-                        st.warning(f" Failed to fetch data for: {', '.join(optimizer.failed_tickers)}")
+    with col1:
+        st.markdown("##### Test Individual Tickers")
+        debug_ticker = st.text_input("Enter a single ticker to test:", value="AAPL", help="Test if a ticker is valid and has data")
+        
+        if st.button("Test Ticker", key="debug_test"):
+            if debug_ticker.strip():
+                with st.spinner(f"Testing {debug_ticker.upper()}..."):
+                    try:
+                        test_optimizer = PortfolioOptimizer([debug_ticker.upper()])
+                        success, message, raw_data = test_optimizer.simple_ticker_test(debug_ticker.upper())
                         
-                        # Check for common issues
-                        if len(optimizer.failed_tickers) == len(tickers):
-                            st.error(" **All tickers failed!** This usually indicates:")
-                            st.markdown("""
-                            - Internet connectivity issues
-                            - Yahoo Finance API problems  
-                            - Invalid ticker symbols
-                            - Regional access restrictions
-                            """)
-                        elif len(optimizer.failed_tickers) > len(tickers) * 0.5:
-                            st.warning(" **Most tickers failed.** Common causes:")
-                            st.markdown("""
-                            - Network issues or rate limiting
-                            - Ticker symbol format problems
-                            - Try fewer tickers at once
-                            """)
-                    
-                    # Provide troubleshooting suggestions
-                    with st.expander(" Troubleshooting Guide", expanded=True):
-                        st.markdown("""
-                        **Most Common Issues:**
-                        
-                         **Invalid Ticker Symbols:**
-                        - Make sure you're using the correct stock symbols (AAPL, not Apple Inc.)
-                        - Remove any spaces or special characters
-                        - Use US stock symbols (NYSE, NASDAQ)
-                        
-                         **Connection Issues:**
-                        - Check your internet connection
-                        - Yahoo Finance servers might be busy - try again in 1-2 minutes
-                        - Try fewer tickers at once (2-3 maximum)
-                        
-                         **Market Data Availability:**
-                        - Some stocks may not have sufficient historical data
-                        - Try major blue-chip stocks: AAPL, MSFT, JNJ, PG, KO
-                        - Avoid recently listed companies or penny stocks
-                        
-                         **Quick Solutions:**
-                        """)
-                        
-                        # Add quick solution buttons
-                        sol_col1, sol_col2, sol_col3 = st.columns(3)
-                        
-                        with sol_col1:
-                            if st.button(" Try Blue Chips", help="Use reliable blue chip stocks"):
-                                st.session_state.tickers_input = "AAPL, MSFT, JNJ, PG, KO"
-                                st.rerun()
-                        
-                        with sol_col2:
-                            if st.button(" Try Top ETFs", help="Use popular ETFs"):
-                                st.session_state.tickers_input = "SPY, QQQ, VTI"
-                                st.rerun()
-                        
-                        with sol_col3:
-                            if st.button(" Try Finance Sector", help="Use financial stocks"):
-                                st.session_state.tickers_input = "JPM, BAC, WFC"
-                                st.rerun()
+                        if success:
+                            st.success(f"Basic Test: {message}")
+                            st.markdown("##### Raw Data Structure")
+                            st.write("**Data Shape:**", raw_data.shape)
+                            st.write("**Columns:**", list(raw_data.columns))
+                            st.write("**Index Type:**", type(raw_data.index).__name__)
+                            st.write("**First few rows:**")
+                            st.dataframe(raw_data.head())
+                            
+                            full_success, full_message = test_optimizer.quick_test_ticker(debug_ticker.upper())
+                            if full_success:
+                                st.success(f"Full Test: {full_message}")
+                            else:
+                                st.error(f"Full Test Failed: {full_message}")
+                        else:
+                            st.error(f"Basic Test Failed: {message}")
+                    except Exception as e:
+                        st.error(f"Critical Error: {str(e)}")
+                        st.markdown("##### Error Details")
+                        import traceback
+                        st.code(traceback.format_exc())
                 else:
-                    st.session_state.data_fetched = True
-                    
-                    # Show data fetch results
-                    if error_info:  # Some tickers failed
-                        st.markdown(f'<div class="status-warning"> Could not fetch data for: {error_info}</div>', unsafe_allow_html=True)
-                        st.markdown(f'<div class="status-success"> Successfully loaded: {", ".join(optimizer.tickers)}</div>', unsafe_allow_html=True)
-                    else:
-                        st.markdown(f'<div class="status-success"> Successfully loaded all {len(optimizer.tickers)} assets!</div>', unsafe_allow_html=True)
-                    
-                    # Display data quality information
-                    if optimizer.data_quality_info:
-                        st.markdown("#### Data Quality Report")
-                        quality_cols = st.columns(len(optimizer.tickers))
-                        
-                        for i, ticker in enumerate(optimizer.tickers):
-                            if ticker in optimizer.data_quality_info:
-                                quality = optimizer.data_quality_info[ticker]['quality_score']
-                                quality_class = "quality-high" if quality > 0.8 else "quality-medium" if quality > 0.6 else "quality-low"
-                                
-                                with quality_cols[i]:
-                                    st.markdown(f"""
-                                        <div style="text-align: center; padding: 1rem; background: white; border-radius: 8px; margin: 0.5rem;">
-                                            <div><span class="quality-indicator {quality_class}"></span><strong>{ticker}</strong></div>
-                                            <div>Quality: {quality:.1%}</div>
-                                            <div style="font-size: 0.8rem; color: #666;">
-                                                {optimizer.data_quality_info[ticker]['total_points']} data points
-                                            </div>
-                                        </div>
-                                    """, unsafe_allow_html=True)
-                    
-                    # Get risk-free rate
-                    if include_rf:
-                        with st.spinner(" Fetching risk-free rate..."):
-                            rf_rate = optimizer.get_risk_free_rate()
-                            st.info(f" Current risk-free rate: {rf_rate:.2%}")
-                    
-                    # Run optimization
-                    st.info(f" Running {methods_info[selected_method]['title']} optimization...")
-                    
-                    with st.spinner(" Optimizing portfolio..."):
-                        result = optimizer.optimize_portfolio(
-                            method=selected_method,
-                            target_return=target_return,
-                            target_volatility=target_volatility,
-                            min_weight=min_weight,
-                            max_weight=max_weight,
-                            include_risk_free=include_rf 
-                        )
-                    
-                    if result['success']:
-                        st.session_state.optimizer = optimizer
-                        st.session_state.optimization_results = result
-                        
-                        st.markdown('<div class="status-success">🎉 Portfolio optimization completed successfully!</div>', unsafe_allow_html=True)
-                        
-                        # Show optimization details
-                        if 'optimization_details' in result:
-                            details = result['optimization_details']
-                            st.info(f"✅ Optimization converged in {details.get('iterations', 'N/A')} iterations")
-                        
-                        st.rerun()
-                    else:
-                        st.markdown(f'<div class="status-error">❌ Optimization failed: {result["error"]}</div>', unsafe_allow_html=True)
-                        
-                        # Provide optimization troubleshooting
-                        with st.expander(" Optimization Troubleshooting", expanded=True):
-                            st.markdown("""
-                            **Possible issues and solutions:**
-                            
-                            **Target too aggressive:** Try more realistic return/risk targets
-                            
-                            **Constraint conflicts:** Check min/max weight constraints
-                            
-                            **Market data issues:** Some assets may have insufficient data
-                            
-                            **Try different method:** Switch to Maximum Sharpe or Minimum Variance
-                            """)
-                        
-            except Exception as e:
-                st.markdown(f'<div class="status-error">💥 Unexpected error: {str(e)}</div>', unsafe_allow_html=True)
-                
-                with st.expander("🐛 Error Details", expanded=False):
-                    st.code(str(e))
+                    st.warning("Please enter a ticker symbol")
     
-    st.markdown('</div>', unsafe_allow_html=True)
+    with col2:
+        st.markdown("##### System Information")
+        if st.session_state.optimizer:
+            optimizer = st.session_state.optimizer
+            debug_info = optimizer.get_debug_info()
+            
+            st.info(f"""
+            **Current Status:**
+            - Assets requested: {len(debug_info['tickers_requested'])}
+            - Assets loaded: {len(debug_info['successful_tickers'])}
+            - Failed assets: {len(debug_info['failed_tickers'])}
+            - Data points: {debug_info['data_points']}
+            - Date range: {debug_info['data_date_range']['start'] if debug_info['data_date_range'] else 'N/A'} to {debug_info['data_date_range']['end'] if debug_info['data_date_range'] else 'N/A'}
+            - Risk-free rate: {debug_info['risk_free_rate']:.2%}
+            - Market data: {'Available' if debug_info['market_data_available'] else 'Not available'}
+            """)
+            
+            if debug_info['failed_tickers']:
+                st.warning(f"Failed tickers: {', '.join(debug_info['failed_tickers'])}")
+            if debug_info['successful_tickers']:
+                st.success(f"Successful tickers: {', '.join(debug_info['successful_tickers'])}")
+        else:
+            st.info("No optimizer initialized yet")
 
-with col2:
-    st.markdown('<div class="danger-button">', unsafe_allow_html=True)
-    if st.button("Clear Results", help="Clear current optimization results", use_container_width=True, type="secondary"):
-        # Clear all session state
-        for key in ['optimizer', 'optimization_results', 'data_fetched']:
-            if key in st.session_state:
-                del st.session_state[key]
-        st.rerun()
+    # Data Fetch Test
+    st.markdown("#### Data Fetch Test")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        test_ticker = st.text_input("Test a ticker:", value="AAPL", help="Test individual ticker data availability")
+    
+    with col2:
+        if st.button("Test Data Fetch", key="test_fetch"):
+            if test_ticker.strip():
+                with st.spinner(f"Testing data fetch for {test_ticker.upper()}..."):
+                    try:
+                        import yfinance as yf
+                        import pandas as pd
+                        
+                        data = yf.download(test_ticker.upper(), period='30d', progress=False)
+                        
+                        if data.empty:
+                            st.error(f"No data available for {test_ticker.upper()}")
+                        else:
+                            try:
+                                temp_optimizer = PortfolioOptimizer([test_ticker.upper()])
+                                price_series = temp_optimizer._extract_price_series(data, test_ticker.upper())
+                                
+                                if price_series is not None and len(price_series) > 0:
+                                    st.success(f"Successfully fetched and extracted {len(price_series)} price points for {test_ticker.upper()}")
+                                    
+                                    try:
+                                        if isinstance(data.columns, pd.MultiIndex):
+                                            columns_list = [f"{col[0]}" for col in data.columns]
+                                        else:
+                                            columns_list = list(data.columns)
+                                        
+                                        latest_price = price_series.iloc[-1]
+                                        
+                                        st.info(f"""
+                                        **Data Info:**
+                                        - Date range: {data.index.min().strftime('%Y-%m-%d')} to {data.index.max().strftime('%Y-%m-%d')}
+                                        - Columns: {', '.join(columns_list)}
+                                        - Latest price: ${latest_price:.2f}
+                                        - Data extraction: Success
+                                        """)
+                                    except Exception as info_error:
+                                        st.info(f"Data extracted successfully but couldn't parse details: {str(info_error)}")
+                                else:
+                                    st.warning(f"Data fetched but price extraction failed for {test_ticker.upper()}")
+                            except Exception as extract_error:
+                                st.warning(f"Data fetched but extraction test failed: {str(extract_error)}")
+                                st.success(f"Basic fetch successful for {test_ticker.upper()} ({len(data)} rows)")
+                    except Exception as e:
+                        st.error(f"Error testing {test_ticker.upper()}: {str(e)}")
+            else:
+                st.warning("Please enter a ticker symbol")
+
+    # Tips and Best Practices
+    st.markdown("#### Tips & Best Practices")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        ##### Optimization Methods Guide
+        
+        **Maximum Sharpe Ratio**
+        - Best for: General portfolio optimization
+        - Goal: Maximize risk-adjusted returns
+        - Ideal for: Most investors seeking balance
+        
+        **Minimum Variance**
+        - Best for: Conservative investors
+        - Goal: Minimize portfolio risk
+        - Ideal for: Risk-averse investors, stable income needs
+        
+        **Target Return**
+        - Best for: Specific return goals
+        - Goal: Achieve target with minimum risk
+        - Ideal for: Pension funds, endowments
+        
+        **Target Volatility**
+        - Best for: Risk budgeting
+        - Goal: Maximize return for specific risk
+        - Ideal for: Risk-managed strategies
+        """)
+    
+    with col2:
+        st.markdown("""
+        ##### Key Metrics Explained
+        
+        **Expected Return**: Annualized expected portfolio return
+        **Volatility**: Annual portfolio standard deviation (risk)
+        **Sharpe Ratio**: Return per unit of risk (higher is better)
+        **Sortino Ratio**: Risk-adjusted return using downside deviation
+        **VaR**: Maximum expected loss at confidence level
+        **CVaR**: Average loss beyond VaR threshold
+        **Max Drawdown**: Largest peak-to-trough decline
+        **Diversification Ratio**: Effective number of independent positions
+        **Beta**: Sensitivity to market movements
+        **Alpha**: Excess return above market expectations
+        """)
+    
+    st.markdown("""
+    ##### Important Considerations
+    
+    **Data Limitations**
+    - Results based on historical data (past performance ≠ future results)
+    - Market conditions change rapidly
+    - Consider transaction costs and taxes in real implementation
+    
+    **Portfolio Implementation**
+    - Rebalance periodically (quarterly/annually)
+    - Consider market impact of trades
+    - Account for bid-ask spreads and commissions
+    - Monitor portfolio drift from target weights
+    
+    **Risk Management**
+    - Diversification doesn't guarantee profits
+    - Monitor correlation changes over time
+    - Consider regime changes and black swan events
+    - Use multiple risk metrics for comprehensive analysis
+    
+    **Practical Usage**
+    - Start with 3-6 well-known assets
+    - Use 2-3 years of data for stable results
+    - Test with paper trading before real implementation
+    - Consider your investment timeline and liquidity needs
+    """)
+
     st.markdown('</div>', unsafe_allow_html=True)
 
 # Display Results Section
@@ -1591,214 +1619,6 @@ if st.session_state.optimization_results and st.session_state.optimizer:
             st.markdown('</div>', unsafe_allow_html=True)
         else:
             st.markdown('<div class="status-info"> CAPM analysis disabled. Enable in Advanced Options to view detailed beta and alpha analysis.</div>', unsafe_allow_html=True)
-
-# Debug and Troubleshooting Section
-with st.expander(" Debug & Troubleshooting", expanded=False):
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("#### Test Individual Tickers")
-        debug_ticker = st.text_input("Enter a single ticker to test:", value="AAPL", help="Test if a ticker is valid and has data")
-        
-        if st.button(" Test Ticker", key="debug_test"):
-            if debug_ticker.strip():
-                with st.spinner(f"Testing {debug_ticker.upper()}..."):
-                    try:
-                        test_optimizer = PortfolioOptimizer([debug_ticker.upper()])
-                        
-                        # Try the simple test first
-                        success, message, raw_data = test_optimizer.simple_ticker_test(debug_ticker.upper())
-                        
-                        if success:
-                            st.success(f" Basic Test: {message}")
-                            
-                            # Show raw data structure
-                            st.markdown(" Raw Data Structure")
-                            st.write("**Data Shape:**", raw_data.shape)
-                            st.write("**Columns:**", list(raw_data.columns))
-                            st.write("**Index Type:**", type(raw_data.index).__name__)
-                            st.write("**First few rows:**")
-                            st.dataframe(raw_data.head())
-                            
-                            # Now try full extraction test
-                            full_success, full_message = test_optimizer.quick_test_ticker(debug_ticker.upper())
-                            
-                            if full_success:
-                                st.success(f" Full Test: {full_message}")
-                            else:
-                                st.error(f" Full Test Failed: {full_message}")
-                                
-                        else:
-                            st.error(f" Basic Test Failed: {message}")
-                            
-                    except Exception as e:
-                        st.error(f" Critical Error: {str(e)}")
-                        
-                        # Show detailed traceback for debugging
-                        st.markdown(" Error Details", expanded=False)
-                        import traceback
-                        st.code(traceback.format_exc())
-                            
-            else:
-                st.warning("Please enter a ticker symbol")
-    
-    with col2:
-        st.markdown("#### System Information")
-        
-        if st.session_state.optimizer:
-            optimizer = st.session_state.optimizer
-            debug_info = optimizer.get_debug_info()
-            
-            st.info(f"""
-            **Current Status:**
-            - Assets requested: {len(debug_info['tickers_requested'])}
-            - Assets loaded: {len(debug_info['successful_tickers'])}
-            - Failed assets: {len(debug_info['failed_tickers'])}
-            - Data points: {debug_info['data_points']}
-            - Date range: {debug_info['data_date_range']['start'] if debug_info['data_date_range'] else 'N/A'} to {debug_info['data_date_range']['end'] if debug_info['data_date_range'] else 'N/A'}
-            - Risk-free rate: {debug_info['risk_free_rate']:.2%}
-            - Market data: {'Available' if debug_info['market_data_available'] else 'Not available'}
-            """)
-            
-            if debug_info['failed_tickers']:
-                st.warning(f"Failed tickers: {', '.join(debug_info['failed_tickers'])}")
-                
-            if debug_info['successful_tickers']:
-                st.success(f"Successful tickers: {', '.join(debug_info['successful_tickers'])}")
-        else:
-            st.info("No optimizer initialized yet")
-    
-    # Add a data fetch test section
-    st.markdown("#### Data Fetch Test")
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        test_ticker = st.text_input("Test a ticker:", value="AAPL", help="Test individual ticker data availability")
-        
-    with col2:
-        if st.button(" Test Data Fetch", key="test_fetch"):
-            if test_ticker.strip():
-                with st.spinner(f"Testing data fetch for {test_ticker.upper()}..."):
-                    try:
-                        import yfinance as yf
-                        import pandas as pd
-                        
-                        # Simple test
-                        data = yf.download(test_ticker.upper(), period='30d', progress=False)
-                        
-                        if data.empty:
-                            st.error(f" No data available for {test_ticker.upper()}")
-                        else:
-                            # Test our data extraction method
-                            try:
-                                temp_optimizer = PortfolioOptimizer([test_ticker.upper()])
-                                price_series = temp_optimizer._extract_price_series(data, test_ticker.upper())
-                                
-                                if price_series is not None and len(price_series) > 0:
-                                    st.success(f" Successfully fetched and extracted {len(price_series)} price points for {test_ticker.upper()}")
-                                    
-                                    # Show basic info - handle both single and multi-index columns
-                                    try:
-                                        if isinstance(data.columns, pd.MultiIndex):
-                                            columns_list = [f"{col[0]}" for col in data.columns]
-                                        else:
-                                            columns_list = list(data.columns)
-                                        
-                                        latest_price = price_series.iloc[-1]
-                                        
-                                        st.info(f"""
-                                        **Data Info:**
-                                        - Date range: {data.index.min().strftime('%Y-%m-%d')} to {data.index.max().strftime('%Y-%m-%d')}
-                                        - Columns: {', '.join(columns_list)}
-                                        - Latest price: ${latest_price:.2f}
-                                        - Data extraction: Success
-                                        """)
-                                    except Exception as info_error:
-                                        st.info(f"Data extracted successfully but couldn't parse details: {str(info_error)}")
-                                        
-                                else:
-                                    st.warning(f" Data fetched but price extraction failed for {test_ticker.upper()}")
-                                    
-                            except Exception as extract_error:
-                                st.warning(f" Data fetched but extraction test failed: {str(extract_error)}")
-                                st.success(f" Basic fetch successful for {test_ticker.upper()} ({len(data)} rows)")
-                            
-                    except Exception as e:
-                        st.error(f" Error testing {test_ticker.upper()}: {str(e)}")
-            else:
-                st.warning("Please enter a ticker symbol")
-
-# Tips and Information Section
-with st.expander(" Tips & Best Practices", expanded=False):
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("""
-        #### Optimization Methods Guide
-        
-        **Maximum Sharpe Ratio**
-        - Best for: General portfolio optimization
-        - Goal: Maximize risk-adjusted returns
-        - Ideal for: Most investors seeking balance
-        
-        **Minimum Variance**
-        - Best for: Conservative investors
-        - Goal: Minimize portfolio risk
-        - Ideal for: Risk-averse investors, stable income needs
-        
-        **Target Return**
-        - Best for: Specific return goals
-        - Goal: Achieve target with minimum risk
-        - Ideal for: Pension funds, endowments
-        
-        **Target Volatility**
-        - Best for: Risk budgeting
-        - Goal: Maximize return for specific risk
-        - Ideal for: Risk-managed strategies
-        """)
-    
-    with col2:
-        st.markdown("""
-        #### Key Metrics Explained
-        
-        **Expected Return**: Annualized expected portfolio return
-        **Volatility**: Annual portfolio standard deviation (risk)
-        **Sharpe Ratio**: Return per unit of risk (higher is better)
-        **Sortino Ratio**: Risk-adjusted return using downside deviation
-        **VaR**: Maximum expected loss at confidence level
-        **CVaR**: Average loss beyond VaR threshold
-        **Max Drawdown**: Largest peak-to-trough decline
-        **Diversification Ratio**: Effective number of independent positions
-        **Beta**: Sensitivity to market movements
-        **Alpha**: Excess return above market expectations
-        """)
-    
-    st.markdown("""
-    #### Important Considerations
-    
-     **Data Limitations**
-    - Results based on historical data (past performance ≠ future results)
-    - Market conditions change rapidly
-    - Consider transaction costs and taxes in real implementation
-    
-     **Portfolio Implementation**
-    - Rebalance periodically (quarterly/annually)
-    - Consider market impact of trades
-    - Account for bid-ask spreads and commissions
-    - Monitor portfolio drift from target weights
-    
-     **Risk Management**
-    - Diversification doesn't guarantee profits
-    - Monitor correlation changes over time
-    - Consider regime changes and black swan events
-    - Use multiple risk metrics for comprehensive analysis
-    
-     **Practical Usage**
-    - Start with 3-6 well-known assets
-    - Use 2-3 years of data for stable results
-    - Test with paper trading before real implementation
-    - Consider your investment timeline and liquidity needs
-    """)
 
 # Footer with enhanced styling
 st.markdown("---")
