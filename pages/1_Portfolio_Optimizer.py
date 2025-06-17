@@ -499,6 +499,7 @@ st.markdown("""
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             padding: 0.5rem;
             border-radius: 15px;
+            justify-content: center;
         }
 
         .stTabs [data-baseweb="tab"] {
@@ -507,6 +508,9 @@ st.markdown("""
             color: #666;
             font-weight: 600;
             transition: all 0.3s ease;
+            text-align: center;
+            flex: 1;
+            max-width: 200px;
         }
 
         .stTabs [data-baseweb="tab"]:hover {
@@ -1161,13 +1165,48 @@ if st.session_state.optimization_results and st.session_state.optimizer:
     
     # Enhanced Tabbed Results Display
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        " Portfolio Composition",
-        " Efficient Frontier", 
-        " Risk Analysis",
-        " Performance Analytics",
-        " CAPM Analysis"
+        "📊 Portfolio Composition",
+        "📈 Efficient Frontier", 
+        "⚠️ Risk Analysis",
+        "📈 Performance Analytics",
+        "📊 CAPM Analysis"
     ])
-    
+
+    # Add custom CSS for tab styling
+    st.markdown("""
+        <style>
+            .stTabs [data-baseweb="tab-list"] {
+                gap: 2px;
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                padding: 0.5rem;
+                border-radius: 15px;
+                justify-content: center;
+            }
+
+            .stTabs [data-baseweb="tab"] {
+                background: transparent;
+                border-radius: 10px;
+                color: #666;
+                font-weight: 600;
+                transition: all 0.3s ease;
+                text-align: center;
+                flex: 1;
+                max-width: 200px;
+            }
+
+            .stTabs [data-baseweb="tab"]:hover {
+                background: rgba(102, 126, 234, 0.1);
+                color: #667eea;
+            }
+
+            .stTabs [aria-selected="true"] {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
     with tab1:
         st.markdown('<div class="chart-container">', unsafe_allow_html=True)
         
