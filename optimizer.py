@@ -434,24 +434,79 @@ class PortfolioOptimizer:
             except Exception:
                 continue
     
+    # 1. FIXED RISK-FREE RATE FETCHING
     def get_risk_free_rate(self) -> float:
-        """Enhanced risk-free rate fetching."""
-        treasury_symbols = ['^IRX', '^TNX', '^FVX']
+        """Enhanced risk-free rate fetching with better error handling."""
+        # Treasury symbols in order of preference
+        treasury_symbols = ['^IRX', '^TNX', '^FVX', 'DGS3MO', 'DGS10']
         
         for symbol in treasury_symbols:
             try:
-                treasury_data = yf.download(symbol, period='30d', progress=False)
-                if not treasury_data.empty and 'Close' in treasury_data.columns:
-                    latest_rates = treasury_data['Close'].dropna()
-                    if len(latest_rates) > 0:
-                        latest_rate = latest_rates.iloc[-1]
-                        if 0 < latest_rate < 50:
-                            self.rf_rate = latest_rate / 100
-                            return self.rf_rate
-            except Exception:
+                st.info(f"Attempting to fetch risk-free rate from {symbol}...")
+                
+                # Try different time periods
+                for period in ['5d', '1mo', '3mo']:
+                    try:
+                        treasury_data = yf.download(symbol, period=period, progress=False)
+                        
+                        if not treasury_data.empty:
+                            # Handle different column structures
+                            if 'Close' in treasury_data.columns:
+                                rates = treasury_data['Close'].dropna()
+                            elif 'Adj Close' in treasury_data.columns:
+                                rates = treasury_data['Adj Close'].dropna()
+                            else:
+                                # Handle potential multi-index columns
+                                if isinstance(treasury_data.columns, pd.MultiIndex):
+                                    for col in treasury_data.columns:
+                                        if 'close' in str(col).lower():
+                                            rates = treasury_data[col].dropna()
+                                            break
+                                else:
+                                    rates = treasury_data.iloc[:, -1].dropna()  # Last column
+                            
+                            if len(rates) > 0:
+                                latest_rate = rates.iloc[-1]
+                                
+                                # Validate rate (should be between 0 and 20% for most scenarios)
+                                if 0 < latest_rate < 20:
+                                    self.rf_rate = latest_rate / 100
+                                    st.success(f"✅ Successfully fetched risk-free rate: {self.rf_rate:.3%} from {symbol}")
+                                    return self.rf_rate
+                                
+                                st.warning(f"Rate {latest_rate} from {symbol} seems invalid")
+                            
+                    except Exception as e:
+                        st.warning(f"Failed to fetch {symbol} with period {period}: {str(e)}")
+                        continue
+                        
+            except Exception as e:
+                st.warning(f"Error with {symbol}: {str(e)}")
                 continue
         
-        self.rf_rate = 0.02
+        # If all fails, try FRED API approach (alternative data source)
+        try:
+            import pandas_datareader as pdr
+            st.info("Trying FRED data source...")
+            
+            # Try 3-month Treasury rate from FRED
+            end = datetime.now()
+            start = end - timedelta(days=30)
+            
+            fred_rate = pdr.get_data_fred('DGS3MO', start, end).dropna()
+            if not fred_rate.empty:
+                latest_rate = fred_rate.iloc[-1, 0]
+                if 0 < latest_rate < 20:
+                    self.rf_rate = latest_rate / 100
+                    st.success(f"✅ Successfully fetched risk-free rate from FRED: {self.rf_rate:.3%}")
+                    return self.rf_rate
+                    
+        except Exception as e:
+            st.warning(f"FRED approach failed: {str(e)}")
+        
+        # Final fallback - use reasonable default based on current economic conditions
+        self.rf_rate = 0.045  # 4.5% - reasonable default for 2024-2025
+        st.warning(f"⚠️ Using fallback risk-free rate: {self.rf_rate:.3%}")
         return self.rf_rate
 
     # ================== PORTFOLIO METRICS AND CALCULATIONS ==================
@@ -699,24 +754,27 @@ class PortfolioOptimizer:
         except Exception as e:
             return {'success': False, 'error': f'Optimization error: {str(e)}'}
     
-    def optimize_portfolio_with_risk_free(self, 
-                                      method: str = 'max_sharpe',
-                                      target_return: Optional[float] = None,
-                                      target_volatility: Optional[float] = None,
-                                      min_weight: float = 0.0,
-                                      max_weight: float = 1.0,
-                                      max_iterations: int = 1000) -> Dict:
-        """Portfolio optimization including risk-free asset allocation."""
+    # 2. FIXED TARGET OPTIMIZATION WITH PROPER RISK-FREE INTEGRATION
+    def optimize_portfolio_with_risk_free_fixed(self, 
+                                            method: str = 'max_sharpe',
+                                            target_return: Optional[float] = None,
+                                            target_volatility: Optional[float] = None,
+                                            min_weight: float = 0.0,
+                                            max_weight: float = 1.0,
+                                            max_iterations: int = 1000) -> Dict:
+        """FIXED: Portfolio optimization with proper risk-free asset integration."""
         if self.returns is None or self.mean_returns is None:
             return {'success': False, 'error': 'No data available for optimization'}
         
         try:
-            # Step 1: Find the optimal risky portfolio (tangency portfolio)
+            # Step 1: Always find the tangency portfolio first (optimal risky portfolio)
+            st.info("🎯 Finding optimal risky portfolio (tangency)...")
             tangency_result = self.optimize_portfolio(
                 method='max_sharpe',
                 min_weight=min_weight,
                 max_weight=max_weight,
-                max_iterations=max_iterations
+                max_iterations=max_iterations,
+                include_risk_free=False  # Important: risky assets only
             )
             
             if not tangency_result['success']:
@@ -727,84 +785,126 @@ class PortfolioOptimizer:
             tangency_volatility = tangency_result['volatility']
             tangency_sharpe = tangency_result['sharpe_ratio']
             
-            # Step 2: Determine allocation between risk-free asset and tangency portfolio
+            st.success(f"✅ Tangency portfolio: Return={tangency_return:.2%}, Vol={tangency_volatility:.2%}, Sharpe={tangency_sharpe:.3f}")
+            
+            # Step 2: Determine allocation based on method and constraints
+            rf_weight = 0.0
+            risky_weight = 1.0
+            
             if method == 'max_sharpe':
-                # Pure tangency portfolio (no risk-free asset constraint)
+                # Pure tangency portfolio gives maximum Sharpe ratio
                 rf_weight = 0.0
                 risky_weight = 1.0
-                final_weights = tangency_weights.copy()
+                st.info("📊 Using pure tangency portfolio (max Sharpe)")
                 
             elif method == 'target_return' and target_return is not None:
-                # Calculate required allocation to achieve target return
+                st.info(f"🎯 Optimizing for target return: {target_return:.2%}")
+                
                 if target_return <= self.rf_rate:
-                    # Target return below risk-free rate - invest only in risk-free asset
+                    # Target below risk-free rate: invest only in risk-free asset
                     rf_weight = 1.0
                     risky_weight = 0.0
-                    final_weights = np.zeros(len(self.tickers))
+                    st.info("💰 Target return below risk-free rate - using 100% risk-free asset")
+                    
                 elif target_return >= tangency_return:
-                    # Target return above tangency portfolio - leverage if allowed
+                    # Target above tangency portfolio: use leverage (with limits)
+                    if tangency_return <= self.rf_rate:
+                        st.error("❌ Cannot achieve target return - tangency portfolio return too low")
+                        return {'success': False, 'error': 'Target return unachievable with available assets'}
+                    
                     leverage_ratio = (target_return - self.rf_rate) / (tangency_return - self.rf_rate)
-                    if leverage_ratio > 1.5:  # Limit leverage
-                        leverage_ratio = 1.5
-                        st.warning("Target return requires high leverage. Limited to 150% risky assets.")
+                    max_leverage = 2.0  # Allow up to 200% in risky assets
+                    
+                    if leverage_ratio > max_leverage:
+                        leverage_ratio = max_leverage
+                        actual_return = self.rf_rate + leverage_ratio * (tangency_return - self.rf_rate)
+                        st.warning(f"⚠️ Target return requires excessive leverage. Limited to {max_leverage:.0%} risky assets.")
+                        st.warning(f"Achievable return with max leverage: {actual_return:.2%}")
                     
                     rf_weight = 1.0 - leverage_ratio
                     risky_weight = leverage_ratio
-                    final_weights = tangency_weights * risky_weight
+                    st.info(f"📈 Using leverage: {risky_weight:.1%} risky assets, {rf_weight:.1%} risk-free (borrowed if negative)")
+                    
                 else:
-                    # Target return between risk-free rate and tangency portfolio
+                    # Target between risk-free rate and tangency portfolio
                     risky_weight = (target_return - self.rf_rate) / (tangency_return - self.rf_rate)
                     rf_weight = 1.0 - risky_weight
-                    final_weights = tangency_weights * risky_weight
+                    st.info(f"⚖️ Mixing assets: {risky_weight:.1%} risky, {rf_weight:.1%} risk-free")
                     
             elif method == 'target_volatility' and target_volatility is not None:
-                # Calculate required allocation to achieve target volatility
+                st.info(f"📊 Optimizing for target volatility: {target_volatility:.2%}")
+                
                 if target_volatility <= 1e-6:
-                    # Target volatility near zero - invest only in risk-free asset
+                    # Target volatility near zero: use only risk-free asset
                     rf_weight = 1.0
                     risky_weight = 0.0
-                    final_weights = np.zeros(len(self.tickers))
+                    st.info("🛡️ Target volatility near zero - using 100% risk-free asset")
+                    
                 elif target_volatility >= tangency_volatility:
-                    # Target volatility above tangency portfolio - leverage if allowed
+                    # Target volatility above tangency portfolio: use leverage
                     leverage_ratio = target_volatility / tangency_volatility
-                    if leverage_ratio > 1.5:  # Limit leverage
-                        leverage_ratio = 1.5
-                        st.warning("Target volatility requires high leverage. Limited to 150% risky assets.")
+                    max_leverage = 2.0
+                    
+                    if leverage_ratio > max_leverage:
+                        leverage_ratio = max_leverage
+                        actual_vol = leverage_ratio * tangency_volatility
+                        st.warning(f"⚠️ Target volatility requires excessive leverage. Limited to {max_leverage:.0%} risky assets.")
+                        st.warning(f"Achievable volatility with max leverage: {actual_vol:.2%}")
                     
                     rf_weight = 1.0 - leverage_ratio
                     risky_weight = leverage_ratio
-                    final_weights = tangency_weights * risky_weight
+                    st.info(f"📈 Using leverage: {risky_weight:.1%} risky assets")
+                    
                 else:
                     # Target volatility between zero and tangency portfolio
                     risky_weight = target_volatility / tangency_volatility
                     rf_weight = 1.0 - risky_weight
-                    final_weights = tangency_weights * risky_weight
+                    st.info(f"⚖️ Mixing assets: {risky_weight:.1%} risky, {rf_weight:.1%} risk-free")
                     
             elif method == 'min_variance':
-                # For minimum variance, find the optimal mix
-                if tangency_volatility < 0.001:  # Very low risk portfolio
-                    rf_weight = 0.0
-                    risky_weight = 1.0
-                    final_weights = tangency_weights.copy()
+                # For minimum variance, compare risk-free asset vs minimum variance portfolio
+                min_var_result = self.optimize_portfolio(
+                    method='min_variance',
+                    min_weight=min_weight,
+                    max_weight=max_weight,
+                    max_iterations=max_iterations,
+                    include_risk_free=False
+                )
+                
+                if min_var_result['success']:
+                    min_var_volatility = min_var_result['volatility']
+                    
+                    if min_var_volatility > 0.001:  # If min var portfolio has significant risk
+                        # Use conservative allocation
+                        risky_weight = 0.3
+                        rf_weight = 0.7
+                        tangency_weights = min_var_result['weights']  # Use min var weights instead
+                        st.info("🛡️ Using conservative allocation for minimum variance")
+                    else:
+                        # Min var portfolio already very low risk
+                        risky_weight = 1.0
+                        rf_weight = 0.0
+                        tangency_weights = min_var_result['weights']
                 else:
-                    # Use a small allocation to risky assets for some return
-                    risky_weight = 0.2  # Conservative allocation
-                    rf_weight = 0.8
-                    final_weights = tangency_weights * risky_weight
+                    st.warning("Could not find minimum variance portfolio, using tangency")
+            
             else:
                 return {'success': False, 'error': f'Invalid optimization method: {method}'}
             
-            # Step 3: Calculate final portfolio metrics
+            # Step 3: Calculate final portfolio weights and metrics
+            final_weights = tangency_weights * risky_weight
+            
+            # Calculate final portfolio metrics
             if risky_weight > 0:
                 final_return = self.rf_rate * rf_weight + tangency_return * risky_weight
-                final_volatility = abs(risky_weight) * tangency_volatility  # Risk only from risky assets
+                final_volatility = abs(risky_weight) * tangency_volatility
             else:
                 final_return = self.rf_rate
                 final_volatility = 0.0
             
-            final_sharpe = (final_return - self.rf_rate) / final_volatility if final_volatility > 0 else 0
+            final_sharpe = (final_return - self.rf_rate) / final_volatility if final_volatility > 0 else float('inf')
             
-            # Calculate other metrics for the risky portion
+            # Get additional metrics from the risky portion
             if risky_weight > 0:
                 risky_metrics = self.portfolio_metrics(tangency_weights)
             else:
@@ -813,7 +913,8 @@ class PortfolioOptimizer:
                     'max_drawdown': 0, 'diversification_ratio': 1, 'concentration': 0,
                 }
             
-            return {
+            # Create comprehensive result
+            result = {
                 'success': True,
                 'method': method,
                 'weights': final_weights,
@@ -839,9 +940,27 @@ class PortfolioOptimizer:
                     'converged': True,
                     'rf_rate': self.rf_rate,
                     'capital_allocation_line': True,
+                    'leverage_used': risky_weight > 1.0,
                     'message': f'Optimal allocation: {rf_weight:.1%} risk-free, {risky_weight:.1%} risky portfolio'
                 }
             }
+            
+            # Validation
+            if method == 'target_return' and target_return is not None:
+                achieved_return = result['expected_return']
+                if abs(achieved_return - target_return) > 0.001:  # Allow small tolerance
+                    if target_return > self.rf_rate and target_return < tangency_return:
+                        st.warning(f"⚠️ Target return {target_return:.2%} vs achieved {achieved_return:.2%}")
+            
+            if method == 'target_volatility' and target_volatility is not None:
+                achieved_vol = result['volatility']
+                if abs(achieved_vol - target_volatility) > 0.001:
+                    if target_volatility > 0 and target_volatility < tangency_volatility:
+                        st.warning(f"⚠️ Target volatility {target_volatility:.2%} vs achieved {achieved_vol:.2%}")
+            
+            st.success(f"🎉 Final portfolio: Return={final_return:.2%}, Vol={final_volatility:.2%}, Sharpe={final_sharpe:.3f}")
+            
+            return result
             
         except Exception as e:
             return {'success': False, 'error': f'Optimization with risk-free asset failed: {str(e)}'}
@@ -1010,10 +1129,11 @@ class PortfolioOptimizer:
 
 # ================== VISUALIZATION FUNCTIONS ==================
 
-def create_efficient_frontier_plot(optimizer: PortfolioOptimizer, 
-                                 optimal_portfolio: Optional[Dict] = None,
-                                 include_risk_free: bool = False) -> Optional[go.Figure]:
-    """Create enhanced efficient frontier visualization with proper risk-free asset integration."""
+# 3. FIXED EFFICIENT FRONTIER PLOT WITH CORRECT CAL REPRESENTATION
+def create_efficient_frontier_plot_fixed(optimizer: PortfolioOptimizer, 
+                                        optimal_portfolio: Optional[Dict] = None,
+                                        include_risk_free: bool = True) -> Optional[go.Figure]:
+    """FIXED: Create efficient frontier with proper CAL and portfolio positioning."""
     try:
         with st.spinner("Generating efficient frontier..."):
             frontier_data = optimizer.generate_efficient_frontier()
@@ -1073,15 +1193,26 @@ def create_efficient_frontier_plot(optimizer: PortfolioOptimizer,
             hovertemplate=f'<b>Risk-Free Asset</b><br>Return: {rf_return:.2f}%<br>Risk: 0.0%<extra></extra>'
         ))
         
-        # Draw Capital Allocation Line if we have frontier data
+        # Find tangency portfolio and draw CAL
         if frontier_data['sharpe_ratios']:
             max_sharpe_idx = np.argmax(frontier_data['sharpe_ratios'])
             tangency_vol = frontier_data['volatilities'][max_sharpe_idx] * 100
             tangency_ret = frontier_data['returns'][max_sharpe_idx] * 100
             tangency_sharpe = frontier_data['sharpe_ratios'][max_sharpe_idx]
             
-            # Draw Capital Allocation Line (CAL) from risk-free asset to tangency portfolio and beyond
-            max_vol_display = max(60, tangency_vol * 2)  # Extend line beyond tangency
+            # Mark tangency portfolio
+            fig.add_trace(go.Scatter(
+                x=[tangency_vol], y=[tangency_ret],
+                mode='markers+text',
+                marker=dict(size=25, color='red', symbol='diamond', line=dict(width=3, color='white')),
+                text=['Tangency'], textposition="top center",
+                textfont=dict(size=12, color='black', family='Arial Black'),
+                name='Tangency Portfolio',
+                hovertemplate=f'<b>Tangency Portfolio</b><br>Return: {tangency_ret:.2f}%<br>Risk: {tangency_vol:.2f}%<br>Sharpe: {tangency_sharpe:.3f}<extra></extra>'
+            ))
+            
+            # Draw Capital Allocation Line (CAL) - extended in both directions
+            max_vol_display = max(60, tangency_vol * 2.5)
             cal_x = np.linspace(0, max_vol_display, 100)
             cal_slope = (tangency_ret - rf_return) / tangency_vol if tangency_vol > 0 else 0
             cal_y = rf_return + cal_slope * cal_x
@@ -1092,77 +1223,51 @@ def create_efficient_frontier_plot(optimizer: PortfolioOptimizer,
                 name='Capital Allocation Line',
                 hovertemplate='<b>Capital Allocation Line</b><br>Return: %{y:.2f}%<br>Risk: %{x:.2f}%<br>Sharpe: ' + f'{tangency_sharpe:.3f}<extra></extra>'
             ))
-            
-            # Add annotation explaining CAL
-            if tangency_vol > 0:
-                fig.add_annotation(
-                    x=tangency_vol * 1.3, y=rf_return + cal_slope * tangency_vol * 1.3,
-                    text=f"CAL Slope = {cal_slope:.3f}<br>(Tangency Sharpe Ratio)",
-                    showarrow=True, arrowhead=2, arrowcolor='orange',
-                    bgcolor='rgba(255, 255, 255, 0.8)', bordercolor='orange',
-                    font=dict(size=10)
-                )
         
         # Mark optimal portfolio if provided
-        if optimal_portfolio:
-            if include_risk_free and 'tangency_return' in optimal_portfolio:
-                # When including risk-free asset, show TWO points:
-                # 1. Tangency portfolio (on efficient frontier)
-                # 2. Your optimal portfolio (on CAL)
-                
-                # 1. Mark tangency portfolio on efficient frontier
-                tang_vol = optimal_portfolio['tangency_volatility'] * 100
-                tang_ret = optimal_portfolio['tangency_return'] * 100
-                
-                fig.add_trace(go.Scatter(
-                    x=[tang_vol], y=[tang_ret],
-                    mode='markers+text',
-                    marker=dict(size=25, color='red', symbol='diamond', line=dict(width=3, color='white')),
-                    text=['Tangency'], textposition="top center",
-                    textfont=dict(size=12, color='black', family='Arial Black'),
-                    name='Tangency Portfolio (Optimal Risky)',
-                    hovertemplate=f'<b>Tangency Portfolio</b><br>Return: {tang_ret:.2f}%<br>Risk: {tang_vol:.2f}%<br>Sharpe: {optimal_portfolio["tangency_sharpe"]:.3f}<extra></extra>'
-                ))
-                
-                # 2. Mark YOUR optimal portfolio on the CAL
-                your_vol = optimal_portfolio['volatility'] * 100
-                your_ret = optimal_portfolio['expected_return'] * 100
-                rf_weight = optimal_portfolio.get('rf_weight', 0)
-                risky_weight = optimal_portfolio.get('risky_weight', 1)
-                
-                fig.add_trace(go.Scatter(
-                    x=[your_vol], y=[your_ret],
-                    mode='markers+text',
-                    marker=dict(size=30, color='lime', symbol='star', line=dict(width=3, color='black')),
-                    text=['Your Portfolio'], textposition="bottom center",
-                    textfont=dict(size=12, color='black', family='Arial Black'),
-                    name='Your Optimal Portfolio (On CAL)',
-                    hovertemplate=f'<b>Your Optimal Portfolio</b><br>Return: {your_ret:.2f}%<br>Risk: {your_vol:.2f}%<br>Sharpe: {optimal_portfolio["sharpe_ratio"]:.3f}<br>Risk-Free: {rf_weight:.1%}<br>Risky: {risky_weight:.1%}<extra></extra>'
-                ))
-                
-                # Add line connecting risk-free asset to your portfolio for clarity
+        if optimal_portfolio and optimal_portfolio.get('success'):
+            # Always show the actual portfolio position
+            your_vol = optimal_portfolio['volatility'] * 100
+            your_ret = optimal_portfolio['expected_return'] * 100
+            your_sharpe = optimal_portfolio['sharpe_ratio']
+            
+            # Check if this involves risk-free asset
+            rf_weight = optimal_portfolio.get('rf_weight', 0)
+            risky_weight = optimal_portfolio.get('risky_weight', 1)
+            
+            # Color and label based on allocation
+            if rf_weight > 0.01:  # Significant risk-free allocation
+                marker_color = 'lime'
+                portfolio_label = f'Your Portfolio (CAL)'
+                hover_text = f'<b>Your Optimal Portfolio</b><br>Return: {your_ret:.2f}%<br>Risk: {your_vol:.2f}%<br>Sharpe: {your_sharpe:.3f}<br>Risk-Free: {rf_weight:.1%}<br>Risky: {risky_weight:.1%}<extra></extra>'
+            elif risky_weight > 1.01:  # Leverage used
+                marker_color = 'purple'
+                portfolio_label = f'Your Portfolio (Leveraged)'
+                hover_text = f'<b>Your Leveraged Portfolio</b><br>Return: {your_ret:.2f}%<br>Risk: {your_vol:.2f}%<br>Sharpe: {your_sharpe:.3f}<br>Leverage: {risky_weight:.1%}<extra></extra>'
+            else:  # Pure risky portfolio
+                marker_color = 'blue'
+                portfolio_label = f'Your Portfolio (Risky Only)'
+                hover_text = f'<b>Your Portfolio</b><br>Return: {your_ret:.2f}%<br>Risk: {your_vol:.2f}%<br>Sharpe: {your_sharpe:.3f}<extra></extra>'
+            
+            fig.add_trace(go.Scatter(
+                x=[your_vol], y=[your_ret],
+                mode='markers+text',
+                marker=dict(size=30, color=marker_color, symbol='star', line=dict(width=3, color='black')),
+                text=['Your Portfolio'], textposition="bottom center",
+                textfont=dict(size=12, color='black', family='Arial Black'),
+                name=portfolio_label,
+                hovertemplate=hover_text
+            ))
+            
+            # If using risk-free asset, draw line from risk-free to your portfolio
+            if abs(rf_weight) > 0.01:
                 fig.add_trace(go.Scatter(
                     x=[0, your_vol], y=[rf_return, your_ret],
                     mode='lines',
-                    line=dict(color='lime', width=6, dash='solid'),
+                    line=dict(color=marker_color, width=6, dash='solid'),
                     name='Your CAL Position',
                     opacity=0.7,
                     hovertemplate='<b>Your Position on CAL</b><extra></extra>'
-                ))
-                
-            else:
-                # Traditional optimal portfolio on efficient frontier (no risk-free asset)
-                fig.add_trace(go.Scatter(
-                    x=[optimal_portfolio['volatility'] * 100],
-                    y=[optimal_portfolio['expected_return'] * 100],
-                    mode='markers+text',
-                    marker=dict(size=25, color='red', symbol='diamond', line=dict(width=3, color='white')),
-                    text=['Optimal'], textposition="top center",
-                    textfont=dict(size=12, color='black', family='Arial Black'),
-                    name='Optimal Portfolio',
-                    hovertemplate='<b>Optimal Portfolio</b><br>' +
-                                  'Return: %{y:.2f}%<br>Risk: %{x:.2f}%<br>' +
-                                  f'Sharpe: {optimal_portfolio["sharpe_ratio"]:.3f}<extra></extra>'
                 ))
         
         # Update layout
@@ -1180,6 +1285,7 @@ def create_efficient_frontier_plot(optimizer: PortfolioOptimizer,
     except Exception as e:
         st.error(f"Error creating efficient frontier plot: {str(e)}")
         return None
+
 
 
 def create_portfolio_composition_chart(tickers: List[str], 
@@ -1528,7 +1634,7 @@ if __name__ == "__main__":
             print(f"Sharpe Ratio: {result['sharpe_ratio']:.3f}")
             
             # Generate visualizations
-            frontier_plot = create_efficient_frontier_plot(optimizer, result, include_risk_free=True)
+            frontier_plot = create_efficient_frontier_plot_fixed(optimizer, result, include_risk_free=True)
             composition_chart = create_portfolio_composition_chart(
                 optimizer.tickers, 
                 result['weights'], 
