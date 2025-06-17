@@ -375,8 +375,7 @@ with col2:
             <ul class="card-features">
                 <li>Centrale Méditerranée Student</li>
                 <li>Financial Engineering Focus</li>
-                <li>Quantitative Research Experience</li>
-                <li>Professional CV Available</li>
+                <li>Quantitative Research Experience</li> 
             </ul>
         </div>
     """, unsafe_allow_html=True)
