@@ -360,36 +360,37 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
+
 # CV Downloads Section
-st.markdown("""
-    <div class="section-card">
-        <div class="section-title">Resume Downloads</div>
-        <div class="cv-section">
-            <p class="cv-description">Download my latest resume in your preferred language:</p>
-        </div>
-    </div>
-""", unsafe_allow_html=True)
+#st.markdown("""
+#    <div class="section-card">
+#        <div class="section-title">Resume Downloads</div>
+#        <div class="cv-section">
+#            <p class="cv-description">Download my latest resume in your preferred language:</p>
+#        </div>
+#    </div>
+#""", unsafe_allow_html=True)
 
 # CV download buttons
-col1, col2 = st.columns(2)
+#col1, col2 = st.columns(2)
+#
+#cv_en = "assets/Reda_Salhi_CV_EN.pdf"
+#cv_fr = "assets/Reda_Salhi_CV_FR.pdf"
 
-cv_en = "assets/Reda_Salhi_CV_EN.pdf"
-cv_fr = "assets/Reda_Salhi_CV_FR.pdf"
-
-with col1:
-    if os.path.exists(cv_en):
-        with open(cv_en, "rb") as f:
-            st.download_button(
-                label="Download CV - English Version",
-                data=f,
-                file_name="Reda_Salhi_CV_EN.pdf",
-                mime="application/pdf",
-                use_container_width=True
-            )
-    else:
-        st.info("English CV - Coming Soon")
-
-with col2:
+#with col1:
+#    if os.path.exists(cv_en):
+#        with open(cv_en, "rb") as f:
+#            st.download_button(
+#                label="Download CV - English Version",
+#                data=f,
+#                file_name="Reda_Salhi_CV_EN.pdf",
+#                mime="application/pdf",
+#                use_container_width=True
+#            )
+#   else:
+#        st.info("English CV - Coming Soon")
+"""
+#with col2:
     if os.path.exists(cv_fr):
         with open(cv_fr, "rb") as f:
             st.download_button(
@@ -400,7 +401,7 @@ with col2:
                 use_container_width=True
             )
     else:
-        st.info("French CV - Coming Soon")
+        st.info("French CV - Coming Soon")"""
 
 # Links Section
 st.markdown("""
