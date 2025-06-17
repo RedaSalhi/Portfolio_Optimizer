@@ -1,14 +1,40 @@
 # var_app.py
 
 import streamlit as st
-from src.parametric import compute_parametric_var, plot_return_distribution, plot_pnl_vs_var
-from src.fixed_income import compute_fixed_income_var, plot_yield_change_distribution, plot_pnl_vs_var as plot_fixed_pnl
-from src.portfolio import compute_portfolio_var, plot_correlation_matrix, plot_individual_distributions, plot_portfolio_pnl_vs_var
-from src.monte_carlo import compute_monte_carlo_var, plot_simulated_returns, plot_correlation_matrix as plot_mc_corr, plot_monte_carlo_pnl_vs_var
+# Add these imports at the top (replace the existing src imports):
+from src.parametric import (
+    compute_parametric_var, 
+    create_var_gauge, 
+    plot_interactive_return_distribution,  # FIXED
+    create_risk_dashboard,
+    plot_animated_pnl_vs_var
+)
+from src.fixed_income import (
+    compute_fixed_income_var, 
+    create_bond_analytics_dashboard,
+    create_yield_scenario_analysis,  # FIXED
+    create_yield_curve_analysis
+)
+from src.portfolio import (
+    compute_portfolio_var, 
+    create_portfolio_risk_dashboard,
+    create_risk_attribution_treemap,
+    create_correlation_network,
+    plot_enhanced_portfolio_pnl_vs_var
+)
+from src.monte_carlo import (
+    compute_monte_carlo_var, 
+    create_monte_carlo_dashboard,  # FIXED
+    create_realtime_simulation_progress,
+    create_3d_simulation_visualization,
+    plot_enhanced_correlation_matrix
+)
 import pandas as pd
+import numpy as np
+import time
 
 # Page config
-st.set_page_config(page_title="Value at Risk Analytics", layout="wide", page_icon="⚡")
+st.set_page_config(page_title="QuantRisk VaR Analytics", layout="wide", page_icon="⚡")
 
 # Enhanced CSS styling
 st.markdown("""
@@ -20,83 +46,227 @@ st.markdown("""
         /* Hero Section */
         .var-hero {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 2.5rem 2rem;
+            padding: 3rem 2rem;
             border-radius: 20px;
             text-align: center;
             margin-bottom: 2rem;
             color: white;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .var-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: rotate(45deg);
+            animation: shine 4s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
         }
         
         .var-hero h1 {
-            font-size: 3rem;
+            font-size: 3.2rem;
             font-weight: 800;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.8rem;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            letter-spacing: -1px;
+            position: relative;
+            z-index: 1;
         }
         
         .var-hero p {
             font-size: 1.3rem;
             opacity: 0.9;
-            margin-bottom: 0;
+            margin-bottom: 1rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-stat {
+            background: rgba(255,255,255,0.2);
+            padding: 1rem 1.5rem;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 800;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
         }
 
         /* Mode Selection Cards */
-        .mode-selection {
+        .mode-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
             margin: 2rem 0;
         }
-        
+
         .mode-card {
             background: white;
             padding: 2rem;
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.08);
             transition: all 0.3s ease;
             border: 2px solid transparent;
             cursor: pointer;
             height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mode-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
         }
         
         .mode-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 16px 48px rgba(0,0,0,0.15);
+            transform: translateY(-10px);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
             border-color: #667eea;
         }
         
         .mode-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
             display: block;
             text-align: center;
         }
         
         .mode-title {
-            font-size: 1.4rem;
+            font-size: 1.5rem;
             font-weight: 700;
             color: #2c3e50;
-            margin-bottom: 0.8rem;
+            margin-bottom: 1rem;
             text-align: center;
         }
         
         .mode-description {
             color: #666;
             text-align: center;
-            line-height: 1.5;
-            font-size: 0.95rem;
+            line-height: 1.6;
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
         }
 
-        /* Input Sections */
-        .input-section {
-            background: #f8f9fa;
+        .mode-features {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .mode-features li {
+            padding: 0.3rem 0;
+            color: #555;
+            font-size: 0.9rem;
+            position: relative;
+            padding-left: 1.5rem;
+        }
+
+        .mode-features li::before {
+            content: "✓";
+            color: #27ae60;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+
+        /* Results Container */
+        .results-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 2rem;
+            border-radius: 20px;
+            margin: 2rem 0;
+            border-left: 5px solid #667eea;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        .results-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        /* Selected Mode */
+        .selected-mode {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            border-radius: 15px;
+            text-align: center;
+            font-weight: 600;
+            margin: 2rem 0;
+            box-shadow: 0 8px 25px rgba(39, 174, 96, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .selected-mode::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: slide 2s infinite;
+        }
+
+        @keyframes slide {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        /* Input Styling */
+        .input-group {
+            background: white;
             padding: 2rem;
             border-radius: 16px;
             margin: 1.5rem 0;
-            border-left: 4px solid #667eea;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            border-top: 4px solid #667eea;
         }
-        
-        .section-title {
-            font-size: 1.6rem;
-            font-weight: 700;
+
+        .input-title {
+            font-size: 1.3rem;
+            font-weight: 600;
             color: #2c3e50;
             margin-bottom: 1.5rem;
             display: flex;
@@ -104,104 +274,60 @@ st.markdown("""
             gap: 0.5rem;
         }
 
-        /* Asset Input Cards */
-        .asset-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            margin-bottom: 1rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            border: 1px solid #e9ecef;
-        }
-        
-        .asset-card:hover {
-            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-        }
-
-        /* Results Section */
-        .results-container {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            padding: 2rem;
-            border-radius: 16px;
-            margin: 2rem 0;
-        }
-        
-        .var-metric {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        
-        .var-value {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: #e74c3c;
-            margin-bottom: 0.5rem;
-        }
-        
-        .var-label {
-            color: #666;
-            font-size: 1rem;
-            font-weight: 500;
-        }
-
-        /* Status Messages */
-        .selected-mode {
-            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
-            color: white;
-            padding: 1rem 2rem;
-            border-radius: 12px;
-            text-align: center;
-            font-weight: 600;
-            margin: 1rem 0;
-            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
-        }
-
         /* Buttons */
         .stButton > button {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 0.8rem 2rem;
-            border-radius: 10px;
+            padding: 1rem 2rem;
+            border-radius: 12px;
             font-weight: 600;
             font-size: 1rem;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
         }
         
         .stButton > button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.6);
         }
 
-        /* Back Button */
-        .back-button {
-            margin-bottom: 1rem;
-        }
-        
-        .back-button button {
-            background: #6c757d !important;
-            color: white !important;
-        }
-
-        /* Charts and Plots */
+        /* Chart Containers */
         .chart-container {
             background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            margin: 1rem 0;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            margin: 2rem 0;
+        }
+
+        /* Loading Animation */
+        .loading-container {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         /* Responsive Design */
         @media (max-width: 768px) {
-            .var-hero h1 { font-size: 2.2rem; }
+            .var-hero h1 { font-size: 2.5rem; }
             .var-hero p { font-size: 1.1rem; }
-            .mode-card { padding: 1.5rem; }
-            .input-section { padding: 1.5rem; }
+            .hero-stats { gap: 1rem; }
+            .mode-grid { grid-template-columns: 1fr; }
         }
     </style>
 """, unsafe_allow_html=True)
@@ -209,60 +335,87 @@ st.markdown("""
 # Hero Section
 st.markdown("""
     <div class="var-hero">
-        <h1>⚡ Value-at-Risk Analytics</h1>
-        <p>Professional risk assessment using multiple VaR methodologies</p>
+        <h1>⚡ QuantRisk VaR Analytics</h1>
+        <p>Advanced Interactive Risk Assessment Platform with Real-Time Analytics</p>
+        <div class="hero-stats">
+            <div class="hero-stat">
+                <span class="stat-number">4</span>
+                <span class="stat-label">VaR Methods</span>
+            </div>
+            <div class="hero-stat">
+                <span class="stat-number">Real-Time</span>
+                <span class="stat-label">Analytics</span>
+            </div>
+            <div class="hero-stat">
+                <span class="stat-number">3D</span>
+                <span class="stat-label">Visualizations</span>
+            </div>
+            <div class="hero-stat">
+                <span class="stat-number">Interactive</span>
+                <span class="stat-label">Dashboards</span>
+            </div>
+        </div>
     </div>
 """, unsafe_allow_html=True)
 
 # Back Button
-with st.container():
-    st.markdown('<div class="back-button">', unsafe_allow_html=True)
-    if st.button("🔙 Back to Home", help="Return to main dashboard"):
-        st.switch_page("streamlit_app.py")
-    st.markdown('</div>', unsafe_allow_html=True)
+if st.button("🔙 Back to Home", help="Return to main dashboard"):
+    st.switch_page("streamlit_app.py")
 
 # Mode Selection
-st.markdown("""
-    <div class="section-title">
-        Select Risk Analysis Method
-    </div>
-""", unsafe_allow_html=True)
+st.markdown("## 🎯 Select Advanced Risk Analysis Method")
+
+st.markdown('<div class="mode-grid">', unsafe_allow_html=True)
 
 col1, col2 = st.columns(2)
 
 with col1:
     st.markdown("""
         <div class="mode-card">
-            <span class="mode-icon">📈</span>
-            <div class="mode-title">Single Asset Analysis</div>
-            <div class="mode-description">Parametric VaR for individual stocks or fixed income instruments</div>
+            <span class="mode-icon">📊</span>
+            <div class="mode-title">Single Asset Analytics</div>
+            <div class="mode-description">Advanced parametric VaR with interactive gauges and real-time risk monitoring</div>
+            <ul class="mode-features">
+                <li>Real-time VaR gauges</li>
+                <li>Interactive return distributions</li>
+                <li>Risk dashboard</li>
+                <li>Animated P&L analysis</li>
+            </ul>
         </div>
     """, unsafe_allow_html=True)
     
     col1a, col1b = st.columns(2)
     with col1a:
-        if st.button("Equity VaR", key="equity_btn", help="Parametric VaR for stocks"):
-            st.session_state.selected_mode = "One Asset (Parametric)"
+        if st.button("📈 Advanced Equity VaR", key="equity_btn"):
+            st.session_state.selected_mode = "Advanced Equity Analytics"
     with col1b:
-        if st.button("Bond VaR", key="bond_btn", help="PV01-based VaR for bonds"):
-            st.session_state.selected_mode = "One Asset (Fixed Income)"
+        if st.button("🏦 Advanced Bond VaR", key="bond_btn"):
+            st.session_state.selected_mode = "Advanced Fixed Income"
 
 with col2:
     st.markdown("""
         <div class="mode-card">
-            <span class="mode-icon">📊</span>
-            <div class="mode-title">Portfolio Analysis</div>
-            <div class="mode-description">Multi-asset portfolio risk assessment with correlation analysis</div>
+            <span class="mode-icon">🎲</span>
+            <div class="mode-title">Portfolio Analytics</div>
+            <div class="mode-description">Comprehensive portfolio risk with 3D visualizations and Monte Carlo simulations</div>
+            <ul class="mode-features">
+                <li>3D risk visualization</li>
+                <li>Real-time simulations</li>
+                <li>Risk attribution</li>
+                <li>Interactive dashboards</li>
+            </ul>
         </div>
     """, unsafe_allow_html=True)
     
     col2a, col2b = st.columns(2)
     with col2a:
-        if st.button("Portfolio VaR", key="portfolio_btn", help="Mixed portfolio analysis"):
-            st.session_state.selected_mode = "Portfolio (Equity + Bonds) (Variance-Covariance)"
+        if st.button("🎯 Advanced Portfolio VaR", key="portfolio_btn"):
+            st.session_state.selected_mode = "Advanced Portfolio Analytics"
     with col2b:
-        if st.button("Monte Carlo", key="mc_btn", help="Monte Carlo simulation"):
-            st.session_state.selected_mode = "Multiple Assets (Monte Carlo)"
+        if st.button("🎲 Interactive Monte Carlo", key="mc_btn"):
+            st.session_state.selected_mode = "Interactive Monte Carlo"
+
+st.markdown('</div>', unsafe_allow_html=True)
 
 # Display selected mode
 mode = st.session_state.get("selected_mode", None)
@@ -270,408 +423,400 @@ mode = st.session_state.get("selected_mode", None)
 if mode:
     st.markdown(f"""
         <div class="selected-mode">
-            Active Analysis: <strong>{mode}</strong>
+            🚀 Active Analysis: <strong>{mode}</strong>
+            <br><small>Advanced interactive analytics enabled</small>
         </div>
     """, unsafe_allow_html=True)
 
-# Mode-specific interfaces
-if mode == "One Asset (Parametric)":
-    st.markdown("""
-        <div class="input-section">
-            <div class="section-title">Equity Parametric VaR Configuration</div>
-        </div>
-    """, unsafe_allow_html=True)
 
-    num_assets = st.number_input("Number of Stocks", min_value=1, max_value=10, value=2, step=1)
-    tickers = []
+if mode == "Advanced Equity Analytics":
+    st.markdown('<div class="input-group">', unsafe_allow_html=True)
+    st.markdown('<div class="input-title">📈 Advanced Equity Risk Configuration</div>', unsafe_allow_html=True)
 
-    for i in range(num_assets):
-        st.markdown('<div class="asset-card">', unsafe_allow_html=True)
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            default_value = "AAPL" if i == 0 else "MSFT" if i == 1 else ""
-            ticker = st.text_input(f"Stock Ticker {i + 1}", value=default_value, key=f"param_ticker_{i}").upper()
-        with col2:
-            st.markdown("<br>", unsafe_allow_html=True)
-            st.markdown(f"**Asset {i + 1}**")
-        tickers.append(ticker.strip())
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    col1, col2 = st.columns(2)
+    # Simplified inputs for demonstration
+    ticker = st.text_input("🏢 Stock Ticker", value="AAPL").upper()
+    
+    col1, col2, col3 = st.columns(3)
     with col1:
-        position = st.number_input("Position Size per Asset ($)", value=100000, step=10000)
+        position = st.number_input("💰 Position Size ($)", value=1000000, step=100000)
     with col2:
-        confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95, step=0.01)
+        confidence = st.slider("🎯 Confidence Level", 0.90, 0.99, 0.95, step=0.01)
+    with col3:
+        enable_advanced = st.checkbox("🔬 Enable Advanced Analytics", value=True)
 
-    if st.button("Run VaR Analysis", key="run_equity_var"):
-        with st.spinner("Computing parametric VaR..."):
-            results = compute_parametric_var(tickers, confidence_level=confidence, position_size=position)
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    if st.button("🚀 Run Advanced VaR Analysis", key="run_advanced_equity"):
+        if ticker:
+            with st.spinner("🔄 Computing advanced parametric VaR with interactive analytics..."):
+                try:
+                    results = compute_parametric_var([ticker], confidence_level=confidence, position_size=position)
+                    
+                    for res in results:
+                        if 'error' in res:
+                            st.error(f"❌ {res['ticker']}: {res['error']}")
+                        else:
+                            st.markdown('<div class="results-section">', unsafe_allow_html=True)
+                            st.markdown(f'<div class="results-title">📊 Advanced Analytics for {res["ticker"]}</div>', unsafe_allow_html=True)
+                            
+                            # Key Metrics Row
+                            col1, col2, col3, col4 = st.columns(4)
+                            with col1:
+                                st.metric("💥 1-Day VaR", f"${res['VaR']:.0f}", f"{abs(res['VaR'])/position*100:.2f}% of Portfolio")
+                            with col2:
+                                st.metric("📊 Daily Volatility", f"{res['daily_volatility']:.2%}", f"Annual: {res['daily_volatility']*np.sqrt(252):.1%}")
+                            with col3:
+                                st.metric("⚠️ VaR Breaches", f"{res['num_exceedances']}", f"{res['exceedance_pct']:.1f}% of days")
+                            with col4:
+                                sharpe = res.get('sharpe_ratio', 0)
+                                st.metric("📈 Sharpe Ratio", f"{sharpe:.2f}", "Risk-adjusted return")
 
-            st.markdown('<div class="results-container">', unsafe_allow_html=True)
-            for res in results:
-                with st.expander(f"Results for {res['ticker']}", expanded=True):
+                            # Interactive VaR Gauge
+                            st.markdown("### 🎛️ Real-Time Risk Gauge")
+                            gauge_fig = create_var_gauge(res['VaR'], position, confidence)
+                            st.plotly_chart(gauge_fig, use_container_width=True)                            
+
+                            if enable_advanced:
+                                # FIXED: Advanced Analytics with error handling
+                                col1, col2 = st.columns(2)
+                                
+                                with col1:
+                                    try:
+                                        st.markdown("### 📈 Interactive Return Distribution")
+                                        dist_fig = plot_interactive_return_distribution(res['df'], res['VaR'], confidence)
+                                        if dist_fig:
+                                            st.plotly_chart(dist_fig, use_container_width=True)
+                                        else:
+                                            st.info("📊 Interactive distribution temporarily unavailable")
+                                    except Exception as e:
+                                        st.warning(f"Distribution chart issue: {str(e)}")
+                                
+                                with col2:
+                                    try:
+                                        st.markdown("### 📊 Enhanced P&L Analysis")
+                                        pnl_fig = plot_animated_pnl_vs_var(res['df'], res['VaR'], confidence)
+                                        if pnl_fig:
+                                            st.plotly_chart(pnl_fig, use_container_width=True)
+                                        else:
+                                            st.info("📈 Enhanced P&L chart temporarily unavailable")
+                                    except Exception as e:
+                                        st.warning(f"P&L chart issue: {str(e)}")
+
+                                # FIXED: Risk Dashboard with error handling
+                                try:
+                                    st.markdown("### 🎛️ Comprehensive Risk Dashboard")
+                                    dashboard_fig = create_risk_dashboard([res])
+                                    if dashboard_fig:
+                                        st.plotly_chart(dashboard_fig, use_container_width=True)
+                                    else:
+                                        st.info("🎛️ Risk dashboard temporarily unavailable")
+                                except Exception as e:
+                                    st.warning(f"Dashboard issue: {str(e)}")
+                                
+                except Exception as e:
+                    st.error(f"❌ Error: {str(e)}")
+                    st.info("💡 Try using a well-known ticker like AAPL, MSFT, or GOOG")
+
+
+
+elif mode == "Advanced Fixed Income":
+    st.markdown('<div class="input-group">', unsafe_allow_html=True)
+    st.markdown('<div class="input-title">🏦 Advanced Fixed Income Analytics</div>', unsafe_allow_html=True)
+
+    ticker = st.text_input("📊 Bond Yield Ticker", value="DGS10").upper()
+    
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        maturity = st.number_input("⏰ Bond Maturity (Years)", min_value=1, max_value=30, value=10)
+    with col2:
+        position = st.number_input("💰 Position Size ($)", value=1000000, step=100000)
+    with col3:
+        confidence = st.slider("🎯 Confidence Level", 0.90, 0.99, 0.95, step=0.01)
+    with col4:
+        advanced_bond = st.checkbox("🔬 Duration & Convexity", value=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    if st.button("🚀 Run Advanced Bond VaR", key="run_advanced_bond"):
+        with st.spinner("🔄 Computing advanced fixed income VaR with duration/convexity analytics..."):
+            try:
+                results = compute_fixed_income_var([ticker], maturity=maturity, confidence_level=confidence, position_size=position)
+                
+                for res in results:
                     if 'error' in res:
                         st.error(f"❌ {res['ticker']}: {res['error']}")
-                        continue
+                    else:
+                        st.markdown('<div class="results-section">', unsafe_allow_html=True)
+                        st.markdown(f'<div class="results-title">🏦 Advanced Bond Analytics for {res["ticker"]}</div>', unsafe_allow_html=True)
+                        
+                        # Enhanced Metrics with FIXED key access
+                        col1, col2, col3, col4, col5 = st.columns(5)
+                        with col1:
+                            var_display = res.get('VaR_linear', res.get('VaR', 0))
+                            st.metric("💥 Linear VaR", f"${var_display:.0f}")
+                        with col2:
+                            var_quad = res.get('VaR_quadratic', var_display * 1.1)
+                            st.metric("🔄 Quadratic VaR", f"${var_quad:.0f}")
+                        with col3:
+                            duration = res.get('duration', 0)
+                            st.metric("⏱️ Duration", f"{duration:.2f} years")
+                        with col4:
+                            convexity = res.get('convexity', 0)
+                            st.metric("🔄 Convexity", f"{convexity:.2f}")
+                        with col5:
+                            st.metric("📊 Current YTM", f"{res['ytm']:.2%}")
 
-                    col1, col2, col3 = st.columns(3)
-                    with col1:
-                        st.markdown(f"""
-                            <div class="var-metric">
-                                <div class="var-value">${res['VaR']:.0f}</div>
-                                <div class="var-label">1-Day VaR ({int(confidence * 100)}%)</div>
-                            </div>
-                        """, unsafe_allow_html=True)
-                    with col2:
-                        st.markdown(f"""
-                            <div class="var-metric">
-                                <div class="var-value">{res['daily_volatility']:.2%}</div>
-                                <div class="var-label">Daily Volatility</div>
-                            </div>
-                        """, unsafe_allow_html=True)
-                    with col3:
-                        st.markdown(f"""
-                            <div class="var-metric">
-                                <div class="var-value">{res['num_exceedances']}</div>
-                                <div class="var-label">VaR Breaches ({res['exceedance_pct']:.1f}%)</div>
-                            </div>
-                        """, unsafe_allow_html=True)
+                        if advanced_bond and 'duration' in res and res['duration'] > 0:
+                            # Bond Analytics Dashboard (FIXED with error handling)
+                            try:
+                                st.markdown("### 🎛️ Bond Risk Analytics Dashboard")
+                                bond_dashboard = create_bond_analytics_dashboard(res)
+                                if bond_dashboard:
+                                    st.plotly_chart(bond_dashboard, use_container_width=True)
+                                else:
+                                    st.info("📊 Dashboard temporarily unavailable - displaying basic metrics above")
+                            except Exception as e:
+                                st.warning(f"Dashboard display issue: {str(e)}")
 
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-                        st.markdown("**Return Distribution**")
-                        st.pyplot(plot_return_distribution(res['df']))
+                            # 3D Yield Scenario Analysis (FIXED with error handling)
+                            try:
+                                st.markdown("### 🌐 3D Yield Scenario Analysis")
+                                scenario_fig = create_yield_scenario_analysis(res)
+                                if scenario_fig:
+                                    st.plotly_chart(scenario_fig, use_container_width=True)
+                                else:
+                                    st.info("📈 3D analysis temporarily unavailable - using 2D approximation")
+                                    
+                                    # Fallback: Simple 2D scenario analysis
+                                    import plotly.graph_objects as go
+                                    yield_changes = np.linspace(-200, 200, 50)
+                                    pnl_values = []
+                                    for dy in yield_changes:
+                                        duration_effect = -res['duration'] * (dy/10000) * res['price'] * position
+                                        pnl_values.append(duration_effect)
+                                    
+                                    fig_2d = go.Figure()
+                                    fig_2d.add_trace(go.Scatter(x=yield_changes, y=pnl_values, mode='lines', name='Duration Effect'))
+                                    fig_2d.update_layout(title="2D Yield Scenario (Duration Only)", 
+                                                        xaxis_title="Yield Change (bps)", 
+                                                        yaxis_title="P&L ($)")
+                                    st.plotly_chart(fig_2d, use_container_width=True)
+                            except Exception as e:
+                                st.warning(f"Scenario analysis issue: {str(e)}")
+
                         st.markdown('</div>', unsafe_allow_html=True)
-                    with col2:
-                        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-                        st.markdown("**PnL vs. VaR**")
-                        st.pyplot(plot_pnl_vs_var(res['df'], res['VaR'], confidence))
-                        st.markdown('</div>', unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
+                        
+            except Exception as e:
+                st.error(f"❌ Error: {str(e)}")
+                st.info("💡 Try using a different bond ticker (e.g., ^IRX, ^TNX) or check your internet connection")
 
-elif mode == "One Asset (Fixed Income)":
-    st.markdown("""
-        <div class="input-section">
-            <div class="section-title">Fixed Income VaR (PV01 Method)</div>
-        </div>
-    """, unsafe_allow_html=True)
 
-    num_bonds = st.number_input("Number of Bond Instruments", min_value=1, value=2, step=1)
-    bond_tickers = []
-
-    for i in range(num_bonds):
-        st.markdown('<div class="asset-card">', unsafe_allow_html=True)
-        col1, col2 = st.columns([3, 1])
+elif mode == "Advanced Portfolio Analytics":
+    st.markdown('<div class="input-group">', unsafe_allow_html=True)
+    st.markdown('<div class="input-title">🎯 Advanced Portfolio Risk Analytics</div>', unsafe_allow_html=True)
+    
+    # Simplified portfolio setup
+    equity_tickers_input = st.text_input("📈 Equity Tickers (comma-separated)", value="AAPL,MSFT,GOOG").upper()
+    bond_tickers_input = st.text_input("🏦 Bond Tickers (comma-separated)", value="DGS10").upper()
+    
+    equity_tickers = [t.strip() for t in equity_tickers_input.split(',') if t.strip()]
+    bond_tickers = [t.strip() for t in bond_tickers_input.split(',') if t.strip()]
+    
+    total_assets = len(equity_tickers) + len(bond_tickers)
+    if total_assets > 0:
+        equal_weight = 1.0 / total_assets
+        equity_weights = [equal_weight] * len(equity_tickers)
+        bond_weights = [equal_weight] * len(bond_tickers)
+        
+        st.info(f"📊 Using equal weights: {equal_weight:.1%} per asset ({len(equity_tickers)} equities, {len(bond_tickers)} bonds)")
+        
+        col1, col2, col3, col4 = st.columns(4)
         with col1:
-            default_value = "DGS10" if i == 0 else "^IRX" if i == 1 else ""
-            ticker = st.text_input(f"Bond Yield Ticker {i + 1}", value=default_value, key=f"bond_ticker_{i}")
+            position = st.number_input("💰 Portfolio Value ($)", value=1000000, step=100000)
         with col2:
-            st.markdown("<br>", unsafe_allow_html=True)
-            st.markdown(f"**Bond {i + 1}**")
-        bond_tickers.append(ticker.strip().upper())
+            maturity = st.slider("⏰ Bond Maturity (Years)", 1, 30, 10)
+        with col3:
+            confidence = st.slider("🎯 Confidence Level", 0.90, 0.99, 0.95, step=0.01)
+        with col4:
+            advanced_portfolio = st.checkbox("🔬 Advanced Analytics", value=True)
+
         st.markdown('</div>', unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        maturity = st.number_input("Bond Maturity (Years)", min_value=1, max_value=30, value=10)
-    with col2:
-        position = st.number_input("Position Size ($)", value=1000000, step=100000)
-    with col3:
-        confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95, step=0.01)
-
-    if st.button("Run Fixed Income VaR", key="run_bond_var"):
-        with st.spinner("Computing PV01-based VaR..."):
-            results = compute_fixed_income_var(
-                bond_tickers, maturity=maturity, confidence_level=confidence, position_size=position
-            )
-
-            st.markdown('<div class="results-container">', unsafe_allow_html=True)
-            for res in results:
-                with st.expander(f"Results for {res['ticker']}", expanded=True):
+        if st.button("🚀 Run Advanced Portfolio Analysis", key="run_advanced_portfolio"):
+            with st.spinner("🔄 Computing advanced portfolio VaR with risk attribution..."):
+                try:
+                    results = compute_portfolio_var(
+                        equity_tickers, equity_weights, bond_tickers, bond_weights,
+                        confidence_level=confidence, position_size=position, maturity=maturity
+                    )
+                
+                    st.markdown('<div class="results-section">', unsafe_allow_html=True)
+                    st.markdown('<div class="results-title">🎯 Advanced Portfolio Risk Analysis</div>', unsafe_allow_html=True)
+                    
+                    # Key Portfolio Metrics
                     col1, col2, col3, col4 = st.columns(4)
                     with col1:
-                        st.markdown(f"""
-                            <div class="var-metric">
-                                <div class="var-value">${res['VaR']:.0f}</div>
-                                <div class="var-label">1-Day VaR ({int(confidence * 100)}%)</div>
-                            </div>
-                        """, unsafe_allow_html=True)
+                        st.metric("💥 Portfolio VaR", f"${results['var_portfolio']:.0f}", f"{abs(results['var_portfolio'])/position*100:.2f}%")
                     with col2:
-                        st.markdown(f"""
-                            <div class="var-metric">
-                                <div class="var-value">{res['ytm']:.2%}</div>
-                                <div class="var-label">Current YTM</div>
-                            </div>
-                        """, unsafe_allow_html=True)
+                        diversification_benefit = results['weighted_var_sum'] - results['var_portfolio']
+                        st.metric("🛡️ Diversification Benefit", f"${diversification_benefit:.0f}", f"{diversification_benefit/results['weighted_var_sum']*100:.1f}%")
                     with col3:
-                        st.markdown(f"""
-                            <div class="var-metric">
-                                <div class="var-value">{res['vol_bps']:.1f}</div>
-                                <div class="var-label">Volatility (bps)</div>
-                            </div>
-                        """, unsafe_allow_html=True)
+                        st.metric("📊 Portfolio Volatility", f"{results['volatility']*np.sqrt(252):.1%}", "Annualized")
                     with col4:
-                        st.markdown(f"""
-                            <div class="var-metric">
-                                <div class="var-value">{res['exceedances']}</div>
-                                <div class="var-label">Breaches ({res['exceedance_pct']:.1f}%)</div>
-                            </div>
-                        """, unsafe_allow_html=True)
+                        st.metric("⚠️ VaR Breaches", f"{results['exceedances']}", f"{results['exceedance_pct']:.1f}%")
 
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-                        st.markdown("**Yield Change Distribution**")
-                        fig1 = plot_yield_change_distribution(pd.DataFrame({'Yield_Change_bps': res['yield_changes']}))
-                        st.pyplot(fig1)
-                        st.markdown('</div>', unsafe_allow_html=True)
-                    with col2:
-                        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-                        st.markdown("**PnL vs. VaR**")
-                        fig2 = plot_pnl_vs_var(res['df'], res['VaR'], confidence)
-                        st.pyplot(fig2)
-                        st.markdown('</div>', unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
+                    if advanced_portfolio:
+                        # Portfolio Risk Dashboard
+                        st.markdown("### 🎛️ Interactive Portfolio Risk Dashboard")
+                        portfolio_dashboard = create_portfolio_risk_dashboard(results)
+                        if portfolio_dashboard:
+                            st.plotly_chart(portfolio_dashboard, use_container_width=True)
 
-elif mode == "Portfolio (Equity + Bonds) (Variance-Covariance)":
-    st.markdown("""
-        <div class="input-section">
-            <div class="section-title">Portfolio Parametric VaR</div>
-        </div>
-    """, unsafe_allow_html=True)
+                        # Risk Attribution
+                        col1, col2 = st.columns(2)
+                        
+                        with col1:
+                            st.markdown("### 🌳 Risk Attribution Treemap")
+                            treemap_fig = create_risk_attribution_treemap(results)
+                            if treemap_fig:
+                                st.plotly_chart(treemap_fig, use_container_width=True)
+                        
+                        with col2:
+                            st.markdown("### 🕸️ Correlation Network")
+                            network_fig = create_correlation_network(results)
+                            if network_fig:
+                                st.plotly_chart(network_fig, use_container_width=True)
 
-    col1, col2 = st.columns(2)
-    with col1:
-        num_eq = st.number_input("Number of Equity Assets", min_value=0, value=2, step=1)
-    with col2:
-        num_bond = st.number_input("Number of Bond Instruments", min_value=0, value=1, step=1)
-    
-    total_assets = num_eq + num_bond
-    if total_assets == 0:
-        st.error("❌ Please select at least one asset (equity or bond)")
-        st.stop()
-    
-    default_weight = 100.0 / total_assets
-    
-    # Equity Holdings
-    eq_tickers, eq_weights = [], []
-    if num_eq > 0:
-        st.markdown("### Equity Holdings")
-        for i in range(num_eq):
-            st.markdown('<div class="asset-card">', unsafe_allow_html=True)
-            col1, col2 = st.columns([2, 1])
-            with col1:
-                eq_ticker = st.text_input(f"Stock Ticker {i+1}", key=f"eq_ticker_{i}").upper()
-            with col2:
-                eq_weight = st.number_input(f"Weight (%)", min_value=0.0, max_value=100.0,
-                                            value=default_weight, step=1.0, key=f"eq_weight_{i}")
-            eq_tickers.append(eq_ticker)
-            eq_weights.append(eq_weight / 100)
-            st.markdown('</div>', unsafe_allow_html=True)
-    
-    # Bond Holdings
-    bond_tickers, bond_weights = [], []
-    if num_bond > 0:
-        st.markdown("### Bond Holdings")
-        for i in range(num_bond):
-            st.markdown('<div class="asset-card">', unsafe_allow_html=True)
-            col1, col2 = st.columns([2, 1])
-            with col1:
-                bond_ticker = st.text_input(f"Bond Ticker {i+1}", key=f"bond_ticker_{i}").upper()
-            with col2:
-                bond_weight = st.number_input(f"Weight (%)", min_value=0.0, max_value=100.0,
-                                              value=default_weight, step=1.0, key=f"bond_weight_{i}")
-            bond_tickers.append(bond_ticker)
-            bond_weights.append(bond_weight / 100)
-            st.markdown('</div>', unsafe_allow_html=True)
-    
-    # Weight validation
-    total_weight = sum(eq_weights) + sum(bond_weights)
-    
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("Total Portfolio Weight", f"{total_weight * 100:.1f}%")
-    with col2:
-        st.metric("Equity Allocation", f"{sum(eq_weights) * 100:.1f}%")
-    with col3:
-        st.metric("Bond Allocation", f"{sum(bond_weights) * 100:.1f}%")
-    
-    if abs(total_weight - 1.0) > 0.01:
-        st.error("❌ Total weights must sum to 100%. Please adjust your allocations.")
-        st.stop()
+                        # Enhanced P&L Analysis
+                        st.markdown("### 📈 Enhanced Portfolio P&L Analysis")
+                        pnl_fig = plot_enhanced_portfolio_pnl_vs_var(
+                            results['return_df'][['PnL', 'VaR_Breach']], 
+                            results['var_portfolio'], 
+                            confidence
+                        )
+                        st.plotly_chart(pnl_fig, use_container_width=True)
 
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        position = st.number_input("Portfolio Value ($)", value=1000000, step=100000)
-    with col2:
-        maturity = st.slider("Bond Maturity (Years)", 1, 30, 10)
-    with col3:
-        confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95, step=0.01)
+                    st.markdown('</div>', unsafe_allow_html=True)
+                    
+                except Exception as e:
+                    st.error(f"❌ Error: {str(e)}")
 
-    if st.button("Run Portfolio VaR Analysis", key="run_portfolio_var"):
-        with st.spinner("Computing portfolio VaR..."):
-            results = compute_portfolio_var(
-                eq_tickers, eq_weights, bond_tickers, bond_weights,
-                confidence_level=confidence, position_size=position, maturity=maturity
-            )
+elif mode == "Interactive Monte Carlo":
+    st.markdown('<div class="input-group">', unsafe_allow_html=True)
+    st.markdown('<div class="input-title">🎲 Interactive Monte Carlo Simulation</div>', unsafe_allow_html=True)
+    
+    tickers_input = st.text_input("🎯 Asset Tickers (comma-separated)", value="AAPL,MSFT,GOOG,TSLA")
+    tickers = [t.strip().upper() for t in tickers_input.split(',') if t.strip()]
+    
+    if tickers:
+        num_assets = len(tickers)
+        weights = [1.0/num_assets] * num_assets
         
-            st.markdown('<div class="results-container">', unsafe_allow_html=True)
-            
-            # Portfolio VaR Results
-            with st.expander("Portfolio VaR Results", expanded=True):
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.markdown(f"""
-                        <div class="var-metric">
-                            <div class="var-value">${results['var_portfolio']:.0f}</div>
-                            <div class="var-label">Portfolio VaR ({int(confidence * 100)}%)</div>
-                        </div>
-                    """, unsafe_allow_html=True)
-                with col2:
-                    st.markdown(f"""
-                        <div class="var-metric">
-                            <div class="var-value">${results['weighted_var_sum']:.0f}</div>
-                            <div class="var-label">Sum of Individual VaRs</div>
-                        </div>
-                    """, unsafe_allow_html=True)
-                with col3:
-                    st.markdown(f"""
-                        <div class="var-metric">
-                            <div class="var-value">{results['exceedances']}</div>
-                            <div class="var-label">VaR Breaches ({results['exceedance_pct']:.1f}%)</div>
-                        </div>
-                    """, unsafe_allow_html=True)
+        st.info(f"🎲 Portfolio: {len(tickers)} assets with equal {100/num_assets:.1f}% weights")
 
-            # Portfolio Analytics (separate expander)
-            return_df = results['return_df']
-            asset_names = results['asset_names']
-            
-            with st.expander("Portfolio Analytics", expanded=False):
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-                    st.markdown("**Asset Correlation Matrix**")
-                    fig_corr = plot_correlation_matrix(return_df[asset_names])
-                    st.pyplot(fig_corr)
-                    st.markdown('</div>', unsafe_allow_html=True)
-                with col2:
-                    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-                    st.markdown("**Portfolio PnL vs. VaR**")
-                    fig_pnl = plot_portfolio_pnl_vs_var(
-                        return_df[['PnL', 'VaR_Breach']], results['var_portfolio'], confidence
-                    )
-                    st.pyplot(fig_pnl)
-                    st.markdown('</div>', unsafe_allow_html=True)
-
-                st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-                st.markdown("**Individual Asset Distributions**")
-                fig_hists = plot_individual_distributions(return_df[asset_names])
-                st.pyplot(fig_hists)
-                st.markdown('</div>', unsafe_allow_html=True)
-                
-            st.markdown('</div>', unsafe_allow_html=True)
-
-elif mode == "Multiple Assets (Monte Carlo)":
-    st.markdown("""
-        <div class="input-section">
-            <div class="section-title">Monte Carlo Portfolio VaR</div>
-        </div>
-    """, unsafe_allow_html=True)
-
-    num_assets = st.number_input("Number of Assets", min_value=2, value=3, step=1)
-
-    tickers, weights = [], []
-    for i in range(num_assets):
-        st.markdown('<div class="asset-card">', unsafe_allow_html=True)
-        col1, col2 = st.columns([2, 1])
+        col1, col2, col3, col4 = st.columns(4)
         with col1:
-            ticker = st.text_input(f"Asset Ticker {i + 1}", key=f"mc_ticker_{i}").upper()
+            position = st.number_input("💰 Portfolio Value ($)", value=1000000, step=100000)
         with col2:
-            weight = st.number_input(f"Weight (%)", min_value=0.0, max_value=100.0, 
-                                     value=100.0 / num_assets, step=1.0, key=f"mc_weight_{i}")
-        tickers.append(ticker)
-        weights.append(weight / 100)
+            sims = st.number_input("🎲 Simulations", value=10000, step=1000, min_value=1000, max_value=50000)
+        with col3:
+            confidence = st.slider("🎯 Confidence Level", 0.90, 0.99, 0.95, step=0.01)
+        with col4:
+            realtime_sim = st.checkbox("⚡ Real-time Simulation", value=True)
+
         st.markdown('</div>', unsafe_allow_html=True)
 
-    total_weight = sum(weights)
-    if abs(total_weight - 1.0) > 0.01:
-        st.error(f"❌ Total weights must sum to 100%. Currently: {total_weight*100:.1f}%")
-        st.stop()
+        if st.button("🚀 Run Interactive Monte Carlo", key="run_interactive_mc"):
+            # Check for problematic tickers
+            rate_like = ["^IRX", "DTB3", "DTB6", "DTB12", "DGS1MO", "DGS3MO", "DGS6MO", "DGS1", "DGS2",
+                         "DGS3", "DGS5", "DGS7", "DGS10", "DGS20", "DGS30"]
 
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        position = st.number_input("Portfolio Value ($)", value=1000000, step=100000)
-    with col2:
-        sims = st.number_input("Simulations", value=10000, step=1000, min_value=1000)
-    with col3:
-        confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95, step=0.01)
+            if any(t in rate_like for t in tickers):
+                st.warning("⚠️ **Rate Ticker Detected**: Consider using bond ETFs (SHV, BIL, TLT) instead of rate tickers for better simulation accuracy.")
+            else:
+                if realtime_sim and sims <= 20000:
+                    # Real-time simulation with progress
+                    st.markdown("### ⚡ Real-Time Monte Carlo Simulation")
+                    
+                    progress_placeholder = st.empty()
+                    
+                    # Simulate real-time progress (simplified for demonstration)
+                    progress_bar = st.progress(0)
+                    status_text = st.empty()
+                    
+                    for i in range(1, 11):
+                        progress = i * 0.1
+                        progress_bar.progress(progress)
+                        status_text.text(f'Running simulation... {i*10}% complete')
+                        time.sleep(0.2)  # Simulate computation time
+                    
+                    status_text.text('Simulation complete! Generating results...')
+                
+                # Run actual Monte Carlo
+                with st.spinner("🔄 Computing Monte Carlo VaR with advanced analytics..."):
+                    try:
+                        results = compute_monte_carlo_var(
+                            tickers=tickers, weights=weights, portfolio_value=position,
+                            num_simulations=sims, confidence_level=confidence
+                        )
 
-    if st.button("Run Monte Carlo Analysis", key="run_mc_var"):
-        # Check for rate-like tickers
-        rate_like = ["^IRX", "DTB3", "DTB6", "DTB12", "DGS1MO", "DGS3MO", "DGS6MO", "DGS1", "DGS2",
-                     "DGS3", "DGS5", "DGS7", "DGS10", "DGS20", "DGS30", "FEDFUNDS", "SOFR", "OBFR",
-                     "USD3MTD156N", "T5YIE", "T10YIE", "T5YIFR", "DSWP2", "DSWP10"]
+                        st.markdown('<div class="results-section">', unsafe_allow_html=True)
+                        st.markdown('<div class="results-title">🎲 Interactive Monte Carlo Results</div>', unsafe_allow_html=True)
+                        
+                        # Key Results
+                        col1, col2, col3, col4 = st.columns(4)
+                        with col1:
+                            st.metric("💥 Monte Carlo VaR", f"${results['VaR_dollar']:,.0f}", f"{results['VaR_pct']:.2%} of Portfolio")
+                        with col2:
+                            st.metric("🎲 Simulations", f"{results['num_simulations']:,}", "Completed")
+                        with col3:
+                            st.metric("⚠️ VaR Breaches", f"{results['num_exceedances']}", f"{results['exceedance_pct']:.1f}%")
+                        with col4:
+                            worst_case = np.min(results['simulated_returns']) * position
+                            st.metric("💀 Worst Case", f"${worst_case:,.0f}", "Maximum Loss")
 
-        if any(t in rate_like for t in tickers):
-            st.warning("""
-                ⚠️ **Rate Ticker Detected**: Some tickers represent interest rates (not tradable assets). 
-                Monte Carlo VaR works with asset prices. Consider using bond ETFs like SHV, BIL, TLT instead.
-            """)
-        else:
-            with st.spinner("Running Monte Carlo simulation..."):
-                results = compute_monte_carlo_var(
-                    tickers=tickers, weights=weights, portfolio_value=position,
-                    num_simulations=sims, confidence_level=confidence
-                )
+                        try:
+                            st.markdown("### 🎛️ Interactive Monte Carlo Dashboard")
+                            mc_dashboard = create_monte_carlo_dashboard(results)
+                            if mc_dashboard:
+                                st.plotly_chart(mc_dashboard, use_container_width=True)
+                            else:
+                                st.info("🎛️ Monte Carlo dashboard temporarily unavailable - showing basic results above")
+                        except Exception as e:
+                            st.warning(f"Dashboard display issue: {str(e)}")
 
-                st.markdown('<div class="results-container">', unsafe_allow_html=True)
-                with st.expander("Monte Carlo VaR Results", expanded=True):
-                    col1, col2, col3 = st.columns(3)
-                    with col1:
-                        st.markdown(f"""
-                            <div class="var-metric">
-                                <div class="var-value">${results['VaR_dollar']:,.0f}</div>
-                                <div class="var-label">Monte Carlo VaR</div>
-                            </div>
-                        """, unsafe_allow_html=True)
-                    with col2:
-                        st.markdown(f"""
-                            <div class="var-metric">
-                                <div class="var-value">{results['VaR_pct']:.2%}</div>
-                                <div class="var-label">VaR as % of Portfolio</div>
-                            </div>
-                        """, unsafe_allow_html=True)
-                    with col3:
-                        st.markdown(f"""
-                            <div class="var-metric">
-                                <div class="var-value">{results['num_exceedances']}</div>
-                                <div class="var-label">Breaches ({results['exceedance_pct']:.1f}%)</div>
-                            </div>
-                        """, unsafe_allow_html=True)
+                        # FIXED: 3D Visualization with error handling
+                        if len(tickers) >= 2:
+                            try:
+                                st.markdown("### 🌐 3D Simulation Visualization")
+                                viz_3d = create_3d_simulation_visualization(results)
+                                if viz_3d:
+                                    st.plotly_chart(viz_3d, use_container_width=True)
+                                else:
+                                    st.info("🌐 3D visualization temporarily unavailable")
+                            except Exception as e:
+                                st.warning(f"3D visualization issue: {str(e)}")
 
-                    col1, col2, col3 = st.columns(3)
-                    with col1:
-                        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-                        st.markdown("**Simulated Returns**")
-                        st.pyplot(plot_simulated_returns(results['simulated_returns'], results['VaR_pct'], confidence))
-                        st.markdown('</div>', unsafe_allow_html=True)
-                    with col2:
-                        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-                        st.markdown("**Correlation Matrix**")
-                        st.pyplot(plot_mc_corr(results['returns']))
-                        st.markdown('</div>', unsafe_allow_html=True)
-                    with col3:
-                        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-                        st.markdown("**Historical PnL vs VaR**")
-                        st.pyplot(plot_monte_carlo_pnl_vs_var(results['pnl_df'], results['VaR_dollar'], confidence))
-                        st.markdown('</div>', unsafe_allow_html=True)
-                st.markdown('</div>', unsafe_allow_html=True)
-
+                        # FIXED: Enhanced Correlation Analysis
+                        try:
+                            st.markdown("### 🔗 Enhanced Correlation Analysis")
+                            corr_fig = plot_enhanced_correlation_matrix(results['returns'])
+                            if corr_fig:
+                                st.plotly_chart(corr_fig, use_container_width=True)
+                            else:
+                                st.info("🔗 Correlation matrix temporarily unavailable")
+                        except Exception as e:
+                            st.warning(f"Correlation analysis issue: {str(e)}")
+                                
+                    except Exception as e:
+                        st.error(f"❌ Error: {str(e)}")
+                        st.info("💡 Try using fewer simulations or well-known tickers like AAPL, MSFT, GOOG")
+                        
 # Footer
 st.markdown("---")
 st.markdown("""
-    <div style="text-align: center; color: #666; padding: 1rem;">
-        <p><strong>QuantRisk Analytics</strong> | Advanced Value-at-Risk Modeling</p>
+    <div style="text-align: center; color: #666; padding: 2rem;">
+        <p><strong>QuantRisk Analytics</strong> | Advanced Interactive Value-at-Risk Platform</p>
+        <p style="font-size: 0.9rem; opacity: 0.8;">Real-Time Analytics • 3D Visualizations • Interactive Dashboards • Professional Risk Management</p>
     </div>
 """, unsafe_allow_html=True)

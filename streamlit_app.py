@@ -46,6 +46,17 @@ st.markdown("""
             margin-right: auto;
             line-height: 1.6;
         }
+            
+        .stButton > button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.6);
+        }
+
+        /* Back Button */
+        .back-button .stButton > button {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.4);
+        }
         
         .hero-description {
             font-size: 1.1rem;
@@ -277,20 +288,27 @@ st.markdown("""
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
-    if st.button("Portfolio Optimizer", key="opt_btn", help="Optimize your portfolio using Markowitz theory"):
+    st.markdown('<div class="back-button">', unsafe_allow_html=True)
+    if st.button("Portfolio Optimizer"):
         st.switch_page("pages/1_Portfolio_Optimizer.py")
+    st.markdown('</div>', unsafe_allow_html=True)
 
 with col2:
-    if st.button("⚡ Value-at-Risk", key="var_btn", help="Calculate portfolio risk using multiple VaR methods"):
+    st.markdown('<div class="back-button">', unsafe_allow_html=True)
+    if st.button("Value-at-Risk"):
         st.switch_page("pages/3_var_app.py")
+    st.markdown('</div>', unsafe_allow_html=True)
 
 with col3:
-    if st.button("About Me", key="about_btn", help="Learn about the developer and download CV"):
-        st.switch_page("pages/2_About_Me.py")
-
+    st.markdown('<div class="back-button">', unsafe_allow_html=True)
+    if st.button("About me"):
+        st.switch_page("2_About_Me.py")
+    st.markdown('</div>', unsafe_allow_html=True)
 with col4:
-    if st.button("Bibliography", key="bib_btn", help="Access research papers and documentation"):
+    st.markdown('<div class="back-button">', unsafe_allow_html=True)
+    if st.button("Bibliography"):
         st.switch_page("pages/4_Bibliography.py")
+    st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("</div>", unsafe_allow_html=True)
 
