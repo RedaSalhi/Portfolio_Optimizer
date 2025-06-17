@@ -662,13 +662,10 @@ st.markdown("""
 # Back Button with enhanced styling
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
-    import streamlit as st
-
-    # CSS for styling all buttons inside Streamlit
     st.markdown("""
         <style>
             button[kind="secondary"] {
-                background: linear-gradient(135deg, #6c757d 0%, #495057 100%) !important;
+                background: linear-gradient(135deg, #28a745 0%, #218838 100%) !important;
                 color: white !important;
                 border: none !important;
                 padding: 1rem 2rem !important;
@@ -676,7 +673,7 @@ with col2:
                 font-weight: 600 !important;
                 font-size: 1rem !important;
                 transition: all 0.3s ease !important;
-                box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4) !important;
+                box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4) !important;
                 width: 100% !important;
                 position: relative !important;
                 overflow: hidden !important;
@@ -684,7 +681,7 @@ with col2:
 
             button[kind="secondary"]:hover {
                 transform: translateY(-3px) !important;
-                box-shadow: 0 10px 30px rgba(108, 117, 125, 0.6) !important;
+                box-shadow: 0 10px 30px rgba(40, 167, 69, 0.6) !important;
             }
 
             button[kind="secondary"]::before {
@@ -704,6 +701,7 @@ with col2:
         </style>
     """, unsafe_allow_html=True)
 
+    # Sample button
     if st.button("← Back to Home", help="Return to main dashboard", use_container_width=True):
         st.switch_page("streamlit_app.py")
 
