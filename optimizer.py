@@ -463,8 +463,6 @@ class PortfolioOptimizer:
                         if not treasury_data.empty:
                             if 'Close' in treasury_data.columns:
                                 rates = treasury_data['Close'].dropna()
-                            elif 'Adj Close' in treasury_data.columns:
-                                rates = treasury_data['Adj Close'].dropna()
                             else:
                                 if isinstance(treasury_data.columns, pd.MultiIndex):
                                     for col in treasury_data.columns:
