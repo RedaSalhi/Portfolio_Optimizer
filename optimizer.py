@@ -21,6 +21,9 @@ import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
 
+# Add this import for FRED utility
+from src.fred_utils import get_latest_risk_free_rate
+
 warnings.filterwarnings('ignore')
 
 
@@ -436,77 +439,55 @@ class PortfolioOptimizer:
     
     # 1. FIXED RISK-FREE RATE FETCHING
     def get_risk_free_rate(self) -> float:
-        """Enhanced risk-free rate fetching with better error handling."""
-        # Treasury symbols in order of preference
-        treasury_symbols = ['^IRX', '^TNX', '^FVX', 'DGS3MO', 'DGS10']
-        
+        """Enhanced risk-free rate fetching with FRED as primary source and robust fallback."""
+        # 1. Try FRED utility first
+        try:
+            latest_fred_rate = get_latest_risk_free_rate()
+            if 0 < latest_fred_rate < 20:
+                self.rf_rate = latest_fred_rate / 100
+                st.success(f"✅ Successfully fetched risk-free rate from FRED: {self.rf_rate:.3%}")
+                return self.rf_rate
+            else:
+                st.warning(f"FRED returned suspicious rate: {latest_fred_rate}")
+        except Exception as e:
+            st.warning(f"FRED utility failed: {str(e)}")
+
+        # 2. Try yfinance as backup
+        treasury_symbols = ['^IRX', '^TNX', '^FVX']
         for symbol in treasury_symbols:
             try:
                 st.info(f"Attempting to fetch risk-free rate from {symbol}...")
-                
-                # Try different time periods
                 for period in ['5d', '1mo', '3mo']:
                     try:
                         treasury_data = yf.download(symbol, period=period, progress=False)
-                        
                         if not treasury_data.empty:
-                            # Handle different column structures
                             if 'Close' in treasury_data.columns:
                                 rates = treasury_data['Close'].dropna()
                             elif 'Adj Close' in treasury_data.columns:
                                 rates = treasury_data['Adj Close'].dropna()
                             else:
-                                # Handle potential multi-index columns
                                 if isinstance(treasury_data.columns, pd.MultiIndex):
                                     for col in treasury_data.columns:
                                         if 'close' in str(col).lower():
                                             rates = treasury_data[col].dropna()
                                             break
                                 else:
-                                    rates = treasury_data.iloc[:, -1].dropna()  # Last column
-                            
+                                    rates = treasury_data.iloc[:, -1].dropna()
                             if len(rates) > 0:
                                 latest_rate = rates.iloc[-1]
-                                
-                                # Validate rate (should be between 0 and 20% for most scenarios)
                                 if 0 < latest_rate < 20:
                                     self.rf_rate = latest_rate / 100
                                     st.success(f"✅ Successfully fetched risk-free rate: {self.rf_rate:.3%} from {symbol}")
                                     return self.rf_rate
-                                
                                 st.warning(f"Rate {latest_rate} from {symbol} seems invalid")
-                            
                     except Exception as e:
                         st.warning(f"Failed to fetch {symbol} with period {period}: {str(e)}")
                         continue
-                        
             except Exception as e:
                 st.warning(f"Error with {symbol}: {str(e)}")
                 continue
-        
-        # If all fails, try FRED API approach (alternative data source)
-        try:
-            import pandas_datareader as pdr
-            st.info("Trying FRED data source...")
-            # NOTE: If you get an error about an API key, register for one at https://fred.stlouisfed.org/docs/api/api_key.html
-            # and set it in your environment: os.environ["FRED_API_KEY"] = "your_api_key_here"
-            end = datetime.now()
-            start = end - timedelta(days=30)
-            fred_rate = pdr.get_data_fred('DGS3MO', start, end).dropna()
-            if not fred_rate.empty:
-                # Handle both DataFrame and Series
-                if isinstance(fred_rate, pd.DataFrame):
-                    latest_rate = fred_rate.iloc[-1, 0]
-                else:
-                    latest_rate = fred_rate.iloc[-1]
-                if 0 < latest_rate < 20:
-                    self.rf_rate = latest_rate / 100
-                    st.success(f"✅ Successfully fetched risk-free rate from FRED: {self.rf_rate:.3%}")
-                    return self.rf_rate
-        except Exception as e:
-            st.warning(f"FRED approach failed: {str(e)}")
-        
-        # Final fallback - use reasonable default based on current economic conditions
+
+        # 3. Final fallback - use reasonable default
         self.rf_rate = 0.045  # 4.5% - reasonable default for 2024-2025
         st.warning(f"⚠️ Using fallback risk-free rate: {self.rf_rate:.3%}")
         return self.rf_rate

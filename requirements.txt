@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 streamlit
 yfinance
 numpy
@@ -7,13 +10,7 @@ scipy
 statsmodels
 pillow
 plotly
-streamlit
-yfinance
-pandas
-numpy
-matplotlib
 seaborn
-scipy
 pandas_datareader
 streamlit_option_menu
 datetime
