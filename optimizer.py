@@ -1053,107 +1053,74 @@ def create_efficient_frontier_plot(optimizer: PortfolioOptimizer,
             hovertemplate=f'<b>Risk-Free Asset</b><br>Return: {rf_return:.2f}%<br>Risk: 0.0%<extra></extra>'
         ))
         
+        # Find and mark tangency portfolio (highest Sharpe ratio on frontier)
+        if frontier_data['sharpe_ratios']:
+            max_sharpe_idx = np.argmax(frontier_data['sharpe_ratios'])
+            tangency_vol = frontier_data['volatilities'][max_sharpe_idx] * 100
+            tangency_ret = frontier_data['returns'][max_sharpe_idx] * 100
+            tangency_sharpe = frontier_data['sharpe_ratios'][max_sharpe_idx]
+            
+            # Mark tangency portfolio
+            fig.add_trace(go.Scatter(
+                x=[tangency_vol], y=[tangency_ret],
+                mode='markers+text',
+                marker=dict(size=25, color='red', symbol='diamond', line=dict(width=3, color='white')),
+                text=['Tangency'], textposition="top center",
+                textfont=dict(size=12, color='black', family='Arial Black'),
+                name='Tangency Portfolio',
+                hovertemplate=f'<b>Tangency Portfolio</b><br>Return: {tangency_ret:.2f}%<br>Risk: {tangency_vol:.2f}%<br>Sharpe: {tangency_sharpe:.3f}<extra></extra>'
+            ))
+            
+            # Draw Capital Allocation Line (CAL) from risk-free asset to tangency portfolio and beyond
+            max_vol_display = max(60, tangency_vol * 2)  # Extend line beyond tangency
+            cal_x = np.linspace(0, max_vol_display, 100)
+            cal_slope = (tangency_ret - rf_return) / tangency_vol
+            cal_y = rf_return + cal_slope * cal_x
+            
+            fig.add_trace(go.Scatter(
+                x=cal_x, y=cal_y, mode='lines',
+                line=dict(color='orange', width=4, dash='dash'),
+                name='Capital Allocation Line',
+                hovertemplate='<b>Capital Allocation Line</b><br>Return: %{y:.2f}%<br>Risk: %{x:.2f}%<br>Sharpe: ' + f'{tangency_sharpe:.3f}<extra></extra>'
+            ))
+            
+            # Add annotation explaining CAL
+            fig.add_annotation(
+                x=tangency_vol * 1.3, y=rf_return + cal_slope * tangency_vol * 1.3,
+                text=f"CAL Slope = {cal_slope:.3f}<br>(Tangency Sharpe Ratio)",
+                showarrow=True, arrowhead=2, arrowcolor='orange',
+                bgcolor='rgba(255, 255, 255, 0.8)', bordercolor='orange',
+                font=dict(size=10)
+            )
+        
         # Mark optimal portfolio if provided
         if optimal_portfolio:
             if include_risk_free and 'tangency_return' in optimal_portfolio:
-                # When including risk-free asset, show TWO points:
-                # 1. Tangency portfolio (on efficient frontier)
-                # 2. Your optimal portfolio (on CAL)
-                
-                # 1. Mark tangency portfolio on efficient frontier
-                tang_vol = optimal_portfolio['tangency_volatility'] * 100
-                tang_ret = optimal_portfolio['tangency_return'] * 100
+                # Show the actual optimal portfolio point on CAL
+                opt_vol = optimal_portfolio['volatility'] * 100
+                opt_ret = optimal_portfolio['expected_return'] * 100
                 
                 fig.add_trace(go.Scatter(
-                    x=[tang_vol], y=[tang_ret],
-                    mode='markers+text',
-                    marker=dict(size=25, color='red', symbol='diamond', line=dict(width=3, color='white')),
-                    text=['Tangency'], textposition="top center",
-                    textfont=dict(size=12, color='black', family='Arial Black'),
-                    name='Tangency Portfolio (Optimal Risky)',
-                    hovertemplate=f'<b>Tangency Portfolio</b><br>Return: {tang_ret:.2f}%<br>Risk: {tang_vol:.2f}%<br>Sharpe: {optimal_portfolio["tangency_sharpe"]:.3f}<extra></extra>'
-                ))
-                
-                # 2. Mark YOUR optimal portfolio on the CAL
-                your_vol = optimal_portfolio['volatility'] * 100
-                your_ret = optimal_portfolio['expected_return'] * 100
-                rf_weight = optimal_portfolio.get('rf_weight', 0)
-                risky_weight = optimal_portfolio.get('risky_weight', 1)
-                
-                fig.add_trace(go.Scatter(
-                    x=[your_vol], y=[your_ret],
+                    x=[opt_vol], y=[opt_ret],
                     mode='markers+text',
                     marker=dict(size=30, color='lime', symbol='star', line=dict(width=3, color='black')),
                     text=['Your Portfolio'], textposition="bottom center",
                     textfont=dict(size=12, color='black', family='Arial Black'),
-                    name='Your Optimal Portfolio (On CAL)',
-                    hovertemplate=f'<b>Your Optimal Portfolio</b><br>Return: {your_ret:.2f}%<br>Risk: {your_vol:.2f}%<br>Sharpe: {optimal_portfolio["sharpe_ratio"]:.3f}<br>Risk-Free: {rf_weight:.1%}<br>Risky: {risky_weight:.1%}<extra></extra>'
+                    name='Your Optimal Portfolio',
+                    hovertemplate=f'<b>Your Optimal Portfolio</b><br>Return: {opt_ret:.2f}%<br>Risk: {opt_vol:.2f}%<br>Sharpe: {optimal_portfolio["sharpe_ratio"]:.3f}<extra></extra>'
                 ))
-                
-                # Add line connecting risk-free asset to your portfolio for clarity
-                fig.add_trace(go.Scatter(
-                    x=[0, your_vol], y=[rf_return, your_ret],
-                    mode='lines',
-                    line=dict(color='lime', width=6, dash='solid'),
-                    name='Your CAL Position',
-                    opacity=0.7,
-                    hovertemplate='<b>Your Position on CAL</b><extra></extra>'
-                ))
-                
             else:
-                # Traditional optimal portfolio on efficient frontier (no risk-free asset)
+                # Traditional optimal portfolio on efficient frontier
                 fig.add_trace(go.Scatter(
                     x=[optimal_portfolio['volatility'] * 100],
                     y=[optimal_portfolio['expected_return'] * 100],
-                    mode='markers+text',
+                    mode='markers',
                     marker=dict(size=25, color='red', symbol='diamond', line=dict(width=3, color='white')),
-                    text=['Optimal'], textposition="top center",
-                    textfont=dict(size=12, color='black', family='Arial Black'),
                     name='Optimal Portfolio',
                     hovertemplate='<b>Optimal Portfolio</b><br>' +
                                   'Return: %{y:.2f}%<br>Risk: %{x:.2f}%<br>' +
                                   f'Sharpe: {optimal_portfolio["sharpe_ratio"]:.3f}<extra></extra>'
                 ))
-        else:
-            # If no optimal portfolio provided but we have frontier data, just mark the tangency
-            if frontier_data['sharpe_ratios']:
-                max_sharpe_idx = np.argmax(frontier_data['sharpe_ratios'])
-                tangency_vol = frontier_data['volatilities'][max_sharpe_idx] * 100
-                tangency_ret = frontier_data['returns'][max_sharpe_idx] * 100
-                tangency_sharpe = frontier_data['sharpe_ratios'][max_sharpe_idx]
-                
-                # Mark tangency portfolio
-                fig.add_trace(go.Scatter(
-                    x=[tangency_vol], y=[tangency_ret],
-                    mode='markers+text',
-                    marker=dict(size=25, color='red', symbol='diamond', line=dict(width=3, color='white')),
-                    text=['Tangency'], textposition="top center",
-                    textfont=dict(size=12, color='black', family='Arial Black'),
-                    name='Tangency Portfolio',
-                    hovertemplate=f'<b>Tangency Portfolio</b><br>Return: {tangency_ret:.2f}%<br>Risk: {tangency_vol:.2f}%<br>Sharpe: {tangency_sharpe:.3f}<extra></extra>'
-                ))
-                
-                # Draw Capital Allocation Line (CAL) from risk-free asset to tangency portfolio and beyond
-                max_vol_display = max(60, tangency_vol * 2)  # Extend line beyond tangency
-                cal_x = np.linspace(0, max_vol_display, 100)
-                cal_slope = (tangency_ret - rf_return) / tangency_vol
-                cal_y = rf_return + cal_slope * cal_x
-                
-                fig.add_trace(go.Scatter(
-                    x=cal_x, y=cal_y, mode='lines',
-                    line=dict(color='orange', width=4, dash='dash'),
-                    name='Capital Allocation Line',
-                    hovertemplate='<b>Capital Allocation Line</b><br>Return: %{y:.2f}%<br>Risk: %{x:.2f}%<br>Sharpe: ' + f'{tangency_sharpe:.3f}<extra></extra>'
-                ))
-                
-                # Add annotation explaining CAL
-                fig.add_annotation(
-                    x=tangency_vol * 1.3, y=rf_return + cal_slope * tangency_vol * 1.3,
-                    text=f"CAL Slope = {cal_slope:.3f}<br>(Tangency Sharpe Ratio)",
-                    showarrow=True, arrowhead=2, arrowcolor='orange',
-                    bgcolor='rgba(255, 255, 255, 0.8)', bordercolor='orange',
-                    font=dict(size=10)
-                )
         
         # Update layout
         fig.update_layout(
