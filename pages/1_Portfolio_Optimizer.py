@@ -1800,7 +1800,6 @@ with st.expander("Tips & Best Practices", expanded=False):
         **Beta**: Sensitivity to market movements  
         **Alpha**: Excess return above market expectations  
         """)
-    """)
 
 # Footer with enhanced styling
 st.markdown("---")
