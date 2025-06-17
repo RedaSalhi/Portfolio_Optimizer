@@ -1172,7 +1172,11 @@ if st.session_state.optimization_results and st.session_state.optimizer:
         st.markdown('<div class="chart-container">', unsafe_allow_html=True)
         
         # Portfolio composition visualization
-        composition_fig = create_portfolio_composition_chart(optimizer.tickers, result['weights'])
+        composition_fig = create_portfolio_composition_chart(
+            optimizer.tickers, 
+            result['weights'],
+            result.get('rf_weight') if selected_method in ['target_return', 'target_volatility'] else None
+        )
         st.plotly_chart(composition_fig, use_container_width=True)
         
         # Enhanced allocation tables
