@@ -1668,41 +1668,6 @@ with st.expander(" Debug & Troubleshooting", expanded=False):
         else:
             st.info("No optimizer initialized yet")
     
-    st.markdown("""
-    #### Common Issues & Solutions
-    
-    **"No valid ticker symbols found" / "Failed to fetch data"**
-    - Check internet connection
-    - Verify ticker symbols are correct (e.g., AAPL not Apple)
-    - Try well-known tickers: AAPL, MSFT, GOOGL, AMZN, TSLA
-    - Ensure tickers are from major exchanges (NYSE, NASDAQ)
-    - Wait a moment and try again (rate limiting)
-    
-    **"yfinance download errors"**
-    - This is often due to Yahoo Finance API changes
-    - Try fewer tickers at once (2-3 maximum)
-    - Use the individual ticker test feature below
-    - Try during US market hours for better reliability
-    
-    **"Optimization failed to converge"**
-    - Try different optimization method (Maximum Sharpe works best)
-    - Adjust target return/volatility to realistic levels
-    - Check min/max weight constraints
-    - Reduce number of assets (5-8 works well)
-    
-    **"Data fetching errors"**
-    - Yahoo Finance may be temporarily unavailable
-    - Try again in a few minutes
-    - Use fewer tickers (2-5 assets)
-    - Check ticker formats (no special characters)
-    
-    **"Insufficient data"**
-    - Choose tickers with longer trading history
-    - Avoid newly listed stocks or ETFs
-    - Reduce lookback period to 1-2 years
-    - Try major blue-chip stocks first
-    """)
-    
     # Add a data fetch test section
     st.markdown("#### Data Fetch Test")
     col1, col2 = st.columns(2)
@@ -1771,22 +1736,22 @@ with st.expander(" Tips & Best Practices", expanded=False):
         st.markdown("""
         #### Optimization Methods Guide
         
-        ** Maximum Sharpe Ratio**
+        **Maximum Sharpe Ratio**
         - Best for: General portfolio optimization
         - Goal: Maximize risk-adjusted returns
         - Ideal for: Most investors seeking balance
         
-        ** Minimum Variance**
+        **Minimum Variance**
         - Best for: Conservative investors
         - Goal: Minimize portfolio risk
         - Ideal for: Risk-averse investors, stable income needs
         
-        ** Target Return**
+        **Target Return**
         - Best for: Specific return goals
         - Goal: Achieve target with minimum risk
         - Ideal for: Pension funds, endowments
         
-        ** Target Volatility**
+        **Target Volatility**
         - Best for: Risk budgeting
         - Goal: Maximize return for specific risk
         - Ideal for: Risk-managed strategies
