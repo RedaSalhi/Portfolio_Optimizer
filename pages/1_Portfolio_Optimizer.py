@@ -768,7 +768,7 @@ if not st.session_state.optimization_results:
         </div>
     """, unsafe_allow_html=True)
     
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3 = st.columns(3)
     
     with col1:
         if st.button(" Tech Giants", help="Load technology stocks portfolio", use_container_width=True):
@@ -781,11 +781,6 @@ if not st.session_state.optimization_results:
             st.rerun()
     
     with col3:
-        if st.button(" Diversified ETFs", help="Load diversified ETF portfolio", use_container_width=True):
-            st.session_state.tickers_input = "SPY, QQQ, VTI, BND, VEA"
-            st.rerun()
-    
-    with col4:
         if st.button(" FAANG", help="Load FAANG stocks portfolio", use_container_width=True):
             st.session_state.tickers_input = "META, AAPL, AMZN, NFLX, GOOGL"
             st.rerun()
@@ -947,11 +942,9 @@ elif selected_method == 'target_volatility':
     )
     st.info(f"Target: {target_volatility*100:.1f}% annual volatility")
 
-st.markdown('</div>', unsafe_allow_html=True)
 
 # Advanced Options
 with st.expander(" Advanced Options", expanded=False):
-    st.markdown('<div class="advanced-section">', unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     with col1:
@@ -964,7 +957,6 @@ with st.expander(" Advanced Options", expanded=False):
         min_weight = st.slider(" Minimum Asset Weight", 0.0, 0.2, 0.0, step=0.01, format="%.1f%%")
         max_weight = st.slider(" Maximum Asset Weight", 0.2, 1.0, 1.0, step=0.01, format="%.1f%%")
     
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # Validation messages with enhanced styling
 if not valid_input:
@@ -1154,7 +1146,6 @@ with col1:
                 with st.expander("🐛 Error Details", expanded=False):
                     st.code(str(e))
     
-    st.markdown('</div>', unsafe_allow_html=True)
 
 with col2:
     if st.button("Clear Results", help="Clear current optimization results", use_container_width=True, type="secondary"):
@@ -1163,7 +1154,7 @@ with col2:
             if key in st.session_state:
                 del st.session_state[key]
         st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
+
 
 # Display Results Section
 if st.session_state.optimization_results and st.session_state.optimizer:
