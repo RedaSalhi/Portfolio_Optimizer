@@ -1721,59 +1721,65 @@ with st.expander(" Debug & Troubleshooting", expanded=False):
                 st.warning("Please enter a ticker symbol")
 
 # Tips and Information Section
+import streamlit as st
+
 st.markdown("""
     <style>
-        .custom-expander .stMarkdown h4 {
+        /* General markdown text */
+        div[data-testid="stMarkdownContainer"] {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        /* Headings inside markdown */
+        div[data-testid="stMarkdownContainer"] h4 {
             color: #6a11cb;
             font-weight: 700;
-            margin-top: 1rem;
+            margin-top: 1.2rem;
+            margin-bottom: 0.5rem;
         }
 
-        .custom-expander .stMarkdown {
-            font-size: 0.93rem;
-            line-height: 1.6;
-        }
-
-        .custom-expander .stMarkdown strong {
+        /* Bolded keywords */
+        div[data-testid="stMarkdownContainer"] strong {
             color: #2575fc;
         }
 
-        .custom-expander .stMarkdown ul {
-            margin-bottom: 1rem;
+        /* Bullet list styling */
+        div[data-testid="stMarkdownContainer"] ul {
+            margin: 0.5rem 0 1rem 1.2rem;
         }
 
-        .custom-expander .stMarkdown li {
-            margin-left: 0.5rem;
+        div[data-testid="stMarkdownContainer"] li {
+            margin-bottom: 0.4rem;
         }
     </style>
 """, unsafe_allow_html=True)
 
 
-with st.expander("Tips & Best Practices", expanded=False):
-    st.markdown('<div class="custom-expander">', unsafe_allow_html=True)
-
+with st.expander("💡 Tips & Best Practices", expanded=False):
     col1, col2 = st.columns(2)
-    
+
     with col1:
         st.markdown("""
         #### Optimization Methods Guide
-        
-        **Maximum Sharpe Ratio**
+
+        **Maximum Sharpe Ratio**  
         - Best for: General portfolio optimization  
         - Goal: Maximize risk-adjusted returns  
         - Ideal for: Most investors seeking balance  
 
-        **Minimum Variance**
+        **Minimum Variance**  
         - Best for: Conservative investors  
         - Goal: Minimize portfolio risk  
         - Ideal for: Risk-averse investors, stable income needs  
 
-        **Target Return**
+        **Target Return**  
         - Best for: Specific return goals  
         - Goal: Achieve target with minimum risk  
         - Ideal for: Pension funds, endowments  
 
-        **Target Volatility**
+        **Target Volatility**  
         - Best for: Risk budgeting  
         - Goal: Maximize return for specific risk  
         - Ideal for: Risk-managed strategies  
