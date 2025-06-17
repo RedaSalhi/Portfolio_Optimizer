@@ -622,7 +622,7 @@ class PortfolioOptimizer:
         
         # If including risk-free asset, use the enhanced method
         if include_risk_free:
-            return self.optimize_portfolio_with_risk_free(
+            return self.optimize_portfolio_with_risk_free_fixed(
                 method, target_return, target_volatility, min_weight, max_weight, max_iterations
             )
         
