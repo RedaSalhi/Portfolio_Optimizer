@@ -1757,7 +1757,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-with st.expander("💡 Tips & Best Practices", expanded=False):
+with st.expander("Tips & Best Practices", expanded=False):
     col1, col2 = st.columns(2)
 
     with col1:
@@ -1800,32 +1800,6 @@ with st.expander("💡 Tips & Best Practices", expanded=False):
         **Beta**: Sensitivity to market movements  
         **Alpha**: Excess return above market expectations  
         """)
-
-    st.markdown("""
-    #### Important Considerations
-
-    **Data Limitations**  
-    - Results based on historical data (past performance ≠ future results)  
-    - Market conditions change rapidly  
-    - Consider transaction costs and taxes in real implementation  
-
-    **Portfolio Implementation**  
-    - Rebalance periodically (quarterly/annually)  
-    - Consider market impact of trades  
-    - Account for bid-ask spreads and commissions  
-    - Monitor portfolio drift from target weights  
-
-    **Risk Management**  
-    - Diversification doesn't guarantee profits  
-    - Monitor correlation changes over time  
-    - Consider regime changes and black swan events  
-    - Use multiple risk metrics for comprehensive analysis  
-
-    **Practical Usage**  
-    - Start with 3–6 well-known assets  
-    - Use 2–3 years of data for stable results  
-    - Test with paper trading before real implementation  
-    - Consider your investment timeline and liquidity needs  
     """)
 
 # Footer with enhanced styling
