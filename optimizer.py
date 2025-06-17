@@ -488,19 +488,21 @@ class PortfolioOptimizer:
         try:
             import pandas_datareader as pdr
             st.info("Trying FRED data source...")
-            
-            # Try 3-month Treasury rate from FRED
+            # NOTE: If you get an error about an API key, register for one at https://fred.stlouisfed.org/docs/api/api_key.html
+            # and set it in your environment: os.environ["FRED_API_KEY"] = "your_api_key_here"
             end = datetime.now()
             start = end - timedelta(days=30)
-            
             fred_rate = pdr.get_data_fred('DGS3MO', start, end).dropna()
             if not fred_rate.empty:
-                latest_rate = fred_rate.iloc[-1, 0]
+                # Handle both DataFrame and Series
+                if isinstance(fred_rate, pd.DataFrame):
+                    latest_rate = fred_rate.iloc[-1, 0]
+                else:
+                    latest_rate = fred_rate.iloc[-1]
                 if 0 < latest_rate < 20:
                     self.rf_rate = latest_rate / 100
                     st.success(f"✅ Successfully fetched risk-free rate from FRED: {self.rf_rate:.3%}")
                     return self.rf_rate
-                    
         except Exception as e:
             st.warning(f"FRED approach failed: {str(e)}")
         
