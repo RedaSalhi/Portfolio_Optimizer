@@ -921,10 +921,10 @@ if selected_method == 'target_return':
     target_return = st.slider(
         "Target Annual Return:",
         min_value=0.05,
-        max_value=0.30,
+        max_value=1.0,
         value=0.12,
         step=0.01,
-        format="%.1f%%",
+        format="%.2f%%",
         help="Desired annual return percentage"
     )
     st.info(f"Target: {target_return*100:.1f}% annual return")
@@ -934,10 +934,10 @@ elif selected_method == 'target_volatility':
     target_volatility = st.slider(
         "Target Annual Volatility:",
         min_value=0.05,
-        max_value=0.40,
+        max_value=1.0,
         value=0.15,
         step=0.01,
-        format="%.1f%%",
+        format="%.2f%%",
         help="Desired annual volatility percentage"
     )
     st.info(f"Target: {target_volatility*100:.1f}% annual volatility")
@@ -954,8 +954,8 @@ with st.expander(" Advanced Options", expanded=False):
         
     with col2:
         st.markdown("#### Weight Constraints")
-        min_weight = st.slider(" Minimum Asset Weight", 0.0, 0.2, 0.0, step=0.01, format="%.1f%%")
-        max_weight = st.slider(" Maximum Asset Weight", 0.2, 1.0, 1.0, step=0.01, format="%.1f%%")
+        min_weight = st.slider(" Minimum Asset Weight", 0.0, 0.2, 0.0, step=0.01, format="%.2f%%")
+        max_weight = st.slider(" Maximum Asset Weight", 0.2, 1.0, 1.0, step=0.01, format="%.2f%%")
     
 
 # Validation messages with enhanced styling
