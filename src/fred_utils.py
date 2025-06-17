@@ -17,7 +17,7 @@ def get_latest_risk_free_rate():
     Returns:
         float: The latest risk-free rate as a percentage (e.g., 5.12 for 5.12%).
     """
-    series_id = 'DGS30'
+    series_id = 'DGS3MO'
     data = fred.get_series(series_id)
     latest_value = data.dropna().iloc[-1]  # Get the most recent non-NaN value
     return latest_value 
