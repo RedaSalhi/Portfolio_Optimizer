@@ -336,7 +336,7 @@ st.markdown("""
 st.markdown("""
     <div class="var-hero">
         <h1>QuantRisk VaR Analytics</h1>
-        <p>Advanced Interactive Risk Assessment Platform with Real-Time Analytics</p>
+        <p>Interactive Risk Assessment Platform with Real-Time Analytics</p>
         <div class="hero-stats">
             <div class="hero-stat">
                 <span class="stat-number">4</span>
@@ -363,7 +363,7 @@ if st.button("Back to Home", help="Return to main dashboard"):
     st.switch_page("streamlit_app.py")
 
 # Mode Selection
-st.markdown("## Select Advanced Risk Analysis Method")
+st.markdown("## Select Risk Analysis Method")
 
 st.markdown('<div class="mode-grid">', unsafe_allow_html=True)
 
@@ -374,7 +374,7 @@ with col1:
         <div class="mode-card">
             <span class="mode-icon"></span>
             <div class="mode-title">Single Asset Analytics</div>
-            <div class="mode-description">Advanced parametric VaR with interactive gauges and real-time risk monitoring</div>
+            <div class="mode-description">Parametric VaR with interactive gauges and real-time risk monitoring</div>
             <ul class="mode-features">
                 <li>Real-time VaR gauges</li>
                 <li>Interactive return distributions</li>
@@ -386,11 +386,11 @@ with col1:
     
     col1a, col1b = st.columns(2)
     with col1a:
-        if st.button("Advanced Equity VaR", key="equity_btn"):
-            st.session_state.selected_mode = "Advanced Equity Analytics"
+        if st.button("Equity VaR", key="equity_btn"):
+            st.session_state.selected_mode = "Equity Analytics"
     with col1b:
-        if st.button("Advanced Bond VaR", key="bond_btn"):
-            st.session_state.selected_mode = "Advanced Fixed Income"
+        if st.button("Bond VaR", key="bond_btn"):
+            st.session_state.selected_mode = "Fixed Income"
 
 with col2:
     st.markdown("""
@@ -409,8 +409,8 @@ with col2:
     
     col2a, col2b = st.columns(2)
     with col2a:
-        if st.button("Advanced Portfolio VaR", key="portfolio_btn"):
-            st.session_state.selected_mode = "Advanced Portfolio Analytics"
+        if st.button("Portfolio VaR", key="portfolio_btn"):
+            st.session_state.selected_mode = "Portfolio Analytics"
     with col2b:
         if st.button("Interactive Monte Carlo", key="mc_btn"):
             st.session_state.selected_mode = "Interactive Monte Carlo"
@@ -424,14 +424,14 @@ if mode:
     st.markdown(f"""
         <div class="selected-mode">
             Active Analysis: <strong>{mode}</strong>
-            <br><small>Advanced interactive analytics enabled</small>
+            <br><small>Interactive analytics enabled</small>
         </div>
     """, unsafe_allow_html=True)
 
 
-if mode == "Advanced Equity Analytics":
+if mode == "Equity Analytics":
     st.markdown('<div class="input-group">', unsafe_allow_html=True)
-    st.markdown('<div class="input-title">Advanced Equity Risk Configuration</div>', unsafe_allow_html=True)
+    st.markdown('<div class="input-title">Equity Risk Configuration</div>', unsafe_allow_html=True)
 
     # Simplified inputs for demonstration
     ticker = st.text_input("Stock Ticker", value="AAPL").upper()
@@ -442,13 +442,13 @@ if mode == "Advanced Equity Analytics":
     with col2:
         confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95, step=0.01)
     with col3:
-        enable_advanced = st.checkbox("Enable Advanced Analytics", value=True)
+        enable_advanced = st.checkbox("Enable Analytics", value=True)
 
     st.markdown('</div>', unsafe_allow_html=True)
     
-    if st.button("Run Advanced VaR Analysis", key="run_advanced_equity"):
+    if st.button("Run VaR Analysis", key="run_advanced_equity"):
         if ticker:
-            with st.spinner("Computing advanced parametric VaR with interactive analytics..."):
+            with st.spinner("Computing parametric VaR with interactive analytics..."):
                 try:
                     results = compute_parametric_var([ticker], confidence_level=confidence, position_size=position)
                     
@@ -457,7 +457,7 @@ if mode == "Advanced Equity Analytics":
                             st.error(f"❌ {res['ticker']}: {res['error']}")
                         else:
                             st.markdown('<div class="results-section">', unsafe_allow_html=True)
-                            st.markdown(f'<div class="results-title">Advanced Analytics for {res["ticker"]}</div>', unsafe_allow_html=True)
+                            st.markdown(f'<div class="results-title">Analytics for {res["ticker"]}</div>', unsafe_allow_html=True)
                             
                             # Key Metrics Row
                             col1, col2, col3, col4 = st.columns(4)
@@ -477,7 +477,6 @@ if mode == "Advanced Equity Analytics":
                             st.plotly_chart(gauge_fig, use_container_width=True)                            
 
                             if enable_advanced:
-                                # FIXED: Advanced Analytics with error handling
                                 col1, col2 = st.columns(2)
                                 
                                 with col1:
@@ -519,9 +518,9 @@ if mode == "Advanced Equity Analytics":
 
 
 
-elif mode == "Advanced Fixed Income":
+elif mode == "Fixed Income":
     st.markdown('<div class="input-group">', unsafe_allow_html=True)
-    st.markdown('<div class="input-title">Advanced Fixed Income Analytics</div>', unsafe_allow_html=True)
+    st.markdown('<div class="input-title">Fixed Income Analytics</div>', unsafe_allow_html=True)
 
     ticker = st.text_input("Bond Yield Ticker", value="DGS10").upper()
     
@@ -537,8 +536,8 @@ elif mode == "Advanced Fixed Income":
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    if st.button("Run Advanced Bond VaR", key="run_advanced_bond"):
-        with st.spinner("Computing advanced fixed income VaR with duration/convexity analytics..."):
+    if st.button("Run Bond VaR", key="run_advanced_bond"):
+        with st.spinner("Computing fixed income VaR with duration/convexity analytics..."):
             try:
                 results = compute_fixed_income_var([ticker], maturity=maturity, confidence_level=confidence, position_size=position)
                 
@@ -547,7 +546,7 @@ elif mode == "Advanced Fixed Income":
                         st.error(f"❌ {res['ticker']}: {res['error']}")
                     else:
                         st.markdown('<div class="results-section">', unsafe_allow_html=True)
-                        st.markdown(f'<div class="results-title">Advanced Bond Analytics for {res["ticker"]}</div>', unsafe_allow_html=True)
+                        st.markdown(f'<div class="results-title">Bond Analytics for {res["ticker"]}</div>', unsafe_allow_html=True)
                         
                         # Enhanced Metrics with FIXED key access
                         col1, col2, col3, col4, col5 = st.columns(5)
@@ -611,9 +610,9 @@ elif mode == "Advanced Fixed Income":
                 st.info("💡 Try using a different bond ticker (e.g., ^IRX, ^TNX) or check your internet connection")
 
 
-elif mode == "Advanced Portfolio Analytics":
+elif mode == "Portfolio Analytics":
     st.markdown('<div class="input-group">', unsafe_allow_html=True)
-    st.markdown('<div class="input-title">Advanced Portfolio Risk Analytics</div>', unsafe_allow_html=True)
+    st.markdown('<div class="input-title">Portfolio Risk Analytics</div>', unsafe_allow_html=True)
     
     # Simplified portfolio setup
     equity_tickers_input = st.text_input("Equity Tickers (comma-separated)", value="AAPL,MSFT,GOOG").upper()
@@ -638,12 +637,12 @@ elif mode == "Advanced Portfolio Analytics":
         with col3:
             confidence = st.slider("Confidence Level", 0.90, 0.99, 0.95, step=0.01)
         with col4:
-            advanced_portfolio = st.checkbox("Advanced Analytics", value=True)
+            advanced_portfolio = st.checkbox("Analytics", value=True)
 
         st.markdown('</div>', unsafe_allow_html=True)
 
-        if st.button("Run Advanced Portfolio Analysis", key="run_advanced_portfolio"):
-            with st.spinner("Computing advanced portfolio VaR with risk attribution..."):
+        if st.button("Run Portfolio Analysis", key="run_advanced_portfolio"):
+            with st.spinner("Computing portfolio VaR with risk attribution..."):
                 try:
                     results = compute_portfolio_var(
                         equity_tickers, equity_weights, bond_tickers, bond_weights,
@@ -651,7 +650,7 @@ elif mode == "Advanced Portfolio Analytics":
                     )
                 
                     st.markdown('<div class="results-section">', unsafe_allow_html=True)
-                    st.markdown('<div class="results-title">Advanced Portfolio Risk Analysis</div>', unsafe_allow_html=True)
+                    st.markdown('<div class="results-title">Portfolio Risk Analysis</div>', unsafe_allow_html=True)
                     
                     # Key Portfolio Metrics
                     col1, col2, col3, col4 = st.columns(4)
@@ -753,7 +752,7 @@ elif mode == "Interactive Monte Carlo":
                     status_text.text('Simulation complete! Generating results...')
                 
                 # Run actual Monte Carlo
-                with st.spinner("Computing Monte Carlo VaR with advanced analytics..."):
+                with st.spinner("Computing Monte Carlo VaR with analytics..."):
                     try:
                         results = compute_monte_carlo_var(
                             tickers=tickers, weights=weights, portfolio_value=position,
@@ -816,7 +815,7 @@ elif mode == "Interactive Monte Carlo":
 st.markdown("---")
 st.markdown("""
     <div style="text-align: center; color: #666; padding: 2rem;">
-        <p><strong>QuantRisk Analytics</strong> | Advanced Interactive Value-at-Risk Platform</p>
+        <p><strong>QuantRisk Analytics</strong> | Interactive Value-at-Risk Platform</p>
         <p style="font-size: 0.9rem; opacity: 0.8;">Real-Time Analytics • 3D Visualizations • Interactive Dashboards • Professional Risk Management</p>
     </div>
 """, unsafe_allow_html=True)
