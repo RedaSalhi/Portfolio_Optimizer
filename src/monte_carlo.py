@@ -284,7 +284,7 @@ def create_monte_carlo_dashboard(results):
             if simulation_paths.size > 0 and len(simulation_paths.shape) == 2:
                 # Show first 20 paths for performance
                 sample_paths = simulation_paths[:20] * 100  # Convert to percentage
-                
+        
                 for i in range(min(10, len(sample_paths))):  # Show max 10 paths for clarity
                     fig.add_trace(
                         go.Scatter(
@@ -302,12 +302,19 @@ def create_monte_carlo_dashboard(results):
                 # Add placeholder text if no paths available
                 fig.add_annotation(
                     x=0.5, y=0.5,
+                    xref='x domain', yref='y domain',
                     text="Simulation paths not available",
                     showarrow=False,
-                    row=1, col=2
+                    font=dict(size=14, color='gray'),
+                    align='center',
+                    row=None, col=None  # IMPORTANT: These do not exist for add_annotation
                 )
+                # Associate the annotation with the specific subplot (row=1, col=2)
+                fig.layout.annotations[-1]['xref'] = 'x2 domain'
+                fig.layout.annotations[-1]['yref'] = 'y2 domain'
         except Exception as e:
             st.warning(f"Could not create simulation paths: {str(e)}")
+
         
         # 3. Risk gauge
         try:
