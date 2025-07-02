@@ -784,18 +784,6 @@ elif mode == "Interactive Monte Carlo":
                         except Exception as e:
                             st.warning(f"Dashboard display issue: {str(e)}")
 
-                        # FIXED: 3D Visualization with error handling
-                        if len(tickers) >= 2:
-                            try:
-                                st.markdown("### 3D Simulation Visualization")
-                                viz_3d = create_3d_simulation_visualization(results)
-                                if viz_3d:
-                                    st.plotly_chart(viz_3d, use_container_width=True)
-                                else:
-                                    st.info("3D visualization temporarily unavailable")
-                            except Exception as e:
-                                st.warning(f"3D visualization issue: {str(e)}")
-
                         # FIXED: Enhanced Correlation Analysis
                         try:
                             st.markdown("### Enhanced Correlation Analysis")
