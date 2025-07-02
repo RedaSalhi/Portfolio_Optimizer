@@ -777,12 +777,14 @@ elif mode == "Interactive Monte Carlo":
                         try:
                             st.markdown("### Interactive Monte Carlo Dashboard")
                             mc_dashboard = create_monte_carlo_dashboard(results)
-                            if mc_dashboard:
+                        
+                            if mc_dashboard and hasattr(mc_dashboard, 'to_plotly_json'):
                                 st.plotly_chart(mc_dashboard, use_container_width=True)
                             else:
-                                st.info("Monte Carlo dashboard temporarily unavailable - showing basic results above")
+                                st.info("Monte Carlo dashboard temporarily unavailable – showing basic results above.")
                         except Exception as e:
                             st.warning(f"Dashboard display issue: {str(e)}")
+
 
                         # FIXED: Enhanced Correlation Analysis
                         try:
