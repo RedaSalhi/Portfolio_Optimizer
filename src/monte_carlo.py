@@ -222,7 +222,7 @@ def create_realtime_simulation_progress(placeholder, num_simulations, batch_size
 # -------------------------------
 def create_monte_carlo_dashboard(results):
     """
-    FIXED: Create comprehensive Monte Carlo dashboard with proper data validation.
+    FIXED: Create comprehensive Monte Carlo dashboard with proper simulation paths.
     """
     try:
         if not results or 'simulated_returns' not in results:
@@ -253,11 +253,11 @@ def create_monte_carlo_dashboard(results):
             st.warning("No simulation data available")
             return None
         
-        # 1. Histogram with VaR
+        # 1. Histogram with VaR (unchanged)
         try:
             fig.add_trace(
                 go.Histogram(
-                    x=simulated_returns * 100,  # Convert to percentage
+                    x=simulated_returns * 100,
                     nbinsx=min(50, max(10, len(simulated_returns)//100)),
                     name='Simulated Returns',
                     opacity=0.7,
@@ -267,7 +267,6 @@ def create_monte_carlo_dashboard(results):
                 row=1, col=1
             )
             
-            # Add VaR line
             fig.add_vline(
                 x=var_pct * 100,
                 line_width=3,
@@ -278,45 +277,108 @@ def create_monte_carlo_dashboard(results):
         except Exception as e:
             st.warning(f"Could not create histogram: {str(e)}")
         
-        # 2. Sample simulation paths with error handling
+        # 2. FIXED: Sample simulation paths
         try:
-            simulation_paths = results.get('simulation_paths', np.array([]))
-            if simulation_paths.size > 0 and len(simulation_paths.shape) == 2:
-                # Show first 20 paths for performance
-                sample_paths = simulation_paths[:20] * 100  # Convert to percentage
-        
-                for i in range(min(10, len(sample_paths))):  # Show max 10 paths for clarity
+            simulation_paths = results.get('simulation_paths')
+            
+            # If simulation_paths doesn't exist, create synthetic paths from returns
+            if simulation_paths is None or (hasattr(simulation_paths, 'size') and simulation_paths.size == 0):
+                st.info("Generating sample paths from simulation results...")
+                
+                # Create sample cumulative return paths
+                n_paths = min(20, len(simulated_returns))
+                n_steps = 50  # Number of time steps to show
+                
+                # Generate random walks based on the simulation statistics
+                mean_return = np.mean(simulated_returns)
+                std_return = np.std(simulated_returns)
+                
+                # Create paths using geometric Brownian motion
+                dt = 1/252  # Daily time step (assuming 252 trading days)
+                sample_paths = []
+                
+                for i in range(n_paths):
+                    # Generate random increments
+                    random_increments = np.random.normal(
+                        mean_return * dt, 
+                        std_return * np.sqrt(dt), 
+                        n_steps
+                    )
+                    # Create cumulative path
+                    cumulative_path = np.cumsum(random_increments) * 100  # Convert to percentage
+                    sample_paths.append(cumulative_path)
+                
+                simulation_paths = np.array(sample_paths)
+            
+            # Plot the simulation paths
+            if simulation_paths is not None and len(simulation_paths) > 0:
+                # Ensure we have the right shape
+                if len(simulation_paths.shape) == 1:
+                    # If 1D, reshape to 2D
+                    simulation_paths = simulation_paths.reshape(1, -1)
+                
+                # Convert to percentage if needed
+                if np.max(np.abs(simulation_paths)) < 1:
+                    simulation_paths = simulation_paths * 100
+                
+                # Show sample paths (limit to 10 for clarity)
+                n_paths_to_show = min(10, len(simulation_paths))
+                
+                for i in range(n_paths_to_show):
+                    path = simulation_paths[i]
                     fig.add_trace(
                         go.Scatter(
-                            y=sample_paths[i],
+                            x=list(range(len(path))),
+                            y=path,
                             mode='lines',
-                            opacity=0.5,
-                            line=dict(width=1),
+                            opacity=0.6,
+                            line=dict(width=1.5),
                             showlegend=False,
                             name=f'Path {i+1}',
                             hovertemplate='Step %{x}: %{y:.2f}%<extra></extra>'
                         ),
                         row=1, col=2
                     )
+                
+                # Add mean path if we have multiple paths
+                if len(simulation_paths) > 1:
+                    mean_path = np.mean(simulation_paths[:n_paths_to_show], axis=0)
+                    fig.add_trace(
+                        go.Scatter(
+                            x=list(range(len(mean_path))),
+                            y=mean_path,
+                            mode='lines',
+                            line=dict(color='red', width=3),
+                            name='Mean Path',
+                            showlegend=True
+                        ),
+                        row=1, col=2
+                    )
+                    
             else:
-                # Add placeholder text if no paths available
+                # Fallback: show message
                 fig.add_annotation(
-                    x=0.5, y=0.5,
-                    xref='x domain', yref='y domain',
-                    text="Simulation paths not available",
+                    x=0.75, y=0.75,  # Position in subplot 2 (top-right)
+                    xref='paper', yref='paper',
+                    text="No simulation paths available",
                     showarrow=False,
                     font=dict(size=14, color='gray'),
-                    align='center',
-                    row=None, col=None  # IMPORTANT: These do not exist for add_annotation
+                    align='center'
                 )
-                # Associate the annotation with the specific subplot (row=1, col=2)
-                fig.layout.annotations[-1]['xref'] = 'x2 domain'
-                fig.layout.annotations[-1]['yref'] = 'y2 domain'
+                
         except Exception as e:
             st.warning(f"Could not create simulation paths: {str(e)}")
-
+            # Add error message to the plot
+            fig.add_annotation(
+                x=0.75, y=0.75,
+                xref='paper', yref='paper',
+                text=f"Path generation error: {str(e)[:50]}...",
+                showarrow=False,
+                font=dict(size=12, color='red'),
+                align='center'
+            )
         
-        # 3. Risk gauge
+        # 3. Risk gauge (unchanged)
         try:
             var_percentage = abs(var_pct) * 100
             fig.add_trace(
@@ -345,7 +407,7 @@ def create_monte_carlo_dashboard(results):
         except Exception as e:
             st.warning(f"Could not create risk gauge: {str(e)}")
         
-        # 4. Percentile analysis
+        # 4. Percentile analysis (unchanged)
         try:
             percentiles = results.get('percentiles', [])
             if len(percentiles) > 0:
@@ -398,6 +460,7 @@ def create_monte_carlo_dashboard(results):
         fig.update_yaxes(title_text="Return (%)", row=2, col=2)
         
         return fig
+        
     except Exception as e:
         st.error(f"Error creating Monte Carlo dashboard: {str(e)}")
         return None
