@@ -1362,10 +1362,6 @@ if __name__ == "__main__":
             print(f"Optimization failed: {result['error']}")
     else:
         print(f"Data fetching failed: {error}")
-
-# Set the corrected function as the main one
-create_efficient_frontier_plot_fixed = create_efficient_frontier_plot as e:
-            return False, f"Error testing {ticker}: {str(e)}"
     
     def simple_ticker_test(self, ticker: str) -> Tuple[bool, str, Optional[pd.DataFrame]]:
         """Very simple ticker test to debug yfinance issues."""
