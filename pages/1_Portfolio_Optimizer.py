@@ -1,4 +1,5 @@
 # pages/1_Portfolio_Optimizer.py - Enhanced Portfolio Optimization Interface
+# Updated to work with the corrected optimizer.py
 
 import streamlit as st
 import numpy as np
@@ -24,7 +25,7 @@ from optimizer import (
 st.set_page_config(
     page_title="Portfolio Optimizer", 
     layout="wide", 
-    page_icon=""
+    page_icon="📊"
 )
 
 # Enhanced CSS styling inspired by bibliography page
@@ -451,48 +452,6 @@ st.markdown("""
             left: 100%;
         }
 
-        /* Method Selection Buttons */
-        .method-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: 2px solid transparent;
-            padding: 1.2rem 2rem;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
-            cursor: pointer;
-            width: 100%;
-            margin: 0.5rem 0;
-        }
-
-        .method-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
-        }
-
-        .method-btn.selected {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
-        }
-
-        /* Secondary Buttons */
-        .secondary-button .stButton > button {
-            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
-            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.4);
-        }
-
-        .success-button .stButton > button {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
-        }
-
-        .danger-button .stButton > button {
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
-        }
-
         /* Tab Styling */
         .stTabs [data-baseweb="tab-list"] {
             gap: 2px;
@@ -524,27 +483,6 @@ st.markdown("""
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
 
-        /* Loading Animation */
-        .loading-container {
-            text-align: center;
-            padding: 3rem;
-        }
-
-        .loading-spinner {
-            width: 60px;
-            height: 60px;
-            border: 6px solid #f3f3f3;
-            border-top: 6px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 2rem;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
         /* Data Quality Indicators */
         .quality-indicator {
             display: inline-block;
@@ -558,15 +496,6 @@ st.markdown("""
         .quality-medium { background: #ffc107; }
         .quality-low { background: #dc3545; }
 
-        /* Advanced Options */
-        .advanced-section {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 2rem;
-            border-radius: 16px;
-            margin: 1rem 0;
-            border: 2px dashed #667eea;
-        }
-
         /* Responsive Design */
         @media (max-width: 768px) {
             .optimizer-hero h1 { font-size: 2.5rem; }
@@ -575,50 +504,6 @@ st.markdown("""
             .method-selection { grid-template-columns: 1fr; }
             .metrics-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
             .quick-start-grid { grid-template-columns: 1fr; }
-        }
-
-        @media (max-width: 480px) {
-            .config-section, .results-section, .input-group { padding: 1.5rem; }
-            .metric-card { padding: 1.5rem; }
-            .metric-value { font-size: 1.8rem; }
-        }
-
-        /* Tooltips */
-        .tooltip {
-            position: relative;
-            cursor: help;
-        }
-
-        .tooltip:hover::after {
-            content: attr(data-tooltip);
-            position: absolute;
-            bottom: 125%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #2c3e50;
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            white-space: nowrap;
-            z-index: 1000;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-
-        /* Enhanced Expander */
-        .streamlit-expanderHeader {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border-radius: 12px;
-            border: 2px solid #667eea;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-
-        .streamlit-expanderContent {
-            background: white;
-            border-radius: 0 0 12px 12px;
-            border: 2px solid #667eea;
-            border-top: none;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -636,7 +521,7 @@ if 'data_fetched' not in st.session_state:
 # Hero Section with enhanced styling
 st.markdown("""
     <div class="optimizer-hero">
-        <h1>Portfolio Optimizer</h1>
+        <h1>📊 Portfolio Optimizer</h1>
         <p>Professional portfolio optimization using Modern Portfolio Theory with real-time market data, comprehensive risk analytics, and interactive visualizations</p>
         <div class="hero-stats">
             <div class="hero-stat">
@@ -662,72 +547,32 @@ st.markdown("""
 # Back Button with enhanced styling
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
-    st.markdown("""
-        <style>
-            button[kind="secondary"] {
-                background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%) !important;
-                color: white !important;
-                border: none !important;
-                padding: 1rem 2rem !important;
-                border-radius: 12px !important;
-                font-weight: 600 !important;
-                font-size: 1rem !important;
-                transition: all 0.3s ease !important;
-                box-shadow: 0 6px 20px rgba(101, 77, 245, 0.4) !important;
-                width: 100% !important;
-                position: relative !important;
-                overflow: hidden !important;
-            }
-
-            button[kind="secondary"]:hover {
-                transform: translateY(-3px) !important;
-                box-shadow: 0 10px 30px rgba(101, 77, 245, 0.6) !important;
-            }
-
-            button[kind="secondary"]::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: -100%;
-                width: 100%;
-                height: 100%;
-                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-                transition: left 0.5s ease;
-            }
-
-            button[kind="secondary"]:hover::before {
-                left: 100%;
-            }
-        </style>
-    """, unsafe_allow_html=True)
-
-    # Deep Purple Glow Button
-    if st.button("Back to Home", help="Return to main dashboard", use_container_width=True):
+    if st.button("🏠 Back to Home", help="Return to main dashboard", use_container_width=True):
         st.switch_page("streamlit_app.py")
 
 # Status Display Function
 def show_status():
     if st.session_state.optimization_results and st.session_state.optimizer:
-        st.markdown('<div class="status-success"> Portfolio optimization active! Explore results in the tabs below.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="status-success">✅ Portfolio optimization active! Explore results in the tabs below.</div>', unsafe_allow_html=True)
     elif st.session_state.data_fetched:
-        st.markdown('<div class="status-info"> Data loaded successfully! Configure settings and click optimize.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="status-info">ℹ️ Data loaded successfully! Configure settings and click optimize.</div>', unsafe_allow_html=True)
     elif 'tickers_input' in st.session_state and len(st.session_state.get('tickers_input', '').split(',')) >= 2:
-        st.markdown('<div class="status-warning"> Ready to fetch data! Enter tickers and start optimization.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="status-warning">⚠️ Ready to fetch data! Enter tickers and start optimization.</div>', unsafe_allow_html=True)
     else:
-        st.markdown('<div class="status-warning"> Enter 2 or more ticker symbols to begin portfolio optimization.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="status-warning">⚠️ Enter 2 or more ticker symbols to begin portfolio optimization.</div>', unsafe_allow_html=True)
 
 show_status()
 
 # Configuration Section
 st.markdown("""
     <div class="config-section">
-        <div class="config-title"> Portfolio Configuration</div>
+        <div class="config-title">⚙️ Portfolio Configuration</div>
     </div>
 """, unsafe_allow_html=True)
 
 # Asset Selection with enhanced UI
 st.markdown('<div class="input-group">', unsafe_allow_html=True)
-st.markdown('<div class="input-title"> Asset Selection</div>', unsafe_allow_html=True)
+st.markdown('<div class="input-title">📈 Asset Selection</div>', unsafe_allow_html=True)
 
 col1, col2, col3 = st.columns([3, 1, 1])
 with col1:
@@ -741,7 +586,7 @@ with col1:
 
 with col2:
     lookback_years = st.selectbox(
-        " Historical Period:",
+        "📅 Historical Period:",
         options=[1, 2, 3, 5],
         index=2,
         help="Years of historical data for analysis"
@@ -749,7 +594,7 @@ with col2:
 
 with col3:
     include_rf = st.checkbox(
-        " Risk-Free Rate", 
+        "💰 Risk-Free Rate", 
         value=True, 
         help="Use current Treasury rate for Sharpe ratio calculations"
     )
@@ -764,123 +609,55 @@ valid_input = len(tickers) >= 2
 if not st.session_state.optimization_results:
     st.markdown("""
         <div class="quick-start">
-            <div class="quick-start-title"> Quick Start Portfolios</div>
+            <div class="quick-start-title">🚀 Quick Start Portfolios</div>
         </div>
     """, unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button(" Tech Giants", help="Load technology stocks portfolio", use_container_width=True):
+        if st.button("💻 Tech Giants", help="Load technology stocks portfolio", use_container_width=True):
             st.session_state.tickers_input = "AAPL, MSFT, GOOGL, AMZN, TSLA"
             st.rerun()
     
     with col2:
-        if st.button(" Blue Chips", help="Load blue chip stocks portfolio", use_container_width=True):
+        if st.button("🏛️ Blue Chips", help="Load blue chip stocks portfolio", use_container_width=True):
             st.session_state.tickers_input = "JNJ, PG, KO, WMT, JPM"
             st.rerun()
     
     with col3:
-        if st.button(" FAANG", help="Load FAANG stocks portfolio", use_container_width=True):
+        if st.button("🔥 FAANG", help="Load FAANG stocks portfolio", use_container_width=True):
             st.session_state.tickers_input = "META, AAPL, AMZN, NFLX, GOOGL"
             st.rerun()
 
 # Optimization Method Selection
 st.markdown('<div class="input-group">', unsafe_allow_html=True)
-st.markdown('<div class="input-title"> Optimization Method</div>', unsafe_allow_html=True)
+st.markdown('<div class="input-title">🎯 Optimization Method</div>', unsafe_allow_html=True)
 
 # Method selection with cards
-st.markdown("""
-    <style>
-        div[data-testid="stButton"] > button.method-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: 2px solid transparent;
-            padding: 1.2rem 2rem;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
-            cursor: pointer;
-            width: 100%;
-            margin: 0.5rem 0;
-            text-align: center;
-        }
-
-        div[data-testid="stButton"] > button.method-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
-        }
-
-        div[data-testid="stButton"] > button.method-btn.selected {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
-        }
-
-        div[data-testid="stButton"] > button.analysis-btn {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            color: white;
-            border: none;
-            padding: 1.2rem 2rem;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 1.1rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
-            width: 100%;
-            position: relative;
-            overflow: hidden;
-        }
-
-        div[data-testid="stButton"] > button.analysis-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(40, 167, 69, 0.6);
-        }
-
-        div[data-testid="stButton"] > button.analysis-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s ease;
-        }
-
-        div[data-testid="stButton"] > button.analysis-btn:hover::before {
-            left: 100%;
-        }
-    </style>
-""", unsafe_allow_html=True)
-
-# Method selection with cards
-st.markdown('<div class="method-selection">', unsafe_allow_html=True)
-
 methods_info = {
     'max_sharpe': {
         'title': 'Maximum Sharpe Ratio',
         'description': 'Optimize for the best risk-adjusted return. Maximizes return per unit of risk.',
-        'icon': '',
+        'icon': '📈',
         'color': '#667eea'
     },
     'min_variance': {
         'title': 'Minimum Variance',
         'description': 'Minimize portfolio risk and volatility. Best for conservative investors.',
-        'icon': '',
+        'icon': '🛡️',
         'color': '#28a745'
     },
     'target_return': {
         'title': 'Target Return',
         'description': 'Achieve specific return with minimum risk. Set your return goal.',
-        'icon': '',
+        'icon': '🎯',
         'color': '#ffc107'
     },
     'target_volatility': {
         'title': 'Target Risk',
         'description': 'Achieve specific risk level with maximum return. Control your risk exposure.',
-        'icon': '',
+        'icon': '⚖️',
         'color': '#e74c3c'
     }
 }
@@ -890,12 +667,13 @@ cols = [col1, col2, col3, col4]
 
 for i, (method_key, method_info) in enumerate(methods_info.items()):
     with cols[i]:
+        button_type = "primary" if st.session_state.selected_method == method_key else "secondary"
         if st.button(
-            f"{method_info['title']}", 
+            f"{method_info['icon']} {method_info['title']}", 
             help=method_info['description'],
             key=f"method_{method_key}",
             use_container_width=True,
-            type="primary" if st.session_state.selected_method == method_key else "secondary"
+            type=button_type
         ):
             st.session_state.selected_method = method_key
 
@@ -917,148 +695,150 @@ target_return = None
 target_volatility = None
 
 if selected_method == 'target_return':
-    st.markdown("### Target Return Configuration")
+    st.markdown("### 🎯 Target Return Configuration")
     target_return = st.slider(
         "Target Annual Return:",
-        min_value=0.05,
-        max_value=1.0,
+        min_value=0.01,
+        max_value=0.50,
         value=0.12,
         step=0.01,
-        format="%.2f%%",
+        format="%.1f%%",
         help="Desired annual return percentage"
     )
-    st.info(f"Target: {target_return*100:.1f}% annual return")
+    st.info(f"🎯 Target: {target_return*100:.1f}% annual return")
 
 elif selected_method == 'target_volatility':
-    st.markdown("### Target Volatility Configuration")
+    st.markdown("### ⚖️ Target Volatility Configuration")
     target_volatility = st.slider(
         "Target Annual Volatility:",
-        min_value=0.05,
-        max_value=1.0,
+        min_value=0.01,
+        max_value=0.50,
         value=0.15,
         step=0.01,
-        format="%.2f%%",
+        format="%.1f%%",
         help="Desired annual volatility percentage"
     )
-    st.info(f"Target: {target_volatility*100:.1f}% annual volatility")
-
+    st.info(f"⚖️ Target: {target_volatility*100:.1f}% annual volatility")
 
 # Advanced Options
-with st.expander(" Advanced Options", expanded=False):
+with st.expander("🔧 Advanced Options", expanded=False):
     
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown("#### Analysis Options")
-        show_capm = st.checkbox(" CAPM Analysis", value=True, help="Show Capital Asset Pricing Model analysis")
-        frontier_points = st.slider(" Efficient Frontier Points", 25, 100, 50, help="Number of points for efficient frontier")
+        st.markdown("#### 📊 Analysis Options")
+        show_capm = st.checkbox("📈 CAPM Analysis", value=True, help="Show Capital Asset Pricing Model analysis")
+        frontier_points = st.slider("🎯 Efficient Frontier Points", 25, 100, 50, help="Number of points for efficient frontier")
         
     with col2:
-        st.markdown("#### Weight Constraints")
-        min_weight = st.slider(" Minimum Asset Weight", 0.0, 0.2, 0.0, step=0.01, format="%.2f%%")
-        max_weight = st.slider(" Maximum Asset Weight", 0.2, 1.0, 1.0, step=0.01, format="%.2f%%")
-    
+        st.markdown("#### ⚖️ Weight Constraints")
+        min_weight = st.slider("⬇️ Minimum Asset Weight", 0.0, 0.2, 0.0, step=0.01, format="%.1f%%")
+        max_weight = st.slider("⬆️ Maximum Asset Weight", 0.2, 1.0, 1.0, step=0.01, format="%.1f%%")
 
 # Validation messages with enhanced styling
 if not valid_input:
-    st.markdown('<div class="status-error"> Please enter at least 2 valid ticker symbols separated by commas</div>', unsafe_allow_html=True)
+    st.markdown('<div class="status-error">❌ Please enter at least 2 valid ticker symbols separated by commas</div>', unsafe_allow_html=True)
 elif len(tickers) > 10:
-    st.markdown('<div class="status-warning"> Using more than 10 assets may slow down optimization</div>', unsafe_allow_html=True)
+    st.markdown('<div class="status-warning">⚠️ Using more than 10 assets may slow down optimization</div>', unsafe_allow_html=True)
 
 # Main Action Buttons
-st.markdown("### Portfolio Analysis")
+st.markdown("### 🚀 Portfolio Analysis")
 
 col1, col2 = st.columns([3, 1])
 
 with col1:
     if st.button(
-        "Fetch Data & Optimize Portfolio", 
+        "🚀 Fetch Data & Optimize Portfolio", 
         disabled=not valid_input, 
         help="Fetch market data and run portfolio optimization", 
         use_container_width=True,
-        type="secondary"
+        type="primary"
     ):
-        with st.spinner(" Initializing portfolio optimizer..."):
+        with st.spinner("🔄 Initializing portfolio optimizer..."):
             try:
                 # Initialize optimizer
-                st.info(" Initializing optimizer...")
+                st.info("🔧 Initializing optimizer...")
                 optimizer = PortfolioOptimizer(tickers, lookback_years)
+                
+                # Display debug info
+                debug_info = optimizer.get_debug_info()
+                st.info(f"📊 Analysis period: {lookback_years} years | Trading days: {debug_info['temporal_consistency']['trading_days']}")
                 
                 # Validate tickers first
                 valid_tickers, invalid_tickers = optimizer.validate_tickers()
                 
                 if invalid_tickers:
-                    st.warning(f" Invalid ticker format detected: {', '.join(invalid_tickers)}")
+                    st.warning(f"⚠️ Invalid ticker format detected: {', '.join(invalid_tickers)}")
                 
                 if len(valid_tickers) < 2:
-                    st.error(" Need at least 2 valid tickers for portfolio optimization")
+                    st.error("❌ Need at least 2 valid tickers for portfolio optimization")
                     st.stop()
                 
                 # Fetch data
-                st.info(" Fetching market data...")
+                st.info("📡 Fetching market data...")
                 success, error_info = optimizer.fetch_data()
                 
                 if not success:
-                    st.markdown(f'<div class="status-error"> Failed to fetch data: {error_info}</div>', unsafe_allow_html=True)
+                    st.markdown(f'<div class="status-error">❌ Failed to fetch data: {error_info}</div>', unsafe_allow_html=True)
                     
                     # Show detailed failure analysis
                     if hasattr(optimizer, 'failed_tickers') and optimizer.failed_tickers:
-                        st.warning(f" Failed to fetch data for: {', '.join(optimizer.failed_tickers)}")
+                        st.warning(f"⚠️ Failed to fetch data for: {', '.join(optimizer.failed_tickers)}")
                         
                         # Check for common issues
                         if len(optimizer.failed_tickers) == len(tickers):
-                            st.error(" **All tickers failed!** This usually indicates:")
+                            st.error("💥 **All tickers failed!** This usually indicates:")
                             st.markdown("""
-                            - Internet connectivity issues
-                            - Yahoo Finance API problems  
-                            - Invalid ticker symbols
-                            - Regional access restrictions
+                            - 🌐 Internet connectivity issues
+                            - 📊 Yahoo Finance API problems  
+                            - ❌ Invalid ticker symbols
+                            - 🌍 Regional access restrictions
                             """)
                         elif len(optimizer.failed_tickers) > len(tickers) * 0.5:
-                            st.warning(" **Most tickers failed.** Common causes:")
+                            st.warning("⚠️ **Most tickers failed.** Common causes:")
                             st.markdown("""
-                            - Network issues or rate limiting
-                            - Ticker symbol format problems
-                            - Try fewer tickers at once
+                            - 🔄 Network issues or rate limiting
+                            - 📝 Ticker symbol format problems
+                            - 📉 Try fewer tickers at once
                             """)
                     
                     # Provide troubleshooting suggestions
-                    with st.expander(" Troubleshooting Guide", expanded=True):
+                    with st.expander("🔧 Troubleshooting Guide", expanded=True):
                         st.markdown("""
                         **Most Common Issues:**
                         
-                         **Invalid Ticker Symbols:**
+                        🔤 **Invalid Ticker Symbols:**
                         - Make sure you're using the correct stock symbols (AAPL, not Apple Inc.)
                         - Remove any spaces or special characters
                         - Use US stock symbols (NYSE, NASDAQ)
                         
-                         **Connection Issues:**
+                        🌐 **Connection Issues:**
                         - Check your internet connection
                         - Yahoo Finance servers might be busy - try again in 1-2 minutes
                         - Try fewer tickers at once (2-3 maximum)
                         
-                         **Market Data Availability:**
+                        📊 **Market Data Availability:**
                         - Some stocks may not have sufficient historical data
                         - Try major blue-chip stocks: AAPL, MSFT, JNJ, PG, KO
                         - Avoid recently listed companies or penny stocks
                         
-                         **Quick Solutions:**
+                        🚀 **Quick Solutions:**
                         """)
                         
                         # Add quick solution buttons
                         sol_col1, sol_col2, sol_col3 = st.columns(3)
                         
                         with sol_col1:
-                            if st.button(" Try Blue Chips", help="Use reliable blue chip stocks"):
+                            if st.button("🏛️ Try Blue Chips", help="Use reliable blue chip stocks"):
                                 st.session_state.tickers_input = "AAPL, MSFT, JNJ, PG, KO"
                                 st.rerun()
                         
                         with sol_col2:
-                            if st.button(" Try Top ETFs", help="Use popular ETFs"):
+                            if st.button("📈 Try Top ETFs", help="Use popular ETFs"):
                                 st.session_state.tickers_input = "SPY, QQQ, VTI"
                                 st.rerun()
                         
                         with sol_col3:
-                            if st.button(" Try Finance Sector", help="Use financial stocks"):
+                            if st.button("🏦 Try Finance Sector", help="Use financial stocks"):
                                 st.session_state.tickers_input = "JPM, BAC, WFC"
                                 st.rerun()
                 else:
@@ -1066,14 +846,14 @@ with col1:
                     
                     # Show data fetch results
                     if error_info:  # Some tickers failed
-                        st.markdown(f'<div class="status-warning"> Could not fetch data for: {error_info}</div>', unsafe_allow_html=True)
-                        st.markdown(f'<div class="status-success"> Successfully loaded: {", ".join(optimizer.tickers)}</div>', unsafe_allow_html=True)
+                        st.markdown(f'<div class="status-warning">⚠️ Could not fetch data for: {error_info}</div>', unsafe_allow_html=True)
+                        st.markdown(f'<div class="status-success">✅ Successfully loaded: {", ".join(optimizer.tickers)}</div>', unsafe_allow_html=True)
                     else:
-                        st.markdown(f'<div class="status-success"> Successfully loaded all {len(optimizer.tickers)} assets!</div>', unsafe_allow_html=True)
+                        st.markdown(f'<div class="status-success">🎉 Successfully loaded all {len(optimizer.tickers)} assets!</div>', unsafe_allow_html=True)
                     
                     # Display data quality information
                     if optimizer.data_quality_info:
-                        st.markdown("#### Data Quality Report")
+                        st.markdown("#### 📊 Data Quality Report")
                         quality_cols = st.columns(len(optimizer.tickers))
                         
                         for i, ticker in enumerate(optimizer.tickers):
@@ -1094,14 +874,14 @@ with col1:
                     
                     # Get risk-free rate
                     if include_rf:
-                        with st.spinner(" Fetching risk-free rate..."):
+                        with st.spinner("💰 Fetching risk-free rate..."):
                             rf_rate = optimizer.get_risk_free_rate()
-                            st.info(f" Current risk-free rate: {rf_rate:.2%}")
+                            st.info(f"💰 Current risk-free rate: {rf_rate:.2%} (annual)")
                     
                     # Run optimization
-                    st.info(f" Running {methods_info[selected_method]['title']} optimization...")
+                    st.info(f"🎯 Running {methods_info[selected_method]['title']} optimization...")
                     
-                    with st.spinner(" Optimizing portfolio..."):
+                    with st.spinner("⚡ Optimizing portfolio..."):
                         result = optimizer.optimize_portfolio(
                             method=selected_method,
                             target_return=target_return,
@@ -1120,24 +900,38 @@ with col1:
                         # Show optimization details
                         if 'optimization_details' in result:
                             details = result['optimization_details']
-                            st.info(f"✅ Optimization converged in {details.get('iterations', 'N/A')} iterations")
+                            iterations = details.get('iterations', 'N/A')
+                            st.info(f"✅ Optimization converged in {iterations} iterations")
+                            
+                            # Show additional details if using risk-free asset
+                            if include_rf and 'capital_allocation_line' in details:
+                                rf_weight = result.get('rf_weight', 0)
+                                risky_weight = result.get('risky_weight', 1)
+                                
+                                if rf_weight > 0.01:
+                                    st.info(f"💰 Portfolio allocation: {rf_weight:.1%} risk-free asset, {risky_weight:.1%} risky portfolio")
+                                elif risky_weight > 1.01:
+                                    st.info(f"📈 Using leverage: {risky_weight:.1%} in risky assets (borrowing at risk-free rate)")
+                                
+                                if details.get('leverage_used', False):
+                                    st.warning("⚠️ Portfolio uses leverage - additional risk considerations apply")
                         
                         st.rerun()
                     else:
                         st.markdown(f'<div class="status-error">❌ Optimization failed: {result["error"]}</div>', unsafe_allow_html=True)
                         
                         # Provide optimization troubleshooting
-                        with st.expander(" Optimization Troubleshooting", expanded=True):
+                        with st.expander("🔧 Optimization Troubleshooting", expanded=True):
                             st.markdown("""
                             **Possible issues and solutions:**
                             
-                            **Target too aggressive:** Try more realistic return/risk targets
+                            🎯 **Target too aggressive:** Try more realistic return/risk targets
                             
-                            **Constraint conflicts:** Check min/max weight constraints
+                            ⚖️ **Constraint conflicts:** Check min/max weight constraints
                             
-                            **Market data issues:** Some assets may have insufficient data
+                            📊 **Market data issues:** Some assets may have insufficient data
                             
-                            **Try different method:** Switch to Maximum Sharpe or Minimum Variance
+                            🔄 **Try different method:** Switch to Maximum Sharpe or Minimum Variance
                             """)
                         
             except Exception as e:
@@ -1145,16 +939,14 @@ with col1:
                 
                 with st.expander("🐛 Error Details", expanded=False):
                     st.code(str(e))
-    
 
 with col2:
-    if st.button("Clear Results", help="Clear current optimization results", use_container_width=True, type="secondary"):
+    if st.button("🗑️ Clear Results", help="Clear current optimization results", use_container_width=True, type="secondary"):
         # Clear all session state
         for key in ['optimizer', 'optimization_results', 'data_fetched']:
             if key in st.session_state:
                 del st.session_state[key]
         st.rerun()
-
 
 # Display Results Section
 if st.session_state.optimization_results and st.session_state.optimizer:
@@ -1164,7 +956,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
     # Results Section with enhanced styling
     st.markdown("""
         <div class="results-section">
-            <div class="results-title"> Optimization Results</div>
+            <div class="results-title">🏆 Optimization Results</div>
         </div>
     """, unsafe_allow_html=True)
     
@@ -1174,12 +966,11 @@ if st.session_state.optimization_results and st.session_state.optimizer:
     col1, col2, col3, col4, col5 = st.columns(5)
     
     with col1:
-        ret_change = "+Optimized" if result['expected_return'] > 0 else ""
         st.markdown(f"""
             <div class="metric-card">
                 <span class="metric-value">{result['expected_return']*100:.1f}%</span>
                 <div class="metric-label">Expected Return</div>
-                <div class="metric-change"> Annualized</div>
+                <div class="metric-change">📈 Annualized</div>
             </div>
         """, unsafe_allow_html=True)
     
@@ -1188,7 +979,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
             <div class="metric-card">
                 <span class="metric-value">{result['volatility']*100:.1f}%</span>
                 <div class="metric-label">Volatility</div>
-                <div class="metric-change"> Annual Risk</div>
+                <div class="metric-change">📊 Annual Risk</div>
             </div>
         """, unsafe_allow_html=True)
     
@@ -1198,7 +989,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
             <div class="metric-card">
                 <span class="metric-value">{result['sharpe_ratio']:.2f}</span>
                 <div class="metric-label">Sharpe Ratio</div>
-                <div class="metric-change {sharpe_color}"> Risk-Adjusted</div>
+                <div class="metric-change {sharpe_color}">⚖️ Risk-Adjusted</div>
             </div>
         """, unsafe_allow_html=True)
     
@@ -1208,7 +999,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
             <div class="metric-card">
                 <span class="metric-value">{diversification:.1f}</span>
                 <div class="metric-label">Diversification</div>
-                <div class="metric-change"> Effective Assets</div>
+                <div class="metric-change">🔄 Effective Assets</div>
             </div>
         """, unsafe_allow_html=True)
     
@@ -1219,7 +1010,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
             <div class="metric-card">
                 <span class="metric-value">{max_dd:.1f}%</span>
                 <div class="metric-label">Max Drawdown</div>
-                <div class="metric-change {dd_color}"> Historical</div>
+                <div class="metric-change {dd_color}">📉 Historical</div>
             </div>
         """, unsafe_allow_html=True)
     
@@ -1234,7 +1025,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
                 <div class="metric-card">
                     <span class="metric-value">{result['sortino_ratio']:.2f}</span>
                     <div class="metric-label">Sortino Ratio</div>
-                    <div class="metric-change"> Downside Risk</div>
+                    <div class="metric-change">📉 Downside Risk</div>
                 </div>
             """, unsafe_allow_html=True)
         
@@ -1244,7 +1035,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
                 <div class="metric-card">
                     <span class="metric-value">{cvar:.1f}%</span>
                     <div class="metric-label">CVaR (95%)</div>
-                    <div class="metric-change"> Tail Risk</div>
+                    <div class="metric-change">⚠️ Tail Risk</div>
                 </div>
             """, unsafe_allow_html=True)
         
@@ -1254,53 +1045,18 @@ if st.session_state.optimization_results and st.session_state.optimizer:
                 <div class="metric-card">
                     <span class="metric-value">{concentration:.3f}</span>
                     <div class="metric-label">Concentration</div>
-                    <div class="metric-change"> HHI Index</div>
+                    <div class="metric-change">📊 HHI Index</div>
                 </div>
             """, unsafe_allow_html=True)
     
     # Enhanced Tabbed Results Display
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "Portfolio Composition",
-        "Efficient Frontier", 
-        "Risk Analysis",
-        "Performance Analytics",
-        "CAPM Analysis"
+        "📊 Portfolio Composition",
+        "📈 Efficient Frontier", 
+        "⚠️ Risk Analysis",
+        "📉 Performance Analytics",
+        "🎯 CAPM Analysis"
     ])
-
-    # Add custom CSS for tab styling
-    st.markdown("""
-        <style>
-            .stTabs [data-baseweb="tab-list"] {
-                gap: 2px;
-                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-                padding: 0.5rem;
-                border-radius: 15px;
-                justify-content: center;
-            }
-
-            .stTabs [data-baseweb="tab"] {
-                background: transparent;
-                border-radius: 10px;
-                color: #666;
-                font-weight: 600;
-                transition: all 0.3s ease;
-                text-align: center;
-                flex: 1;
-                max-width: 200px;
-            }
-
-            .stTabs [data-baseweb="tab"]:hover {
-                background: rgba(102, 126, 234, 0.1);
-                color: #667eea;
-            }
-
-            .stTabs [aria-selected="true"] {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-            }
-        </style>
-    """, unsafe_allow_html=True)
 
     with tab1:
         st.markdown('<div class="chart-container">', unsafe_allow_html=True)
@@ -1309,7 +1065,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
         composition_fig = create_portfolio_composition_chart(
             optimizer.tickers, 
             result['weights'],
-            result.get('rf_weight') if selected_method in ['target_return', 'target_volatility'] else None
+            result.get('rf_weight') if include_rf else None
         )
         st.plotly_chart(composition_fig, use_container_width=True)
         
@@ -1317,7 +1073,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
         col1, col2 = st.columns([1, 1])
         
         with col1:
-            st.markdown("#### Asset Allocation")
+            st.markdown("#### 📊 Asset Allocation")
             allocation_data = []
             for i, ticker in enumerate(optimizer.tickers):
                 weight = result['weights'][i]
@@ -1332,7 +1088,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
             st.dataframe(allocation_df, hide_index=True, use_container_width=True)
         
         with col2:
-            st.markdown("#### Risk Attribution")
+            st.markdown("#### ⚠️ Risk Attribution")
             risk_data = []
             for i, ticker in enumerate(optimizer.tickers):
                 risk_contrib = result['risk_contribution'][i] if len(result['risk_contribution']) > i else 0
@@ -1348,37 +1104,79 @@ if st.session_state.optimization_results and st.session_state.optimizer:
             risk_df = pd.DataFrame(risk_data)
             st.dataframe(risk_df, hide_index=True, use_container_width=True)
         
+        # Display Capital Allocation Line information if using risk-free asset
+        if include_rf and result.get('rf_weight') is not None:
+            st.markdown("#### 💰 Capital Allocation Line Position")
+            
+            rf_weight = result.get('rf_weight', 0)
+            risky_weight = result.get('risky_weight', 1)
+            tangency_return = result.get('tangency_return', result['expected_return'])
+            tangency_volatility = result.get('tangency_volatility', result['volatility'])
+            tangency_sharpe = result.get('tangency_sharpe', result['sharpe_ratio'])
+            
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.metric(
+                    "Risk-Free Allocation",
+                    f"{rf_weight:.1%}",
+                    help="Portion invested in risk-free asset"
+                )
+            
+            with col2:
+                st.metric(
+                    "Risky Portfolio Allocation", 
+                    f"{risky_weight:.1%}",
+                    "🔄 Leveraged" if risky_weight > 1 else "💼 Conservative" if risky_weight < 1 else "⚖️ Full Investment",
+                    help="Portion invested in risky asset portfolio"
+                )
+            
+            with col3:
+                st.metric(
+                    "Tangency Portfolio Sharpe",
+                    f"{tangency_sharpe:.3f}",
+                    help="Sharpe ratio of the optimal risky portfolio"
+                )
+        
         st.markdown('</div>', unsafe_allow_html=True)
     
     with tab2:
         st.markdown('<div class="chart-container">', unsafe_allow_html=True)
         
-        frontier_fig = create_efficient_frontier_plot(optimizer, result)
+        # Generate efficient frontier with enhanced parameters
+        with st.spinner("📈 Generating efficient frontier..."):
+            frontier_fig = create_efficient_frontier_plot(
+                optimizer, 
+                result, 
+                include_risk_free=include_rf
+            )
+        
         if frontier_fig:
             st.plotly_chart(frontier_fig, use_container_width=True)
         else:
-            st.warning(" Could not generate efficient frontier. Try reducing the number of assets or using different optimization method.")
+            st.warning("⚠️ Could not generate efficient frontier. Try reducing the number of assets or using different optimization method.")
         
         # Enhanced frontier statistics
-        st.markdown("#### Frontier Analysis")
+        st.markdown("#### 📊 Frontier Analysis")
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
             st.metric(
                 "Portfolio Position", 
                 "Optimal", 
-                "On efficient frontier",
+                "✅ On efficient frontier",
                 help="Portfolio lies on the efficient frontier"
             )
         
         with col2:
-            equal_weight_return = optimizer.mean_returns.mean()
-            equal_weight_sharpe = (equal_weight_return - optimizer.rf_rate) / optimizer.returns.mean(axis=1).std()
-            improvement = ((result['sharpe_ratio'] - equal_weight_sharpe) / equal_weight_sharpe * 100) if equal_weight_sharpe != 0 else 0
+            # Calculate equal weight portfolio for comparison
+            equal_weights = np.ones(len(optimizer.tickers)) / len(optimizer.tickers)
+            equal_weight_metrics = optimizer.portfolio_metrics(equal_weights)
+            improvement = ((result['sharpe_ratio'] - equal_weight_metrics['sharpe_ratio']) / equal_weight_metrics['sharpe_ratio'] * 100) if equal_weight_metrics['sharpe_ratio'] != 0 else 0
             st.metric(
                 "Sharpe Improvement", 
                 f"{improvement:.1f}%", 
-                "vs Equal Weight",
+                "📈 vs Equal Weight",
                 help="Improvement over equal weight portfolio"
             )
         
@@ -1392,10 +1190,11 @@ if st.session_state.optimization_results and st.session_state.optimizer:
         with col4:
             if 'optimization_details' in result:
                 iterations = result['optimization_details'].get('iterations', 0)
+                converged = result['optimization_details'].get('converged', False)
                 st.metric(
                     "Convergence", 
                     f"{iterations} iterations",
-                    " Successful" if result['optimization_details'].get('converged', False) else " Warning",
+                    "✅ Successful" if converged else "⚠️ Warning",
                     help="Optimization convergence details"
                 )
         
@@ -1408,24 +1207,55 @@ if st.session_state.optimization_results and st.session_state.optimizer:
         st.plotly_chart(risk_analysis_fig, use_container_width=True)
         
         # Enhanced risk metrics summary
-        st.markdown("#### Risk Metrics Summary")
+        st.markdown("#### ⚠️ Risk Metrics Summary")
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
             var_95 = abs(result['var_95']) * 100
-            st.metric("VaR (95%)", f"{var_95:.2f}%", "Daily", help="Value at Risk at 95% confidence level")
+            st.metric("VaR (95%)", f"{var_95:.2f}%", "📉 Daily", help="Value at Risk at 95% confidence level (daily)")
         
         with col2:
             var_99 = abs(result['var_99']) * 100
-            st.metric("VaR (99%)", f"{var_99:.2f}%", "Daily", help="Value at Risk at 99% confidence level")
+            st.metric("VaR (99%)", f"{var_99:.2f}%", "📉 Daily", help="Value at Risk at 99% confidence level (daily)")
         
         with col3:
             max_weight = np.max(result['weights'])
-            st.metric("Max Weight", f"{max_weight:.1%}", "Largest Position", help="Weight of largest position")
+            st.metric("Max Weight", f"{max_weight:.1%}", "📊 Largest Position", help="Weight of largest position")
         
         with col4:
             min_weight = np.min(result['weights'])
-            st.metric("Min Weight", f"{min_weight:.1%}", "Smallest Position", help="Weight of smallest position")
+            st.metric("Min Weight", f"{min_weight:.1%}", "📊 Smallest Position", help="Weight of smallest position")
+        
+        # Risk decomposition analysis
+        st.markdown("#### 🔍 Risk Decomposition")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # Individual asset risks
+            individual_risks = []
+            for i, ticker in enumerate(optimizer.tickers):
+                asset_vol = np.sqrt(optimizer.cov_matrix_annual.iloc[i, i]) * 100
+                individual_risks.append({
+                    'Asset': ticker,
+                    'Individual Risk': f"{asset_vol:.1f}%",
+                    'Weight': f"{result['weights'][i]:.1%}",
+                    'Weighted Risk': f"{result['weights'][i] * asset_vol:.1f}%"
+                })
+            
+            risks_df = pd.DataFrame(individual_risks)
+            st.dataframe(risks_df, hide_index=True, use_container_width=True)
+        
+        with col2:
+            # Portfolio vs individual asset risk comparison
+            portfolio_vol = result['volatility'] * 100
+            weighted_avg_vol = sum(result['weights'][i] * np.sqrt(optimizer.cov_matrix_annual.iloc[i, i]) * 100 
+                                 for i in range(len(optimizer.tickers)))
+            diversification_benefit = weighted_avg_vol - portfolio_vol
+            
+            st.metric("Portfolio Risk", f"{portfolio_vol:.1f}%", help="Actual portfolio volatility")
+            st.metric("Weighted Average Risk", f"{weighted_avg_vol:.1f}%", help="Risk without diversification benefit")
+            st.metric("Diversification Benefit", f"{diversification_benefit:.1f}%", 
+                     "🛡️ Risk Reduction", help="Risk reduction due to diversification")
         
         st.markdown('</div>', unsafe_allow_html=True)
     
@@ -1438,7 +1268,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
         # Enhanced performance statistics
         portfolio_returns = (optimizer.returns * result['weights']).sum(axis=1)
         
-        st.markdown("#### Performance Statistics")
+        st.markdown("#### 📊 Performance Statistics")
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
@@ -1446,7 +1276,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
             st.metric(
                 "Total Return", 
                 f"{total_return*100:.1f}%", 
-                f"{lookback_years} Year Period",
+                f"📅 {lookback_years} Year Period",
                 help=f"Total return over {lookback_years} year period"
             )
         
@@ -1455,6 +1285,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
             st.metric(
                 "Annualized Return", 
                 f"{annualized_return*100:.1f}%",
+                "📈 CAGR",
                 help="Compound annual growth rate"
             )
         
@@ -1463,6 +1294,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
             st.metric(
                 "Winning Days", 
                 f"{winning_days*100:.1f}%",
+                "📈 Positive Days",
                 help="Percentage of positive return days"
             )
         
@@ -1471,6 +1303,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
             st.metric(
                 "Realized Volatility", 
                 f"{volatility_realized*100:.1f}%",
+                "📊 Historical",
                 help="Historical volatility of the portfolio"
             )
         
@@ -1479,7 +1312,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
         
         with col1:
             skewness = portfolio_returns.skew()
-            skew_interpretation = "Positive Skew" if skewness > 0 else "Negative Skew" if skewness < 0 else "Symmetric"
+            skew_interpretation = "📈 Positive Skew" if skewness > 0 else "📉 Negative Skew" if skewness < -0.1 else "⚖️ Symmetric"
             st.metric(
                 "Skewness", 
                 f"{skewness:.2f}",
@@ -1489,7 +1322,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
         
         with col2:
             kurtosis = portfolio_returns.kurtosis()
-            kurt_interpretation = "Fat Tails" if kurtosis > 0 else "Thin Tails"
+            kurt_interpretation = "⚠️ Fat Tails" if kurtosis > 1 else "📊 Normal Tails"
             st.metric(
                 "Kurtosis", 
                 f"{kurtosis:.2f}",
@@ -1502,15 +1335,18 @@ if st.session_state.optimization_results and st.session_state.optimizer:
             st.metric(
                 "Avg Daily Return", 
                 f"{avg_daily_return:.3f}%",
+                "📅 Daily Average",
                 help="Average daily return"
             )
         
         with col4:
             best_day = portfolio_returns.max() * 100
+            worst_day = portfolio_returns.min() * 100
             st.metric(
                 "Best Day", 
                 f"{best_day:.2f}%",
-                help="Best single day performance"
+                f"📉 Worst: {worst_day:.2f}%",
+                help="Best and worst single day performance"
             )
         
         st.markdown('</div>', unsafe_allow_html=True)
@@ -1519,22 +1355,22 @@ if st.session_state.optimization_results and st.session_state.optimizer:
         if show_capm:
             st.markdown('<div class="chart-container">', unsafe_allow_html=True)
             
-            with st.spinner(" Calculating CAPM metrics..."):
+            with st.spinner("🎯 Calculating CAPM metrics..."):
                 capm_metrics = optimizer.calculate_capm_metrics()
             
-            if capm_metrics:
-                capm_fig = create_capm_analysis_chart(capm_metrics)
+            if camp_metrics:
+                camp_fig = create_capm_analysis_chart(capm_metrics)
                 if capm_fig:
                     st.plotly_chart(capm_fig, use_container_width=True)
                 
                 # Enhanced CAPM summary
-                st.markdown("#### CAPM Analysis Summary")
+                st.markdown("#### 🎯 CAPM Analysis Summary")
                 
                 # Create enhanced CAPM table
                 capm_data = []
                 for ticker in optimizer.tickers:
                     if ticker in capm_metrics:
-                        metrics = capm_metrics[ticker]
+                        metrics = camp_metrics[ticker]
                         capm_data.append({
                             'Asset': ticker,
                             'Beta': f"{metrics['beta']:.3f}",
@@ -1548,100 +1384,121 @@ if st.session_state.optimization_results and st.session_state.optimizer:
                         })
                 
                 if capm_data:
-                    capm_df = pd.DataFrame(capm_data)
+                    capm_df = pd.DataFrame(camp_data)
                     st.dataframe(capm_df, hide_index=True, use_container_width=True)
                     
                     # CAPM interpretation
-                    st.markdown("#### CAPM Interpretation")
+                    st.markdown("#### 📚 CAPM Interpretation")
                     col1, col2 = st.columns(2)
                     
                     with col1:
                         st.markdown("""
-                        **Beta Analysis:**
-                        - **Beta > 1:** More volatile than market
-                        - **Beta < 1:** Less volatile than market  
-                        - **Beta = 1:** Same volatility as market
+                        **📊 Beta Analysis:**
+                        - **Beta > 1:** More volatile than market 📈
+                        - **Beta < 1:** Less volatile than market 🛡️
+                        - **Beta = 1:** Same volatility as market ⚖️
+                        
+                        **🎯 R-Squared Analysis:**
+                        - **R² > 0.7:** Strong market relationship 🔗
+                        - **R² < 0.3:** Weak market relationship 🔄
                         """)
                     
                     with col2:
                         st.markdown("""
-                        **Alpha Analysis:**
-                        - **Alpha > 0:** Outperforming expectations
-                        - **Alpha < 0:** Underperforming expectations
-                        - **Alpha ≈ 0:** Performing as expected
+                        **⭐ Alpha Analysis:**
+                        - **Alpha > 0:** Outperforming expectations 📈
+                        - **Alpha < 0:** Underperforming expectations 📉
+                        - **Alpha ≈ 0:** Performing as expected ⚖️
+                        
+                        **⚠️ Risk Decomposition:**
+                        - **Systematic:** Market-related risk 🌍
+                        - **Idiosyncratic:** Company-specific risk 🏢
                         """)
+                    
+                    # Portfolio CAPM summary
+                    st.markdown("#### 📊 Portfolio CAPM Summary")
+                    
+                    # Calculate portfolio beta and alpha
+                    portfolio_beta = sum(result['weights'][i] * camp_metrics[ticker]['beta'] 
+                                       for i, ticker in enumerate(optimizer.tickers) 
+                                       if ticker in capm_metrics)
+                    
+                    portfolio_alpha = sum(result['weights'][i] * camp_metrics[ticker]['alpha'] 
+                                        for i, ticker in enumerate(optimizer.tickers) 
+                                        if ticker in capm_metrics)
+                    
+                    col1, col2, col3 = st.columns(3)
+                    
+                    with col1:
+                        beta_interpretation = "📈 Aggressive" if portfolio_beta > 1.2 else "🛡️ Defensive" if portfolio_beta < 0.8 else "⚖️ Market-like"
+                        st.metric(
+                            "Portfolio Beta",
+                            f"{portfolio_beta:.3f}",
+                            beta_interpretation,
+                            help="Portfolio sensitivity to market movements"
+                        )
+                    
+                    with col2:
+                        alpha_interpretation = "⭐ Outperforming" if portfolio_alpha > 0.02 else "📉 Underperforming" if portfolio_alpha < -0.02 else "⚖️ Market-like"
+                        st.metric(
+                            "Portfolio Alpha",
+                            f"{portfolio_alpha:.2%}",
+                            alpha_interpretation,
+                            help="Portfolio excess return above market expectations"
+                        )
+                    
+                    with col3:
+                        # Calculate portfolio systematic risk
+                        portfolio_systematic_risk = sum(result['weights'][i] * capm_metrics[ticker].get('systematic_risk', 0) 
+                                                       for i, ticker in enumerate(optimizer.tickers) 
+                                                       if ticker in camp_metrics)
+                        systematic_pct = (portfolio_systematic_risk / result['volatility']) * 100 if result['volatility'] > 0 else 0
+                        
+                        st.metric(
+                            "Systematic Risk %",
+                            f"{systematic_pct:.1f}%",
+                            "🌍 Market-driven",
+                            help="Percentage of portfolio risk from market movements"
+                        )
+                        
             else:
-                st.markdown('<div class="status-warning"> CAPM analysis not available - market data could not be fetched</div>', unsafe_allow_html=True)
+                st.markdown('<div class="status-warning">⚠️ CAPM analysis not available - market data could not be fetched</div>', unsafe_allow_html=True)
                 
                 st.markdown("""
                 **Why CAPM might not be available:**
-                - Market benchmark data unavailable
-                - Insufficient overlapping data between assets and market
-                - Network connectivity issues
+                - 📊 Market benchmark data unavailable
+                - 📅 Insufficient overlapping data between assets and market
+                - 🌐 Network connectivity issues
                 """)
             
             st.markdown('</div>', unsafe_allow_html=True)
         else:
-            st.markdown('<div class="status-info"> CAPM analysis disabled. Enable in Advanced Options to view detailed beta and alpha analysis.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="status-info">ℹ️ CAPM analysis disabled. Enable in Advanced Options to view detailed beta and alpha analysis.</div>', unsafe_allow_html=True)
 
-
-st.markdown("""
-    <style>
-        /* General markdown text */
-        div[data-testid="stMarkdownContainer"] {
-            font-size: 0.95rem;
-            line-height: 1.6;
-            color: #333;
-        }
-
-        /* Headings inside markdown */
-        div[data-testid="stMarkdownContainer"] h4 {
-            color: #6a11cb;
-            font-weight: 700;
-            margin-top: 1.2rem;
-            margin-bottom: 0.5rem;
-        }
-
-        /* Bolded keywords */
-        div[data-testid="stMarkdownContainer"] strong {
-            color: #2575fc;
-        }
-
-        /* Bullet list styling */
-        div[data-testid="stMarkdownContainer"] ul {
-            margin: 0.5rem 0 1rem 1.2rem;
-        }
-
-        div[data-testid="stMarkdownContainer"] li {
-            margin-bottom: 0.4rem;
-        }
-    </style>
-""", unsafe_allow_html=True)
-
-
-with st.expander("Tips & Best Practices", expanded=False):
+# Enhanced Tips & Best Practices Section
+with st.expander("💡 Tips & Best Practices", expanded=False):
     col1, col2 = st.columns(2)
 
     with col1:
         st.markdown("""
-        #### Optimization Methods Guide
+        #### 🎯 Optimization Methods Guide
 
-        **Maximum Sharpe Ratio**  
+        **📈 Maximum Sharpe Ratio**  
         - Best for: General portfolio optimization  
         - Goal: Maximize risk-adjusted returns  
         - Ideal for: Most investors seeking balance  
 
-        **Minimum Variance**  
+        **🛡️ Minimum Variance**  
         - Best for: Conservative investors  
         - Goal: Minimize portfolio risk  
         - Ideal for: Risk-averse investors, stable income needs  
 
-        **Target Return**  
+        **🎯 Target Return**  
         - Best for: Specific return goals  
         - Goal: Achieve target with minimum risk  
         - Ideal for: Pension funds, endowments  
 
-        **Target Volatility**  
+        **⚖️ Target Volatility**  
         - Best for: Risk budgeting  
         - Goal: Maximize return for specific risk  
         - Ideal for: Risk-managed strategies  
@@ -1649,19 +1506,85 @@ with st.expander("Tips & Best Practices", expanded=False):
 
     with col2:
         st.markdown("""
-        #### Key Metrics Explained
+        #### 📊 Key Metrics Explained
 
-        **Expected Return**: Annualized expected portfolio return  
-        **Volatility**: Annual portfolio standard deviation (risk)  
-        **Sharpe Ratio**: Return per unit of risk (higher is better)  
-        **Sortino Ratio**: Risk-adjusted return using downside deviation  
-        **VaR**: Maximum expected loss at confidence level  
-        **CVaR**: Average loss beyond VaR threshold  
-        **Max Drawdown**: Largest peak-to-trough decline  
-        **Diversification Ratio**: Effective number of independent positions  
-        **Beta**: Sensitivity to market movements  
-        **Alpha**: Excess return above market expectations  
+        **📈 Expected Return**: Annualized expected portfolio return  
+        **📊 Volatility**: Annual portfolio standard deviation (risk)  
+        **⚖️ Sharpe Ratio**: Return per unit of risk (higher is better)  
+        **📉 Sortino Ratio**: Risk-adjusted return using downside deviation  
+        **⚠️ VaR**: Maximum expected loss at confidence level  
+        **💥 CVaR**: Average loss beyond VaR threshold  
+        **📉 Max Drawdown**: Largest peak-to-trough decline  
+        **🔄 Diversification Ratio**: Effective number of independent positions  
+        **📊 Beta**: Sensitivity to market movements  
+        **⭐ Alpha**: Excess return above market expectations  
         """)
+
+# Enhanced Performance Tips Section
+with st.expander("🚀 Performance Tips", expanded=False):
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        #### 🎯 Optimization Best Practices
+        
+        **📊 Data Quality**
+        - Use liquid, established stocks
+        - Ensure sufficient historical data (2+ years)
+        - Check data quality indicators
+        
+        **⚖️ Constraint Setting**
+        - Set reasonable min/max weights
+        - Consider liquidity constraints
+        - Account for transaction costs
+        
+        **🔄 Regular Rebalancing**
+        - Review portfolios quarterly
+        - Rebalance when weights drift >5%
+        - Consider market regime changes
+        """)
+    
+    with col2:
+        st.markdown("""
+        #### ⚠️ Risk Management
+        
+        **🛡️ Diversification**
+        - Use assets from different sectors
+        - Include international exposure
+        - Consider alternative asset classes
+        
+        **📊 Risk Monitoring**
+        - Track VaR and CVaR regularly
+        - Monitor correlation changes
+        - Set stop-loss levels
+        
+        **🎯 Target Setting**
+        - Set realistic return targets
+        - Consider risk capacity
+        - Account for market conditions
+        """)
+
+# Enhanced Data Sources and Methodology Section
+with st.expander("📚 Data Sources & Methodology", expanded=False):
+    st.markdown("""
+    #### 📊 Data Sources
+    - **Stock Prices**: Yahoo Finance API
+    - **Risk-Free Rate**: FRED (Federal Reserve Economic Data)
+    - **Market Benchmark**: S&P 500 Index (^GSPC)
+    
+    #### 🔬 Methodology
+    - **Mean Returns**: Annualized from daily returns (252 trading days)
+    - **Covariance Matrix**: Annualized from daily return covariance
+    - **VaR/CVaR**: Historical simulation method (daily basis)
+    - **Optimization**: Sequential Least Squares Programming (SLSQP)
+    - **Risk Attribution**: Marginal contribution decomposition
+    
+    #### ⚠️ Important Notes
+    - **Temporal Consistency**: All metrics properly annualized
+    - **Risk-Free Integration**: Uses current Treasury rates
+    - **CAPM Analysis**: Requires market benchmark data
+    - **Historical Data**: Past performance doesn't guarantee future results
+    """)
 
 # Footer with enhanced styling
 st.markdown("---")
@@ -1669,11 +1592,43 @@ st.markdown("""
     <div style="text-align: center; color: #666; padding: 2rem; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 15px; margin-top: 2rem;">
         <p style="font-size: 1.2rem; font-weight: 700; color: #2c3e50; margin-bottom: 0.5rem;">
             <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
-                QuantRisk Analytics
+                📊 QuantRisk Analytics
             </span>
         </p>
         <p style="font-size: 1rem; color: #667eea; margin-bottom: 0.5rem;">Portfolio Optimization Platform</p>
-        <p style="font-size: 0.9rem; opacity: 0.8;">Built with Modern Portfolio Theory</p>
-        <p style="font-size: 0.8rem; opacity: 0.6; margin-top: 1rem;">© 2025 | Powered by Streamlit & Hosted in GitHub</p>
+        <p style="font-size: 0.9rem; opacity: 0.8;">Built with Modern Portfolio Theory & Enhanced Risk Analytics</p>
+        <p style="font-size: 0.8rem; opacity: 0.6; margin-top: 1rem;">© 2025 | ⚡ Powered by Streamlit & 🔬 Advanced Quantitative Methods</p>
+        
+        <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #ddd;">
+            <p style="font-size: 0.85rem; color: #888; line-height: 1.4;">
+                <strong>🔧 Technical Features:</strong><br>
+                ✅ Temporal Consistency | ✅ Risk-Free Asset Integration | ✅ CAPM Analysis<br>
+                ✅ VaR/CVaR Methodology | ✅ Risk Attribution | ✅ Efficient Frontier
+            </p>
+        </div>
     </div>
 """, unsafe_allow_html=True)
+
+# Add final validation check for results
+if st.session_state.optimization_results and st.session_state.optimizer:
+    # Show validation warnings if any
+    warnings = []
+    try:
+        from optimizer import validate_optimization_result
+        warnings = validate_optimization_result(
+            st.session_state.optimization_results,
+            st.session_state.optimization_results['weights'],
+            st.session_state.optimizer
+        )
+    except Exception:
+        pass
+    
+    if warnings:
+        with st.expander("⚠️ Validation Warnings", expanded=False):
+            for warning in warnings:
+                st.warning(f"⚠️ {warning}")
+            
+            st.info("""
+            These warnings indicate potential issues with the optimization results.
+            Consider adjusting constraints or trying a different optimization method.
+            """)
