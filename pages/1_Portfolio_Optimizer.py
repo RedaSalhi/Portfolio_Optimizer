@@ -1148,7 +1148,8 @@ if st.session_state.optimization_results and st.session_state.optimizer:
             frontier_fig = create_efficient_frontier_plot(
                 optimizer, 
                 result, 
-                include_risk_free=include_rf
+                include_risk_free=include_rf,
+                frontier_points=frontier_points
             )
         
         if frontier_fig:
@@ -1358,8 +1359,8 @@ if st.session_state.optimization_results and st.session_state.optimizer:
             with st.spinner("🎯 Calculating CAPM metrics..."):
                 capm_metrics = optimizer.calculate_capm_metrics()
             
-            if camp_metrics:
-                camp_fig = create_capm_analysis_chart(capm_metrics)
+            if capm_metrics:
+                capm_fig = create_capm_analysis_chart(capm_metrics)
                 if capm_fig:
                     st.plotly_chart(capm_fig, use_container_width=True)
                 
@@ -1370,7 +1371,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
                 capm_data = []
                 for ticker in optimizer.tickers:
                     if ticker in capm_metrics:
-                        metrics = camp_metrics[ticker]
+                        metrics = capm_metrics[ticker]
                         capm_data.append({
                             'Asset': ticker,
                             'Beta': f"{metrics['beta']:.3f}",
@@ -1384,7 +1385,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
                         })
                 
                 if capm_data:
-                    capm_df = pd.DataFrame(camp_data)
+                    capm_df = pd.DataFrame(capm_data)
                     st.dataframe(capm_df, hide_index=True, use_container_width=True)
                     
                     # CAPM interpretation
@@ -1419,11 +1420,11 @@ if st.session_state.optimization_results and st.session_state.optimizer:
                     st.markdown("#### 📊 Portfolio CAPM Summary")
                     
                     # Calculate portfolio beta and alpha
-                    portfolio_beta = sum(result['weights'][i] * camp_metrics[ticker]['beta'] 
+                    portfolio_beta = sum(result['weights'][i] * capm_metrics[ticker]['beta'] 
                                        for i, ticker in enumerate(optimizer.tickers) 
                                        if ticker in capm_metrics)
                     
-                    portfolio_alpha = sum(result['weights'][i] * camp_metrics[ticker]['alpha'] 
+                    portfolio_alpha = sum(result['weights'][i] * capm_metrics[ticker]['alpha'] 
                                         for i, ticker in enumerate(optimizer.tickers) 
                                         if ticker in capm_metrics)
                     
@@ -1451,7 +1452,7 @@ if st.session_state.optimization_results and st.session_state.optimizer:
                         # Calculate portfolio systematic risk
                         portfolio_systematic_risk = sum(result['weights'][i] * capm_metrics[ticker].get('systematic_risk', 0) 
                                                        for i, ticker in enumerate(optimizer.tickers) 
-                                                       if ticker in camp_metrics)
+                                                       if ticker in capm_metrics)
                         systematic_pct = (portfolio_systematic_risk / result['volatility']) * 100 if result['volatility'] > 0 else 0
                         
                         st.metric(

@@ -137,11 +137,17 @@ class PortfolioOptimizer:
         except Exception as e:  # pragma: no cover
             return False, f"Download failed: {e}"
 
-        if isinstance(data, pd.DataFrame) and 'Adj Close' in data.columns:
-            prices = data['Adj Close'].copy()
+        # Extract Adjusted Close robustly across shapes (Series/DataFrame/MultiIndex)
+        if isinstance(data, pd.DataFrame):
+            if 'Close' in data.columns:
+                prices = data['Close'].copy()
+            else:
+                prices = data.copy()
+        elif isinstance(data, pd.Series):
+            # Convert to DataFrame to keep consistent downstream operations
+            prices = data.to_frame(name=self.original_tickers[0])
         else:
-            # yfinance returns a single-level DF when only 1 ticker works
-            prices = data.copy()
+            return False, "Unexpected data format from yfinance."
 
         # Normalize columns to list of tickers that actually downloaded
         if isinstance(prices.columns, pd.MultiIndex):
