@@ -513,7 +513,9 @@ class PortfolioOptimizer:
 
         # Align with portfolio window
         ret = self.returns[self.tickers].copy()
-        df = pd.concat([ret, mkt_ret.rename("_MKT_")], axis=1).dropna()
+        # Avoid Series.rename with a string (can be interpreted as index mapper in some pandas versions)
+        mkt_ret_df = mkt_ret.to_frame(name="_MKT_")
+        df = pd.concat([ret, mkt_ret_df], axis=1).dropna()
         if df.shape[0] < TRADING_DAYS // 2:
             return None
 
