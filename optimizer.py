@@ -60,7 +60,7 @@ def _to_numpy(x: Iterable[float]) -> np.ndarray:
     return arr
 
 
-def _ridge_cov(cov: pd.DataFrame, ridge: float = 1e-8) -> pd.DataFrame:
+def _ridge_cov(cov: pd.DataFrame, ridge: float = 1e-6) -> pd.DataFrame:
     cov = cov.copy()
     diag = np.eye(cov.shape[0]) * ridge
     cov.values[:] = cov.values + diag
@@ -137,25 +137,15 @@ class PortfolioOptimizer:
         except Exception as e:  # pragma: no cover
             return False, f"Download failed: {e}"
 
-        # Extract Adjusted Close/Close robustly across shapes (Series/DataFrame/MultiIndex)
-        if isinstance(data, pd.Series):
-            prices = data.to_frame(name=self.original_tickers[0])
-        elif isinstance(data, pd.DataFrame):
-            if isinstance(data.columns, pd.MultiIndex):
-                last_level = data.columns.get_level_values(-1)
-                if 'Adj Close' in last_level:
-                    prices = data.xs('Adj Close', axis=1, level=-1).copy()
-                elif 'Close' in last_level:
-                    prices = data.xs('Close', axis=1, level=-1).copy()
-                else:
-                    prices = data.select_dtypes(include=[np.number]).copy()
+        # Extract Adjusted Close robustly across shapes (Series/DataFrame/MultiIndex)
+        if isinstance(data, pd.DataFrame):
+            if 'Close' in data.columns:
+                prices = data['Close'].copy()
             else:
-                if 'Adj Close' in data.columns:
-                    prices = data['Adj Close'].copy()
-                elif 'Close' in data.columns:
-                    prices = data['Close'].copy()
-                else:
-                    prices = data.copy()
+                prices = data.copy()
+        elif isinstance(data, pd.Series):
+            # Convert to DataFrame to keep consistent downstream operations
+            prices = data.to_frame(name=self.original_tickers[0])
         else:
             return False, "Unexpected data format from yfinance."
 
@@ -611,183 +601,94 @@ def create_portfolio_composition_chart(tickers: List[str], weights: np.ndarray, 
     return fig
 
 
-def _efficient_frontier_points(opt: PortfolioOptimizer, n_points: int = 60, min_w: float = 0.0, max_w: float = 1.0) -> Tuple[np.ndarray, np.ndarray]:
-    mu = opt.mean_returns_annual[opt.tickers].values  # type: ignore
-    mu_min, mu_max = float(mu.min()), float(mu.max())
-    targets = np.linspace(mu_min, mu_max, n_points)
-    vols: List[float] = []
-    rets: List[float] = []
-    for tr in targets:
+def _efficient_frontier_points(opt: PortfolioOptimizer, n_points: int = 50, min_w: float = 0.0, max_w: float = 1.0) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Génère les points de la frontière efficiente en optimisant pour différents niveaux de rendement cible.
+    Utilise TOUS les tickers dans l'optimisation avec contraintes de poids.
+    """
+    if opt.mean_returns_annual is None or opt.cov_matrix_annual is None:
+        return np.array([]), np.array([])
+    
+    mu = opt.mean_returns_annual[opt.tickers].values
+    n_assets = len(opt.tickers)
+    
+    # Calcul des rendements min et max possibles avec les contraintes de poids
+    # Pour le minimum: portfolio de variance minimale
+    try:
+        w_min_var, _ = opt._min_variance_weights(min_w, max_w)
+        min_return = float(w_min_var @ mu)
+    except:
+        min_return = float(mu.min())
+    
+    # Pour le maximum: tous les poids sur l'actif avec le plus haut rendement (dans les limites)
+    max_return_idx = np.argmax(mu)
+    w_max = np.full(n_assets, min_w)
+    remaining_weight = 1.0 - min_w * n_assets
+    w_max[max_return_idx] = min(max_w, min_w + remaining_weight)
+    # Redistribuer le poids restant si nécessaire
+    if w_max.sum() < 1.0:
+        deficit = 1.0 - w_max.sum()
+        for i in range(n_assets):
+            if i != max_return_idx and w_max[i] < max_w:
+                add_weight = min(deficit, max_w - w_max[i])
+                w_max[i] += add_weight
+                deficit -= add_weight
+                if deficit <= 1e-10:
+                    break
+    max_return = float(w_max @ mu)
+    
+    # Génération des rendements cibles
+    target_returns = np.linspace(min_return, max_return, n_points)
+    
+    vols = []
+    rets = []
+    
+    for target_ret in target_returns:
         try:
-            w, _ = opt._target_return_weights(tr, min_w, max_w)
-            m = opt.portfolio_metrics(w)
-            vols.append(m["volatility"])
-            rets.append(m["expected_return"])
+            # Optimisation de variance minimale pour un rendement cible donné
+            w_target, res = opt._target_return_weights(target_ret, min_w, max_w)
+            
+            if res.success:
+                # Vérification que les contraintes sont respectées
+                if (w_target >= min_w - 1e-6).all() and (w_target <= max_w + 1e-6).all() and abs(w_target.sum() - 1.0) < 1e-6:
+                    metrics = opt.portfolio_metrics(w_target)
+                    vols.append(metrics["volatility"])
+                    rets.append(metrics["expected_return"])
         except Exception:
             continue
+    
     return np.array(vols), np.array(rets)
 
 
-def _random_portfolios(opt: PortfolioOptimizer, n: int = 3000) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-    mu = opt.mean_returns_annual[opt.tickers].values  # type: ignore
-    cov = opt.cov_matrix_annual.loc[opt.tickers, opt.tickers].values  # type: ignore
-    rf = opt.get_risk_free_rate()
-    weights = np.random.dirichlet(np.ones(len(opt.tickers)), size=n)
-    rets = weights @ mu
-    vols = np.sqrt(np.einsum('ij,jk,ik->i', weights, cov, weights))
-    sharpes = (rets - rf) / np.maximum(vols, EPS)
-    return vols, rets, sharpes
-
-
-def create_efficient_frontier_plot(opt: PortfolioOptimizer, result: Dict[str, object], include_risk_free: bool = True, frontier_points: int = 60, include_random: bool = True, n_random: int = 3000) -> Optional[go.Figure]:
-    if opt.mean_returns_annual is None or opt.cov_matrix_annual is None:
-        return None
-
-    try:
-        vols, rets = _efficient_frontier_points(opt, max(25, int(frontier_points)))
-        fig = go.Figure()
-        if include_random:
-            rv, rr, rs = _random_portfolios(opt, n_random)
-            fig.add_trace(go.Scatter(
-                x=rv,
-                y=rr,
-                mode='markers',
-                name='Random Portfolios',
-                marker=dict(size=5, color=rs, colorscale='Viridis', showscale=True, colorbar=dict(title='Sharpe'))
-            ))
-        if len(vols) > 0:
-            fig.add_trace(go.Scatter(x=vols, y=rets, mode='lines', name='Efficient Frontier'))
-
-        # Equal-weight and optimized portfolio
-        eq_w = np.ones(len(opt.tickers)) / len(opt.tickers)
-        pm_eq = opt.portfolio_metrics(eq_w, opt.get_risk_free_rate() if include_risk_free else 0.0)
-        fig.add_trace(go.Scatter(x=[pm_eq["volatility"]], y=[pm_eq["expected_return"]], mode='markers', name='Equal Weight', marker=dict(size=10)))
-
-        fig.add_trace(go.Scatter(x=[result["volatility"]], y=[result["expected_return"]], mode='markers', name='Optimized', marker=dict(size=12)))
-
-        # Tangency & CAL
-        if include_risk_free:
-            rf = opt.get_risk_free_rate()
-            w_tan, _ = opt._tangency_weights(rf, 0.0, 1.0)
-            m_tan = opt.portfolio_metrics(w_tan, rf)
-            fig.add_trace(go.Scatter(x=[m_tan["volatility"]], y=[m_tan["expected_return"]], mode='markers', name='Tangency', marker=dict(size=11)))
-            # CAL line
-            x = np.linspace(0, float(max(vols.max() if len(vols) else m_tan["volatility"], result["volatility"]) * 1.3), 50)
-            slope = (m_tan["expected_return"] - rf) / max(m_tan["volatility"], EPS)
-            y = rf + slope * x
-            fig.add_trace(go.Scatter(x=x, y=y, mode='lines', name='Capital Allocation Line', line=dict(dash='dash')))
-
-        fig.update_layout(
-            title="Efficient Frontier & Portfolio Position",
-            xaxis_title="Volatility (Annual)",
-            yaxis_title="Expected Return (Annual)",
-            margin=dict(l=10, r=10, t=40, b=10),
-            legend_title="",
-        )
-        return fig
-    except Exception:
-        return None
-
-
-def create_risk_return_analysis(opt: PortfolioOptimizer, weights: np.ndarray) -> go.Figure:
-    mu = opt.mean_returns_annual[opt.tickers].values  # type: ignore
-    sig = np.sqrt(np.diag(opt.cov_matrix_annual.loc[opt.tickers, opt.tickers].values))  # type: ignore
-    w = _to_numpy(weights)
-
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=sig, y=mu, mode='markers', text=opt.tickers, name='Assets', marker=dict(size=10)))
-
-    pm = opt.portfolio_metrics(w, opt.get_risk_free_rate())
-    fig.add_trace(go.Scatter(x=[pm["volatility"]], y=[pm["expected_return"]], mode='markers', name='Portfolio', marker=dict(size=14)))
-
-    fig.update_layout(
-        title='Risk vs Return (Assets & Portfolio)',
-        xaxis_title='Volatility (Annual)',
-        yaxis_title='Expected Return (Annual)',
-        margin=dict(l=10, r=10, t=40, b=10)
-    )
-    return fig
-
-
-def create_performance_analytics(opt: PortfolioOptimizer, weights: np.ndarray) -> go.Figure:
-    w = _to_numpy(weights)
-    port_daily = (opt.returns[opt.tickers] * w).sum(axis=1)  # type: ignore
-    eq_daily = (opt.returns[opt.tickers] * (np.ones_like(w) / len(w))).sum(axis=1)  # type: ignore
-
-    wealth_port = (1 + port_daily).cumprod()
-    wealth_eq = (1 + eq_daily).cumprod()
-
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=wealth_port.index, y=wealth_port.values, name='Portfolio Equity', mode='lines'))
-    fig.add_trace(go.Scatter(x=wealth_eq.index, y=wealth_eq.values, name='Equal-Weight Equity', mode='lines'))
-
-    fig.update_layout(
-        title='Performance (Cumulative Growth of $1)',
-        xaxis_title='Date',
-        yaxis_title='Wealth',
-        margin=dict(l=10, r=10, t=40, b=10)
-    )
-    return fig
-
-
-def create_capm_analysis_chart(capm_metrics: Optional[Dict[str, Dict[str, float]]]) -> Optional[go.Figure]:
-    if not capm_metrics:
-        return None
-    # Scatter: Beta (x) vs Alpha (y)
-    betas = [capm_metrics[t]["beta"] for t in capm_metrics]
-    alphas = [capm_metrics[t]["alpha"] for t in capm_metrics]
-    labels = list(capm_metrics.keys())
-
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=betas, y=alphas, mode='markers+text', text=labels, textposition='top center', name='Assets'))
-    fig.add_hline(y=0, line=dict(dash='dot'))
-    fig.add_vline(x=1, line=dict(dash='dot'))
-    fig.update_layout(title='CAPM: Alpha vs Beta', xaxis_title='Beta', yaxis_title='Alpha (Annual)', margin=dict(l=10, r=10, t=40, b=10))
-    return fig
-
-
-# ----------------------------- Validation helper ----------------------------- #
-
-def validate_optimization_result(result: Dict[str, object], weights: Iterable[float], optimizer: PortfolioOptimizer) -> List[str]:
-    """Return a list of human-readable warnings about potential issues.
-    Never raises – returns [] when all looks OK.
+def _generate_random_portfolios(opt: PortfolioOptimizer, n_portfolios: int = 1000, min_w: float = 0.0, max_w: float = 1.0) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
-    warnings_list: List[str] = []
-
-    try:
-        w = _to_numpy(weights)
-        if np.isnan(w).any():
-            warnings_list.append("Weights contain NaN values.")
-        if (w < -1e-6).any():
-            warnings_list.append("Negative weights detected (shorting). Ensure this is intended or raise min_weight.")
-        s = float(w.sum())
-        if abs(s - 1.0) > 1e-3:
-            warnings_list.append(f"Weights do not sum to 1 (sum={s:.4f}).")
-
-        # Basic metric sanity
-        for k in ("expected_return", "volatility", "sharpe_ratio"):
-            v = float(result.get(k, np.nan))
-            if not np.isfinite(v):
-                warnings_list.append(f"Metric {k} is not finite.")
-        if float(result.get("volatility", 0)) <= 0:
-            warnings_list.append("Portfolio volatility is non-positive (check data quality).")
-
-        # Check consistency with inputs
-        if optimizer.mean_returns_annual is not None:
-            if len(w) != len(optimizer.tickers):
-                warnings_list.append("Weights length does not match number of tickers.")
-
-        # Drawdown outliers
-        mdd = abs(float(result.get("max_drawdown", 0)))
-        if mdd > 0.6:
-            warnings_list.append("Max drawdown exceeds 60% – very high historical drawdown.")
-
-        # Concentration (HHI)
-        hhi = float(result.get("concentration", 0))
-        if hhi > 0.4:
-            warnings_list.append("Portfolio highly concentrated (HHI > 0.40). Consider adding constraints.")
-
-    except Exception as e:  # pragma: no cover
-        warnings_list.append(f"Validation encountered an error: {e}")
-
-    return warnings_list
+    Génère des portfolios aléatoires pour visualiser l'espace risque-rendement.
+    Retourne (volatilités, rendements, ratios de Sharpe).
+    """
+    if opt.mean_returns_annual is None or opt.cov_matrix_annual is None:
+        return np.array([]), np.array([]), np.array([])
+    
+    n_assets = len(opt.tickers)
+    rf = opt.get_risk_free_rate()
+    
+    vols = []
+    rets = []
+    sharpes = []
+    
+    for _ in range(n_portfolios):
+        # Génération de poids aléatoires respectant les contraintes
+        weights = np.random.uniform(min_w, max_w, n_assets)
+        # Normalisation pour que la somme = 1
+        weights = weights / weights.sum()
+        
+        # Vérification des contraintes après normalisation
+        if (weights >= min_w - 1e-6).all() and (weights <= max_w + 1e-6).all():
+            try:
+                metrics = opt.portfolio_metrics(weights, rf)
+                vols.append(metrics["volatility"])
+                rets.append(metrics["expected_return"])
+                sharpes.append(metrics["sharpe_ratio"])
+            except Exception:
+                continue
+    
+    return np.array(vols), np.array(rets), np.array(sharpes)
