@@ -60,7 +60,7 @@ def _to_numpy(x: Iterable[float]) -> np.ndarray:
     return arr
 
 
-def _ridge_cov(cov: pd.DataFrame, ridge: float = 1e-6) -> pd.DataFrame:
+def _ridge_cov(cov: pd.DataFrame, ridge: float = 1e-8) -> pd.DataFrame:
     cov = cov.copy()
     diag = np.eye(cov.shape[0]) * ridge
     cov.values[:] = cov.values + diag
@@ -137,15 +137,25 @@ class PortfolioOptimizer:
         except Exception as e:  # pragma: no cover
             return False, f"Download failed: {e}"
 
-        # Extract Adjusted Close robustly across shapes (Series/DataFrame/MultiIndex)
-        if isinstance(data, pd.DataFrame):
-            if 'Close' in data.columns:
-                prices = data['Close'].copy()
-            else:
-                prices = data.copy()
-        elif isinstance(data, pd.Series):
-            # Convert to DataFrame to keep consistent downstream operations
+        # Extract Adjusted Close/Close robustly across shapes (Series/DataFrame/MultiIndex)
+        if isinstance(data, pd.Series):
             prices = data.to_frame(name=self.original_tickers[0])
+        elif isinstance(data, pd.DataFrame):
+            if isinstance(data.columns, pd.MultiIndex):
+                last_level = data.columns.get_level_values(-1)
+                if 'Adj Close' in last_level:
+                    prices = data.xs('Adj Close', axis=1, level=-1).copy()
+                elif 'Close' in last_level:
+                    prices = data.xs('Close', axis=1, level=-1).copy()
+                else:
+                    prices = data.select_dtypes(include=[np.number]).copy()
+            else:
+                if 'Adj Close' in data.columns:
+                    prices = data['Adj Close'].copy()
+                elif 'Close' in data.columns:
+                    prices = data['Close'].copy()
+                else:
+                    prices = data.copy()
         else:
             return False, "Unexpected data format from yfinance."
 
@@ -601,7 +611,7 @@ def create_portfolio_composition_chart(tickers: List[str], weights: np.ndarray, 
     return fig
 
 
-def _efficient_frontier_points(opt: PortfolioOptimizer, n_points: int = 50, min_w: float = 0.0, max_w: float = 1.0) -> Tuple[np.ndarray, np.ndarray]:
+def _efficient_frontier_points(opt: PortfolioOptimizer, n_points: int = 60, min_w: float = 0.0, max_w: float = 1.0) -> Tuple[np.ndarray, np.ndarray]:
     mu = opt.mean_returns_annual[opt.tickers].values  # type: ignore
     mu_min, mu_max = float(mu.min()), float(mu.max())
     targets = np.linspace(mu_min, mu_max, n_points)
@@ -618,13 +628,33 @@ def _efficient_frontier_points(opt: PortfolioOptimizer, n_points: int = 50, min_
     return np.array(vols), np.array(rets)
 
 
-def create_efficient_frontier_plot(opt: PortfolioOptimizer, result: Dict[str, object], include_risk_free: bool = True, frontier_points: int = 50) -> Optional[go.Figure]:
+def _random_portfolios(opt: PortfolioOptimizer, n: int = 3000) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    mu = opt.mean_returns_annual[opt.tickers].values  # type: ignore
+    cov = opt.cov_matrix_annual.loc[opt.tickers, opt.tickers].values  # type: ignore
+    rf = opt.get_risk_free_rate()
+    weights = np.random.dirichlet(np.ones(len(opt.tickers)), size=n)
+    rets = weights @ mu
+    vols = np.sqrt(np.einsum('ij,jk,ik->i', weights, cov, weights))
+    sharpes = (rets - rf) / np.maximum(vols, EPS)
+    return vols, rets, sharpes
+
+
+def create_efficient_frontier_plot(opt: PortfolioOptimizer, result: Dict[str, object], include_risk_free: bool = True, frontier_points: int = 60, include_random: bool = True, n_random: int = 3000) -> Optional[go.Figure]:
     if opt.mean_returns_annual is None or opt.cov_matrix_annual is None:
         return None
 
     try:
         vols, rets = _efficient_frontier_points(opt, max(25, int(frontier_points)))
         fig = go.Figure()
+        if include_random:
+            rv, rr, rs = _random_portfolios(opt, n_random)
+            fig.add_trace(go.Scatter(
+                x=rv,
+                y=rr,
+                mode='markers',
+                name='Random Portfolios',
+                marker=dict(size=5, color=rs, colorscale='Viridis', showscale=True, colorbar=dict(title='Sharpe'))
+            ))
         if len(vols) > 0:
             fig.add_trace(go.Scatter(x=vols, y=rets, mode='lines', name='Efficient Frontier'))
 
