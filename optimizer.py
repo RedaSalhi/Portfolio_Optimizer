@@ -504,17 +504,41 @@ class PortfolioOptimizer:
             return None
         try:
             mkt = yf.download(market_ticker, period=f"{max(self.lookback_years,1)}y", interval="1d", auto_adjust=True, progress=False)
-            if isinstance(mkt, pd.DataFrame) and mkt.shape[0] > 0:
-                mkt_ret = mkt["Close"].pct_change().dropna()
-            else:
+            if not isinstance(mkt, (pd.Series, pd.DataFrame)) or len(mkt) == 0:
                 return None
+
+            # Extract a single adjusted close/close price series
+            if isinstance(mkt, pd.Series):
+                price_series = mkt
+            else:
+                if isinstance(mkt.columns, pd.MultiIndex):
+                    # Prefer 'Close' if present at last level, otherwise try 'Adj Close'
+                    last_level = mkt.columns.get_level_values(-1)
+                    if "Close" in last_level:
+                        price = mkt.xs("Close", axis=1, level=-1)
+                    elif "Adj Close" in last_level:
+                        price = mkt.xs("Adj Close", axis=1, level=-1)
+                    else:
+                        price = mkt.select_dtypes(include=[np.number])
+                else:
+                    if "Close" in mkt.columns:
+                        price = mkt["Close"]
+                    elif "Adj Close" in mkt.columns:
+                        price = mkt["Adj Close"]
+                    else:
+                        price = mkt.select_dtypes(include=[np.number])
+
+                # Squeeze to Series if single column remains
+                price_series = price.iloc[:, 0] if isinstance(price, pd.DataFrame) and price.shape[1] >= 1 else price
+
+            mkt_ret = price_series.pct_change().dropna()
         except Exception:
             return None
 
         # Align with portfolio window
         ret = self.returns[self.tickers].copy()
-        # Avoid Series.rename with a string (can be interpreted as index mapper in some pandas versions)
-        mkt_ret_df = mkt_ret.to_frame(name="_MKT_")
+        # Ensure market return is a 1-col DataFrame with name _MKT_
+        mkt_ret_df = mkt_ret.to_frame(name="_MKT_") if isinstance(mkt_ret, pd.Series) else mkt_ret.rename(columns={mkt_ret.columns[0]: "_MKT_"})
         df = pd.concat([ret, mkt_ret_df], axis=1).dropna()
         if df.shape[0] < TRADING_DAYS // 2:
             return None
