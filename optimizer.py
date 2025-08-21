@@ -692,3 +692,376 @@ def _generate_random_portfolios(opt: PortfolioOptimizer, n_portfolios: int = 100
                 continue
     
     return np.array(vols), np.array(rets), np.array(sharpes)
+
+
+def create_efficient_frontier_plot(opt: PortfolioOptimizer, n_points: int = 50, min_w: float = 0.0, max_w: float = 1.0, show_random: bool = True, n_random: int = 1000) -> go.Figure:
+    """Create an efficient frontier plot with optional random portfolios overlay."""
+    # Generate efficient frontier points
+    vols, rets = _efficient_frontier_points(opt, n_points, min_w, max_w)
+    
+    # Create the main figure
+    fig = go.Figure()
+    
+    # Add efficient frontier
+    if len(vols) > 0 and len(rets) > 0:
+        fig.add_trace(go.Scatter(
+            x=vols, y=rets,
+            mode='lines+markers',
+            name='Efficient Frontier',
+            line=dict(color='blue', width=3),
+            marker=dict(size=6, color='blue'),
+            hovertemplate='Vol: %{x:.2%}<br>Return: %{y:.2%}<extra></extra>'
+        ))
+    
+    # Add random portfolios if requested
+    if show_random and n_random > 0:
+        rand_vols, rand_rets, rand_sharpes = _generate_random_portfolios(opt, n_random, min_w, max_w)
+        if len(rand_vols) > 0:
+            # Color by Sharpe ratio
+            colors = rand_sharpes
+            fig.add_trace(go.Scatter(
+                x=rand_vols, y=rand_rets,
+                mode='markers',
+                name='Random Portfolios',
+                marker=dict(
+                    size=4,
+                    color=colors,
+                    colorscale='RdYlGn',
+                    showscale=True,
+                    colorbar=dict(title="Sharpe Ratio"),
+                    opacity=0.6
+                ),
+                hovertemplate='Vol: %{x:.2%}<br>Return: %{y:.2%}<extra></extra>'
+            ))
+    
+    # Add key portfolio points
+    try:
+        # Min variance portfolio
+        w_min, _ = opt._min_variance_weights(min_w, max_w)
+        m_min = opt.portfolio_metrics(w_min)
+        fig.add_trace(go.Scatter(
+            x=[m_min["volatility"]], y=[m_min["expected_return"]],
+            mode='markers',
+            name='Min Variance',
+            marker=dict(size=12, color='red', symbol='diamond'),
+            hovertemplate='Min Variance<br>Vol: %{x:.2%}<br>Return: %{y:.2%}<extra></extra>'
+        ))
+        
+        # Tangency portfolio
+        rf = opt.get_risk_free_rate()
+        w_tan, _ = opt._tangency_weights(rf, min_w, max_w)
+        m_tan = opt.portfolio_metrics(w_tan, rf)
+        fig.add_trace(go.Scatter(
+            x=[m_tan["volatility"]], y=[m_tan["expected_return"]],
+            mode='markers',
+            name='Tangency',
+            marker=dict(size=12, color='green', symbol='star'),
+            hovertemplate='Tangency<br>Vol: %{x:.2%}<br>Return: %{y:.2%}<extra></extra>'
+        ))
+        
+        # Risk-free rate point
+        fig.add_trace(go.Scatter(
+            x=[0], y=[rf],
+            mode='markers',
+            name='Risk-Free',
+            marker=dict(size=10, color='black', symbol='circle'),
+            hovertemplate='Risk-Free<br>Return: %{y:.2%}<extra></extra>'
+        ))
+        
+        # Capital Allocation Line
+        if m_tan["volatility"] > 0:
+            cal_vols = np.linspace(0, m_tan["volatility"] * 1.5, 100)
+            cal_rets = rf + (m_tan["expected_return"] - rf) / m_tan["volatility"] * cal_vols
+            fig.add_trace(go.Scatter(
+                x=cal_vols, y=cal_rets,
+                mode='lines',
+                name='Capital Allocation Line',
+                line=dict(color='purple', width=2, dash='dash'),
+                hovertemplate='CAL<br>Vol: %{x:.2%}<br>Return: %{y:.2%}<extra></extra>'
+            ))
+            
+    except Exception:
+        pass  # Skip if optimization fails
+    
+    # Update layout
+    fig.update_layout(
+        title="Efficient Frontier & Capital Allocation Line",
+        xaxis_title="Portfolio Volatility (Annualized)",
+        yaxis_title="Expected Return (Annualized)",
+        hovermode='closest',
+        margin=dict(l=10, r=10, t=40, b=10),
+        xaxis=dict(tickformat='.1%'),
+        yaxis=dict(tickformat='.1%')
+    )
+    
+    return fig
+
+
+def create_risk_return_analysis(opt: PortfolioOptimizer, weights: np.ndarray, rf_weight: Optional[float] = None) -> go.Figure:
+    """Create a comprehensive risk-return analysis chart."""
+    w = _to_numpy(weights)
+    
+    # Get portfolio metrics
+    rf = opt.get_risk_free_rate()
+    pm = opt.portfolio_metrics(w, rf)
+    rc, mrc = opt._risk_contributions(w)
+    
+    # Create subplots
+    fig = go.Figure()
+    
+    # Risk contribution chart
+    fig.add_trace(go.Bar(
+        x=opt.tickers,
+        y=rc,
+        name='Risk Contribution',
+        marker_color='lightblue',
+        hovertemplate='%{x}<br>Risk Contribution: %{y:.2%}<extra></extra>'
+    ))
+    
+    # Marginal risk contribution
+    fig.add_trace(go.Scatter(
+        x=opt.tickers,
+        y=mrc,
+        mode='lines+markers',
+        name='Marginal Risk Contribution',
+        line=dict(color='red', width=2),
+        marker=dict(size=8, color='red'),
+        yaxis='y2',
+        hovertemplate='%{x}<br>Marginal Risk: %{y:.2%}<extra></extra>'
+    ))
+    
+    # Update layout for dual y-axis
+    fig.update_layout(
+        title="Risk Contribution Analysis",
+        xaxis_title="Assets",
+        yaxis=dict(
+            title="Risk Contribution",
+            tickformat='.1%',
+            side='left'
+        ),
+        yaxis2=dict(
+            title="Marginal Risk Contribution",
+            tickformat='.1%',
+            side='right',
+            overlaying='y'
+        ),
+        barmode='group',
+        margin=dict(l=10, r=10, t=40, b=10)
+    )
+    
+    return fig
+
+
+def create_performance_analytics(opt: PortfolioOptimizer, weights: np.ndarray, rf_weight: Optional[float] = None) -> go.Figure:
+    """Create performance analytics including drawdown and rolling metrics."""
+    w = _to_numpy(weights)
+    
+    # Calculate portfolio returns
+    port_daily = (opt.returns[opt.tickers] * w).sum(axis=1)
+    
+    # Calculate cumulative wealth and drawdown
+    wealth = (1 + port_daily).cumprod()
+    peak = wealth.cummax()
+    drawdown = (wealth / peak - 1) * 100
+    
+    # Rolling metrics (30-day rolling)
+    window = min(30, len(port_daily) // 4)
+    if window > 5:
+        rolling_vol = port_daily.rolling(window).std() * np.sqrt(252) * 100
+        rolling_sharpe = (port_daily.rolling(window).mean() * 252) / (rolling_vol / 100 + EPS)
+    else:
+        rolling_vol = pd.Series(index=port_daily.index, dtype=float)
+        rolling_sharpe = pd.Series(index=port_daily.index, dtype=float)
+    
+    # Create subplots
+    fig = go.Figure()
+    
+    # Wealth evolution
+    fig.add_trace(go.Scatter(
+        x=wealth.index,
+        y=wealth,
+        mode='lines',
+        name='Portfolio Value',
+        line=dict(color='blue', width=2),
+        yaxis='y',
+        hovertemplate='Date: %{x}<br>Value: %{y:.2f}<extra></extra>'
+    ))
+    
+    # Drawdown
+    fig.add_trace(go.Scatter(
+        x=drawdown.index,
+        y=drawdown,
+        mode='lines',
+        name='Drawdown (%)',
+        line=dict(color='red', width=1),
+        yaxis='y2',
+        hovertemplate='Date: %{x}<br>Drawdown: %{y:.1f}%<extra></extra>'
+    ))
+    
+    # Rolling volatility
+    if not rolling_vol.empty:
+        fig.add_trace(go.Scatter(
+            x=rolling_vol.index,
+            y=rolling_vol,
+            mode='lines',
+            name='Rolling Volatility (%)',
+            line=dict(color='green', width=1, dash='dot'),
+            yaxis='y3',
+            hovertemplate='Date: %{x}<br>Vol: %{y:.1f}%<extra></extra>'
+        ))
+    
+    # Rolling Sharpe
+    if not rolling_sharpe.empty:
+        fig.add_trace(go.Scatter(
+            x=rolling_sharpe.index,
+            y=rolling_sharpe,
+            mode='lines',
+            name='Rolling Sharpe',
+            line=dict(color='purple', width=1, dash='dot'),
+            yaxis='y4',
+            hovertemplate='Date: %{x}<br>Sharpe: %{y:.2f}<extra></extra>'
+        ))
+    
+    # Update layout for multiple y-axes
+    fig.update_layout(
+        title="Portfolio Performance Analytics",
+        xaxis_title="Date",
+        yaxis=dict(title="Portfolio Value", side='left'),
+        yaxis2=dict(title="Drawdown (%)", side='right', overlaying='y'),
+        yaxis3=dict(title="Rolling Vol (%)", side='right', anchor='x', position=0.95),
+        yaxis4=dict(title="Rolling Sharpe", side='right', anchor='x', position=0.9),
+        margin=dict(l=10, r=10, t=40, b=10),
+        hovermode='x unified'
+    )
+    
+    return fig
+
+
+def create_capm_analysis_chart(opt: PortfolioOptimizer, capm_metrics: Dict[str, Dict[str, float]]) -> go.Figure:
+    """Create CAPM analysis chart showing beta vs return and alpha."""
+    if not capm_metrics:
+        # Return empty figure if no CAPM data
+        fig = go.Figure()
+        fig.update_layout(
+            title="CAPM Analysis - No Data Available",
+            xaxis_title="Beta",
+            yaxis_title="Return (%)",
+            margin=dict(l=10, r=10, t=40, b=10)
+        )
+        return fig
+    
+    # Extract data
+    tickers = list(capm_metrics.keys())
+    betas = [capm_metrics[t]["beta"] for t in tickers]
+    returns = [capm_metrics[t]["actual_return"] * 100 for t in tickers]  # Convert to percentage
+    alphas = [capm_metrics[t]["alpha"] * 100 for t in tickers]  # Convert to percentage
+    r_squared = [capm_metrics[t]["r_squared"] for t in tickers]
+    
+    # Create subplots
+    fig = go.Figure()
+    
+    # Beta vs Return scatter
+    fig.add_trace(go.Scatter(
+        x=betas,
+        y=returns,
+        mode='markers',
+        name='Assets',
+        marker=dict(
+            size=[r * 20 + 5 for r in r_squared],  # Size by R²
+            color=alphas,
+            colorscale='RdYlGn',
+            showscale=True,
+            colorbar=dict(title="Alpha (%)"),
+            opacity=0.7
+        ),
+        text=tickers,
+        hovertemplate='<b>%{text}</b><br>Beta: %{x:.2f}<br>Return: %{y:.1f}%<br>Alpha: %{marker.color:.1f}%<br>R²: %{marker.size:.2f}<extra></extra>'
+    ))
+    
+    # Market line (CAPM line)
+    rf = opt.get_risk_free_rate() * 100  # Convert to percentage
+    market_return = np.mean(returns)  # Approximate market return
+    
+    # Add CAPM line
+    beta_range = np.linspace(min(betas) - 0.2, max(betas) + 0.2, 100)
+    capm_line = rf + (market_return - rf) * beta_range
+    
+    fig.add_trace(go.Scatter(
+        x=beta_range,
+        y=capm_line,
+        mode='lines',
+        name='CAPM Line',
+        line=dict(color='black', width=2, dash='dash'),
+        hovertemplate='Beta: %{x:.2f}<br>CAPM Return: %{y:.1f}%<extra></extra>'
+    ))
+    
+    # Risk-free rate point
+    fig.add_trace(go.Scatter(
+        x=[0], y=[rf],
+        mode='markers',
+        name='Risk-Free Rate',
+        marker=dict(size=12, color='black', symbol='diamond'),
+        hovertemplate='Risk-Free<br>Return: %{y:.1f}%<extra></extra>'
+    ))
+    
+    # Update layout
+    fig.update_layout(
+        title="CAPM Analysis: Beta vs Return",
+        xaxis_title="Beta (Systematic Risk)",
+        yaxis_title="Annual Return (%)",
+        margin=dict(l=10, r=10, t=40, b=10),
+        yaxis=dict(tickformat='.1f'),
+        xaxis=dict(tickformat='.2f')
+    )
+    
+    return fig
+
+
+# ----------------------------- Validation helper ----------------------------- #
+
+def validate_optimization_result(result: Dict[str, object]) -> Tuple[bool, List[str]]:
+    """Post-optimization sanity checks.
+    
+    Returns
+    -------
+    (is_valid, list_of_warnings)
+        is_valid=True if all critical checks pass.
+        warnings is a list of non-critical issues.
+    """
+    warnings_list = []
+    
+    # Check required fields
+    required_fields = ["weights", "expected_return", "volatility", "sharpe_ratio"]
+    for field in required_fields:
+        if field not in result:
+            return False, [f"Missing required field: {field}"]
+    
+    # Check weights sum to 1
+    weights = result["weights"]
+    if isinstance(weights, (list, np.ndarray)):
+        weight_sum = sum(weights)
+        if abs(weight_sum - 1.0) > 1e-6:
+            warnings_list.append(f"Weights sum to {weight_sum:.6f}, not 1.0")
+    
+    # Check for extreme values
+    if result["volatility"] <= 0:
+        return False, ["Volatility must be positive"]
+    
+    if result["volatility"] > 2.0:  # >200% annual volatility
+        warnings_list.append("Extremely high volatility detected")
+    
+    if abs(result["expected_return"]) > 1.0:  # >100% annual return
+        warnings_list.append("Extremely high return detected")
+    
+    # Check optimization convergence
+    if "optimization_details" in result:
+        details = result["optimization_details"]
+        if isinstance(details, dict) and "converged" in details:
+            if not details["converged"]:
+                warnings_list.append("Optimization did not converge")
+    
+    # Check for leverage
+    if "leverage_used" in result and result["leverage_used"]:
+        warnings_list.append("Portfolio uses leverage (weights > 100%)")
+    
+    return True, warnings_list

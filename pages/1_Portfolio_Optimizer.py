@@ -1216,15 +1216,16 @@ if st.session_state.optimization_results and st.session_state.optimizer:
             # Pass enhanced parameters to the plotting function
             frontier_fig = create_efficient_frontier_plot(
                 optimizer, 
-                result, 
-                include_risk_free=include_rf,
-                frontier_points=frontier_points,
-                show_random_portfolios=show_random_portfolios
+                n_points=frontier_points,
+                min_w=min_weight,
+                max_w=max_weight,
+                show_random=show_random_portfolios,
+                n_random=random_portfolios_count
             )
-            
-            # Update chart height if specified
-            if frontier_fig and 'chart_height' in locals():
-                frontier_fig.update_layout(height=chart_height)
+        
+        # Update chart height if specified
+        if frontier_fig and 'chart_height' in locals():
+            frontier_fig.update_layout(height=chart_height)
         
         if frontier_fig:
             st.plotly_chart(frontier_fig, use_container_width=True)
@@ -1371,3 +1372,319 @@ if st.session_state.optimization_results and st.session_state.optimizer:
             
             # Correlation insights
             corr_matrix = optimizer.returns[optimizer.tickers].corr()
+            
+            # Find highest and lowest correlations
+            corr_values = []
+            for i in range(len(optimizer.tickers)):
+                for j in range(i+1, len(optimizer.tickers)):
+                    corr_values.append({
+                        'Pair': f"{optimizer.tickers[i]} - {optimizer.tickers[j]}",
+                        'Correlation': corr_matrix.iloc[i, j]
+                    })
+            
+            if corr_values:
+                corr_values.sort(key=lambda x: abs(x['Correlation']), reverse=True)
+                st.markdown("**🔗 Correlation Analysis**")
+                st.metric("Highest Correlation", f"{corr_values[0]['Correlation']:.3f}", corr_values[0]['Pair'])
+                st.metric("Lowest Correlation", f"{corr_values[-1]['Correlation']:.3f}", corr_values[-1]['Pair'])
+                
+                # Show correlation heatmap for smaller portfolios
+                if len(optimizer.tickers) <= 10:
+                    st.markdown("**📊 Correlation Heatmap**")
+                    corr_fig = go.Figure(data=go.Heatmap(
+                        z=corr_matrix.values,
+                        x=optimizer.tickers,
+                        y=optimizer.tickers,
+                        colorscale='RdBu',
+                        zmid=0,
+                        text=corr_matrix.round(3).values,
+                        texttemplate="%{text}",
+                        textfont={"size": 10}
+                    ))
+                    corr_fig.update_layout(
+                        title="Asset Correlation Matrix",
+                        xaxis_title="Assets",
+                        yaxis_title="Assets",
+                        height=500
+                    )
+                    st.plotly_chart(corr_fig, use_container_width=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with tab4:
+        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+        
+        # Performance analytics visualization
+        performance_fig = create_performance_analytics(optimizer, result['weights'])
+        st.plotly_chart(performance_fig, use_container_width=True)
+        
+        # Performance metrics summary
+        st.markdown("#### 📊 Performance Metrics Summary")
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            # Calculate cumulative return
+            port_daily = (optimizer.returns[optimizer.tickers] * result['weights']).sum(axis=1)
+            total_return = (1 + port_daily).prod() - 1
+            st.metric("Total Return", f"{total_return*100:.1f}%", "📈 Cumulative", help="Total return over the analysis period")
+        
+        with col2:
+            # Calculate annualized return
+            years = len(port_daily) / 252
+            annualized_return = (1 + total_return) ** (1/years) - 1 if years > 0 else 0
+            st.metric("Annualized Return", f"{annualized_return*100:.1f}%", "📅 Per Year", help="Annualized return over the analysis period")
+        
+        with col3:
+            # Best and worst periods
+            rolling_30d = port_daily.rolling(30).apply(lambda x: (1 + x).prod() - 1)
+            best_month = rolling_30d.max() * 100
+            worst_month = rolling_30d.min() * 100
+            st.metric("Best Month", f"{best_month:.1f}%", "📈 30-day", help="Best 30-day rolling return")
+        
+        with col4:
+            st.metric("Worst Month", f"{worst_month:.1f}%", "📉 30-day", help="Worst 30-day rolling return")
+        
+        # Rolling performance analysis
+        st.markdown("#### 📈 Rolling Performance Analysis")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # Rolling Sharpe ratio
+            window = min(60, len(port_daily) // 3)
+            if window > 10:
+                rolling_sharpe = port_daily.rolling(window).apply(
+                    lambda x: (x.mean() * 252) / (x.std() * np.sqrt(252) + 1e-8)
+                )
+                
+                sharpe_fig = go.Figure()
+                sharpe_fig.add_trace(go.Scatter(
+                    x=rolling_sharpe.index,
+                    y=rolling_sharpe,
+                    mode='lines',
+                    name=f'{window}-Day Rolling Sharpe',
+                    line=dict(color='purple', width=2)
+                ))
+                sharpe_fig.update_layout(
+                    title=f"{window}-Day Rolling Sharpe Ratio",
+                    xaxis_title="Date",
+                    yaxis_title="Sharpe Ratio",
+                    height=400
+                )
+                st.plotly_chart(sharpe_fig, use_container_width=True)
+            else:
+                st.info("⚠️ Insufficient data for rolling analysis")
+        
+        with col2:
+            # Rolling volatility
+            if window > 10:
+                rolling_vol = port_daily.rolling(window).std() * np.sqrt(252) * 100
+                
+                vol_fig = go.Figure()
+                vol_fig.add_trace(go.Scatter(
+                    x=rolling_vol.index,
+                    y=rolling_vol,
+                    mode='lines',
+                    name=f'{window}-Day Rolling Volatility',
+                    line=dict(color='green', width=2)
+                ))
+                vol_fig.update_layout(
+                    title=f"{window}-Day Rolling Volatility",
+                    xaxis_title="Date",
+                    yaxis_title="Volatility (%)",
+                    height=400
+                )
+                st.plotly_chart(vol_fig, use_container_width=True)
+        
+        # Drawdown analysis
+        st.markdown("#### 📉 Drawdown Analysis")
+        wealth = (1 + port_daily).cumprod()
+        peak = wealth.cummax()
+        drawdown = (wealth / peak - 1) * 100
+        
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            max_dd = drawdown.min()
+            st.metric("Maximum Drawdown", f"{max_dd:.1f}%", "📉 Peak to Trough")
+        
+        with col2:
+            # Calculate drawdown duration
+            dd_start = drawdown[drawdown == 0].index[0] if (drawdown == 0).any() else drawdown.index[0]
+            dd_end = drawdown.idxmin()
+            dd_duration = (dd_end - dd_start).days
+            st.metric("Drawdown Duration", f"{dd_duration} days", "📅 Recovery Time")
+        
+        with col3:
+            # Current drawdown
+            current_dd = drawdown.iloc[-1]
+            st.metric("Current Drawdown", f"{current_dd:.1f}%", "📊 From Peak")
+        
+        with col4:
+            # Recovery progress
+            if current_dd < 0:
+                recovery_progress = (max_dd - current_dd) / abs(max_dd) * 100
+                st.metric("Recovery Progress", f"{recovery_progress:.1f}%", "🔄 From Bottom")
+            else:
+                st.metric("Recovery Status", "✅ Recovered", "🎉 New Highs")
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with tab5:
+        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+        
+        # CAPM Analysis
+        if show_capm:
+            st.info("📈 Calculating CAPM metrics for all assets...")
+            
+            with st.spinner("🔍 Computing beta, alpha, and R-squared for each asset..."):
+                capm_metrics = optimizer.calculate_capm_metrics()
+            
+            if capm_metrics:
+                # CAPM visualization
+                capm_fig = create_capm_analysis_chart(optimizer, capm_metrics)
+                st.plotly_chart(capm_fig, use_container_width=True)
+                
+                # CAPM metrics summary
+                st.markdown("#### 📊 CAPM Metrics Summary")
+                
+                # Create CAPM summary table
+                capm_summary = []
+                for ticker, metrics in capm_metrics.items():
+                    capm_summary.append({
+                        'Asset': ticker,
+                        'Beta': f"{metrics['beta']:.3f}",
+                        'Alpha (%)': f"{metrics['alpha']*100:.2f}%",
+                        'R²': f"{metrics['r_squared']:.3f}",
+                        'Expected Return (%)': f"{metrics['expected_return']*100:.1f}%",
+                        'Actual Return (%)': f"{metrics['actual_return']*100:.1f}%",
+                        'Correlation': f"{metrics['correlation']:.3f}"
+                    })
+                
+                capm_df = pd.DataFrame(capm_summary)
+                st.dataframe(capm_df, hide_index=True, use_container_width=True)
+                
+                # CAPM insights
+                st.markdown("#### 💡 CAPM Analysis Insights")
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    # Beta analysis
+                    betas = [metrics['beta'] for metrics in capm_metrics.values()]
+                    avg_beta = np.mean(betas)
+                    high_beta = [t for t, m in capm_metrics.items() if m['beta'] > 1.2]
+                    low_beta = [t for t, m in capm_metrics.items() if m['beta'] < 0.8]
+                    
+                    st.markdown("**📊 Beta Analysis**")
+                    st.metric("Average Beta", f"{avg_beta:.3f}", "⚖️ Market Average")
+                    st.metric("High Beta Assets", f"{len(high_beta)}", ", ".join(high_beta[:3]) if high_beta else "None")
+                    st.metric("Low Beta Assets", f"{len(low_beta)}", ", ".join(low_beta[:3]) if low_beta else "None")
+                
+                with col2:
+                    # Alpha analysis
+                    alphas = [metrics['alpha'] for metrics in capm_metrics.values()]
+                    avg_alpha = np.mean(alphas)
+                    positive_alpha = [t for t, m in capm_metrics.items() if m['alpha'] > 0]
+                    negative_alpha = [t for t, m in capm_metrics.items() if m['alpha'] < 0]
+                    
+                    st.markdown("**📈 Alpha Analysis**")
+                    st.metric("Average Alpha", f"{avg_alpha*100:.2f}%", "📊 Portfolio Average")
+                    st.metric("Positive Alpha", f"{len(positive_alpha)}", ", ".join(positive_alpha[:3]) if positive_alpha else "None")
+                    st.metric("Negative Alpha", f"{len(negative_alpha)}", ", ".join(negative_alpha[:3]) if negative_alpha else "None")
+                
+                # Risk decomposition
+                st.markdown("#### ⚠️ Systematic vs Idiosyncratic Risk")
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    # Portfolio systematic risk
+                    portfolio_beta = sum(result['weights'][i] * capm_metrics[optimizer.tickers[i]]['beta'] 
+                                      for i in range(len(optimizer.tickers)))
+                    st.metric("Portfolio Beta", f"{portfolio_beta:.3f}", "📊 Market Sensitivity")
+                
+                with col2:
+                    # Portfolio alpha
+                    portfolio_alpha = sum(result['weights'][i] * capm_metrics[optimizer.tickers[i]]['alpha'] 
+                                        for i in range(len(optimizer.tickers)))
+                    st.metric("Portfolio Alpha", f"{portfolio_alpha*100:.2f}%", "📈 Excess Return")
+                
+                with col3:
+                    # Average R-squared
+                    avg_r2 = np.mean([metrics['r_squared'] for metrics in capm_metrics.values()])
+                    st.metric("Average R²", f"{avg_r2:.3f}", "📊 Market Fit")
+                
+                # Market timing insights
+                st.markdown("#### 🕐 Market Timing Analysis")
+                if portfolio_beta > 1.1:
+                    st.info("🚀 **Aggressive Portfolio**: High beta suggests outperformance in bull markets, but higher risk in bear markets")
+                elif portfolio_beta < 0.9:
+                    st.info("🛡️ **Defensive Portfolio**: Low beta suggests lower market sensitivity and potential outperformance in bear markets")
+                else:
+                    st.info("⚖️ **Balanced Portfolio**: Beta close to 1 suggests market-like performance")
+                
+                if portfolio_alpha > 0.02:
+                    st.success("🎯 **Positive Alpha**: Portfolio shows skill in stock selection, generating excess returns beyond market risk")
+                elif portfolio_alpha < -0.02:
+                    st.warning("⚠️ **Negative Alpha**: Portfolio underperforms market expectations - consider rebalancing")
+                else:
+                    st.info("📊 **Market Alpha**: Portfolio performance aligns with market expectations")
+                
+            else:
+                st.warning("⚠️ Could not calculate CAPM metrics. This may be due to insufficient market data or API issues.")
+                
+                with st.expander("🔧 CAPM Troubleshooting"):
+                    st.markdown("""
+                    **Common CAPM calculation issues:**
+                    - **Market data unavailable**: S&P 500 data may not be accessible
+                    - **Insufficient history**: Need at least 1 year of overlapping data
+                    - **API rate limiting**: Yahoo Finance may be temporarily unavailable
+                    - **Regional restrictions**: Some market data may be region-locked
+                    """)
+        else:
+            st.info("ℹ️ CAPM analysis is disabled. Enable it in Advanced Options to see beta, alpha, and market risk analysis.")
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+
+# Footer with additional information
+st.markdown("---")
+st.markdown("""
+    <div style="text-align: center; color: #666; padding: 2rem;">
+        <h3>🔬 Advanced Portfolio Analytics</h3>
+        <p>This enhanced portfolio optimizer provides comprehensive analysis including:</p>
+        <ul style="text-align: left; max-width: 800px; margin: 0 auto;">
+            <li><strong>📊 Enhanced Efficient Frontier:</strong> Multi-asset optimization with random portfolio visualization</li>
+            <li><strong>⚠️ Risk Decomposition:</strong> Marginal and total risk contribution analysis</li>
+            <li><strong>📈 Performance Analytics:</strong> Rolling metrics, drawdown analysis, and wealth evolution</li>
+            <li><strong>🎯 CAPM Analysis:</strong> Beta, alpha, and systematic risk decomposition</li>
+            <li><strong>⚖️ Advanced Constraints:</strong> Flexible weight limits and optimization methods</li>
+        </ul>
+        <p style="margin-top: 1rem; font-size: 0.9rem;">
+            Built with Modern Portfolio Theory, real-time market data, and advanced optimization algorithms.
+        </p>
+    </div>
+""", unsafe_allow_html=True)
+
+# Debug information (hidden by default)
+with st.expander("🐛 Debug Information", expanded=False):
+    if st.session_state.optimizer:
+        st.json(st.session_state.optimizer.get_debug_info())
+    
+    if st.session_state.optimization_results:
+        # Show validation results
+        is_valid, warnings = validate_optimization_result(st.session_state.optimization_results)
+        st.write(f"**Validation Status:** {'✅ Valid' if is_valid else '❌ Invalid'}")
+        if warnings:
+            st.write("**Warnings:**")
+            for warning in warnings:
+                st.write(f"- ⚠️ {warning}")
+        
+        # Show raw results (sanitized)
+        sanitized_results = {}
+        for key, value in st.session_state.optimization_results.items():
+            if key == 'weights':
+                sanitized_results[key] = [float(w) for w in value]
+            elif isinstance(value, (int, float, str, bool)):
+                sanitized_results[key] = value
+            elif isinstance(value, list):
+                sanitized_results[key] = [float(v) if isinstance(v, (int, float)) else v for v in value]
+        
+        st.json(sanitized_results)
